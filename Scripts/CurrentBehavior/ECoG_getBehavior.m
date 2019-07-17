@@ -25,7 +25,7 @@ trialinfo_reward = [];
 trialnum_mem = 1;
 trialnum_reward = 1;
 
-blocknum_mem = 0;%there are 21 trials in 1 block, comprised of a memory and a reward round
+blocknum_mem = 0; %there are 21 trials in 1 block, comprised of a memory and a reward round
 blocknum_reward = 0; 
 
 for sessi = 1 : num_sessions
@@ -48,7 +48,7 @@ for sessi = 1 : num_sessions
                 
                 trialinfo_mem(trialnum_mem, 8 : 8 + size(session{sessi}{triali}.stimInds, 2) - 1) = session{sessi}{triali}.stimInds; %identity of memory items 
                 trialinfo_mem(trialnum_mem, 12) = session{sessi}{triali}.probeStimInd; %identity of probe
-                trialinfo_mem(trialnum_mem, 13) = session{sessi}{triali}.responseResult; %response
+                trialinfo_mem(trialnum_mem, 13) = session{sessi}{triali}.responseResult; %response: 1 = correctly collectd match, 2 = shoulCollect false, but collected, 3 = reject match, 4 = did not collect mismatch
                 trialinfo_mem(trialnum_mem, 14) = session{sessi}{triali}.reactionTime/1000; %RT
                 
                 %Check RT
@@ -60,6 +60,7 @@ for sessi = 1 : num_sessions
                 
                 %Check time
                 timing = round(diff(cell2mat(struct2cell(session{sessi}{triali}.timestamps))), -1); %extract duration of individual events
+                checkTime(trialnum_mem, :) = diff(cell2mat(struct2cell(session{sessi}{triali}.timestamps))); %this is just so that I can directly compare the behavioral output with the imaging data
                 
                 if ismember(timing(1), [480 : 1 : 520]) %fixation: 500 ms
                    tmp(1) = 1;
