@@ -9,10 +9,10 @@ clc;
 
 %% Specify important variables
 
-subnips = {'MKL'};
+subnips = {'MG'};
 
-channelSelection = {{'FL*', 'FbL*'}}';
-pial_file = 'lh.pial';
+channelSelection = {{'CP*', 'FL*', 'TLS*', 'TLI*', 'CA*', 'HIP*', 'TBP*', 'OB*'}}';
+pial_file = 'rh.pial';
 
 %For plotting
 my_colors = cbrewer('div', 'Spectral', 12);
