@@ -25,3 +25,10 @@ decCond = 'indItems'
 
 trainTime = [bl[0] : 5.0]
 testTime = [bl[0] : 5.0]
+
+#CV
+n_folds = 5
+predict_mode = 'cross-validation' #or mean-prediction
+
+#Specific to SVM
+proba = False #determines whether or not the 
