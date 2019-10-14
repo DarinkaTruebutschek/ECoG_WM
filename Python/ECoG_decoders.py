@@ -18,10 +18,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_auc_score
 from sklearn.feature_selection import SelectKBest, f_classif
 
-#Scikit multilearn
-from skmultilearn.problem_transform import BinaryRelevance
-
-def binaryClassif(data_train, label_train, data_test, label_test, proba, n_folds, predict_mode):
+def binaryClassif(data_train, label_train, data_test, label_test, generalization=False, proba=False, n_folds=5, predict_mode='cross-validation'):
 	"""
 	This function performs a binary classification task.
 	"""
@@ -59,7 +56,7 @@ def binaryClassif(data_train, label_train, data_test, label_test, proba, n_folds
 			time_gen.fit(X_train, y_train)
 
 			#Test on X_test
-			y_pred = time_gen.predict(X_test)
+			y_pred = time_gen.predict_proba(X_test)
 
 			#Concatenate all predictions and test indices to be able to later on compute accuracy for multiple labels
 			y_pred_all.append(y_pred)
