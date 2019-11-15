@@ -1,6 +1,6 @@
 #Purpose: This script contains different functions to run a decoding analysis.
 #Project: ECoG
-#Author: Darinka Truebutschek
+#Author: D.T.
 #Date: 08 October 2019
 
 ##########################################

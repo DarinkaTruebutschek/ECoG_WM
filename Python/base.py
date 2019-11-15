@@ -1,12 +1,13 @@
 #Purpose: This contains some important basic functions.
 #Project: ECoG
-#Author: Darinka Truebutschek
+#Author: D.T.
 #Date: 14 October 2019
 
 import numpy as np
 import pandas as pd
 
 from scipy.io import loadmat
+from scipy.ndimage.filters import generic_filter as gf
 ##########################################
 def find_nearest(a, a0):
 
@@ -57,3 +58,25 @@ def loadtablefrommat(matfilename, tablevarname, columnnamesvarname):
                 rowvals.append(rowval)
         table_dict[data_cols[colidx]] = rowvals
     return pd.DataFrame(table_dict)
+
+##########################################
+def my_smooth(data, window):
+    
+    data = np.array(data)
+
+    print('Dimension of data to smooth: ' + str(data.ndim))
+    
+    #Check whether data is 1D (diagonal) or 2D (GAT)
+    if data.ndim == 1:
+        for t in range(data.shape[0]): #loop through the entire dataset
+            if t <= window: #beginning of data
+                data[t] = np.mean(data[t : (t + window + 1)])
+            elif t >= data.shape[0] - window: #end of data
+                data[t] = np.mean(data[(t - window) : t + 1])
+            else:
+                data[t] = np.mean(data[(t - window) : (t + window + 1)])
+        
+    elif data.ndim == 2: #Gat matrix
+        kernel = np.ones((2 * window + 1, 2 * window + 1))
+        data = gf(data, np.mean, footprint=kernel)
+    return data

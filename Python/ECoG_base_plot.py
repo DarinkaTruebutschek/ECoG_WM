@@ -1,6 +1,6 @@
 #Purpose: Basic functions for plotting (adapted from J.R. King).
 #Project: ECoG
-#Author: Darinka Trubutschek
+#Author: D.T.
 #Date: 15 November 2019
 
 import matplotlib

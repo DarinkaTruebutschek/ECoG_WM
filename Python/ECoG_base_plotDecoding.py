@@ -5,7 +5,9 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-from .base import pretty_plot, plot_sem, plot_widths, pretty_colorbar, smooth
+
+from ECoG_base_plot import pretty_plot, plot_sem, plot_widths, pretty_colorbar
+from ECoG_plotDecoding_cfg import font_name, font_size, font_weight
 
 
 def pretty_gat(scores, times=None, chance=0, ax=None, sig=None, cmap='RdBu_r',
@@ -18,7 +20,7 @@ def pretty_gat(scores, times=None, chance=0, ax=None, sig=None, cmap='RdBu_r',
     if times is None:
         times = np.arange(scores.shape[0]) / float(sfreq)
 
-    # setup color range
+    #Setup color range
     if clim is None:
         spread = 2 * np.round(np.percentile(
             np.abs(scores - chance), 99) * 1e2) / 1e2
@@ -29,7 +31,7 @@ def pretty_gat(scores, times=None, chance=0, ax=None, sig=None, cmap='RdBu_r',
     else:
         vmin, vmax = clim
 
-    # setup time
+    #Setup time
     if test_times is None:
         if scores.shape[1] == scores.shape[0]:
             test_times = times
@@ -38,41 +40,37 @@ def pretty_gat(scores, times=None, chance=0, ax=None, sig=None, cmap='RdBu_r',
                 np.ones(scores.shape[1])) * np.ptp(times) / len(times)
     extent = [min(test_times), max(test_times), min(times), max(times)]
 
-    # setup plot
+    #Setup plot
     if ax is None:
         ax = plt.gca()
     
     #Smooth data if wanted
-    if smoothWindow > 0:
-		scores = smooth(scores, window=smoothWindow)
+    #if smoothWindow > 0:
+		#scores = smooth(scores, window=smoothWindow)
 
-    # plot score
+    #Plot score
     if contourPlot is None:
-			im = ax.matshow(scores, extent=extent, cmap=cmap, origin='lower',
-						vmin=vmin, vmax=vmax, aspect='equal')
+        im = ax.matshow(scores, extent=extent, cmap=cmap, origin='lower', vmin=vmin, vmax=vmax, aspect='equal')
     else:
-		im = ax.contourf(scores, levels=steps, extent=extent, cmap=cmap, origin='lower',
-						vmin=vmin, vmax=vmax, aspect='equal')
-		#im.cmap.set_over(maxColor)
-		plt.contour(scores, levels=steps, extent=extent, origin='lower',
-						vmin=vmin, vmax=vmax, aspect='equal', 
-						linewidths = 1, colors = 'k')
-		pretty_colorbar(im=im, ax=None, ticks=steps, ticklabels=None, nticks=np.size(steps))
+        im = ax.contourf(scores, levels=steps, extent=extent, cmap=cmap, origin='lower', vmin=vmin, vmax=vmax, aspect='equal')
+        #im.cmap.set_over(maxColor)
+        plt.contour(scores, levels=steps, extent=extent, origin='lower', vmin=vmin, vmax=vmax, aspect='equal', linewidths = 1, colors = 'k')
+        pretty_colorbar(im=im, ax=None, ticks=steps, ticklabels=None, nticks=np.size(steps))
 
-    # plot sig
+    #Plot sig
     if sig is not None:
-		sig = np.array(sig)
+        sig = np.array(sig)
 		
 		#Smooth data if wanted
-		if smoothWindow > 0:
-			sig = smooth(sig, window=smoothWindow)
+		#if smoothWindow > 0:
+			#sig = smooth(sig, window=smoothWindow)
 		
 		#Construct binary input
-		sig[sig > .05] = 1
-		sig[sig < .05] = 0
-		
-		xx, yy = np.meshgrid(test_times, times, copy=False, indexing='xy')
-		ax.contour(xx, yy, sig, colors= 'k', linestyles='solid', linewidths = 0.25)
+        sig[sig > .05] = 1
+        sig[sig < .05] = 0
+
+        xx, yy = np.meshgrid(test_times, times, copy=False, indexing='xy')
+        ax.contour(xx, yy, sig, colors= 'k', linestyles='solid', linewidths = 0.25)
 		
     ax.axhline(0, color='k')
     ax.axvline(0, color='k')
@@ -80,8 +78,8 @@ def pretty_gat(scores, times=None, chance=0, ax=None, sig=None, cmap='RdBu_r',
     #Add additional lines for classifiers if needed
     if classLines is not None:
 		#Loop through all possible lines and plot them
-		for t, tp in enumerate(classLines):
-			ax.axhline(tp, color = classColors[t], linestyle = 'dashed', linewidth = 1)
+        for t, tp in enumerate(classLines):
+            ax.axhline(tp, color = classColors[t], linestyle = 'dashed', linewidth = 1)
 
     if colorbar:
         pretty_colorbar(
@@ -94,7 +92,8 @@ def pretty_gat(scores, times=None, chance=0, ax=None, sig=None, cmap='RdBu_r',
                  np.min([max(times), max(test_times)])],
                 [np.max([min(times), min(test_times)]),
                  np.min([max(times), max(test_times)])], color=diagonal, linestyle = 'dashed', linewidth = 1)
-    # setup ticks
+
+    #Setup ticks
     xticks, xticklabels = _set_ticks(test_times)
     ax.set_xticks(xticks)
     ax.set_xticklabels(xticklabels, fontdict={'fontname': 'Times New Roman', 'fontsize': 14})
@@ -111,46 +110,32 @@ def pretty_gat(scores, times=None, chance=0, ax=None, sig=None, cmap='RdBu_r',
     return ax
 
 def pretty_decod(scores, times=None, chance=0, ax=None, sig=None, width=3.,
-                 color='k', fill=False, xlabel='Times', sfreq=250, alpha=.75, scat=False, line=True, smoothWindow=0, lim=None, thickness=4,
+                 color='k', fill=False, ylabel='AUC', xlabel='Time (s)', sfreq=250, alpha=.75, scat=False, line=False, lim=None, thickness=4,
                  thicknessScat=20, schrift=14):
     scores = np.array(scores)
 
-    if (scores.ndim == 1) or (scores.shape[1] <= 1): #
+    if (scores.ndim == 1) or (scores.shape[1] <= 1): 
         scores = scores[:, None].T
     if times is None:
         times = np.arange(scores.shape[1]) / float(sfreq)
 
-    # setup plot
+    #Setup plot
     if ax is None:
         ax = plt.gca()
 
-    # Plot SEM
+    #Plot SEM
     if scores.ndim == 2 and scores.shape[0] > 1:
         scores_m = np.mean(scores, axis=0)
         sem = scores.std(0) / np.sqrt(len(scores))
-        if smoothWindow > 0:
-			scores_m = smooth(scores_m, window=smoothWindow)
-			sem = smooth(sem, window=smoothWindow)
-			plot_sem(times, scores_m, sem, color=color, ax=ax, line_args = {'linewidth': thickness})
-        elif smoothWindow == 0:
-			plot_sem(times, scores_m, sem, color=color, ax=ax, line_args = {'linewidth': thickness})
+        plot_sem(times, scores_m, sem, color=color, ax=ax, line_args = {'linewidth': thickness})
     else:
         scores_m = np.squeeze(scores)
         sem = np.zeros_like(scores_m)
-        
-        #Smooth data if wanted
-        if smoothWindow > 0.:
-            scores_m = smooth(scores_m, window=smoothWindow)
-            sem = smooth(sem, window=smoothWindow)
-            plot_sem(times, scores_m, sem, color=color, ax=ax, line_args = {'linewidth': thickness})
+        plot_sem(times, scores_m, sem, color=color, ax=ax, line_args = {'linewidth': thickness})
 
-    # Plot significance
+    #Plot significance
     if sig is not None:
-        sig = np.squeeze(sig)
-        
-        #if smoothWindow > 0:
-			#sig = smooth(sig, window=smoothWindow)
-			
+        sig = np.squeeze(sig)		
         widths = width * sig
         if fill:
             scores_sig = (chance + (scores_m - chance) * sig)
@@ -168,27 +153,31 @@ def pretty_decod(scores, times=None, chance=0, ax=None, sig=None, width=3.,
             scores_sig = dummy1[dummy1 > chance]
             plt.scatter(times_sig, scores_sig, s=thicknessScat, color=color)
         elif line: #Added by Darinka Feb 9th 2016 to plot significance as separate horizontal line
-            times_sig = np.intersect1d(times[sig < .05], times[scores_m > chance]) #select all those time points in which the significance is less than .05 & the accuracy above .5
+            times_sig = np.intersect1d(sig, times[scores_m > chance]) #select all those time points in which the significance is less than .05 & the accuracy above .5
             plt.scatter(times_sig, np.repeat(min(scores_m - sem)+0.004, len(times_sig)), s=thicknessScat, color=color)
         else:
             plot_widths(times, scores_m, widths, ax=ax, color=color)
 
-    # Pretty
+    #Pretty
     if lim is not None: #in order to be able to flexibly adjust limits of y axis
-		ymin, ymax = lim
+        ymin, ymax = lim
     else:
-		ymin, ymax = min(scores_m - sem), max(scores_m + sem)
-    ax.axhline(chance, linestyle='dotted', color='k', zorder=-3)
-    ax.axvline(0, color='k', zorder=-3)
+        ymin, ymax = min(scores_m - sem), max(scores_m + sem)
+    ax.axhline(chance, linestyle='dotted', color='dimgray', zorder=-3)
+    ax.axvline(0, color='dimgray', zorder=-3)
     ax.set_xlim(np.min(times), np.max(times))
     ax.set_ylim(ymin, ymax)
     ax.set_yticks([ymin, chance, ymax])
-    ax.set_yticklabels(['%.2f' % ymin, 'Chance', '%.2f' % ymax], fontdict={'fontname': 'Times New Roman', 'fontsize': schrift})
+    #ax.set_yticklabels(['%.2f' % ymin, 'Chance', '%.2f' % ymax], fontdict={'fontname': 'Times New Roman', 'fontsize': schrift})
+    ax.set_yticklabels(['%.2f' % ymin, 'Chance', '%.2f' % ymax], fontname=font_name, fontsize=font_size, fontweight=font_weight)
     xticks, xticklabels = _set_ticks(times)
     ax.set_xticks(xticks)
-    ax.set_xticklabels(xticklabels, fontdict={'fontname': 'Times New Roman', 'fontsize': schrift})
+    ax.set_xticklabels(xticklabels, fontname=font_name, fontsize=font_size, fontweight=font_weight)
     if len(xlabel):
-        ax.set_xlabel(xlabel, fontdict={'fontname': 'Times New Roman', 'fontsize': schrift})
+        ax.set_xlabel(xlabel, fontname=font_name, fontsize=font_size+1, fontweight=font_weight)
+    if len(ylabel):
+        ax.set_ylabel(ylabel, rotation=0, fontname=font_name, fontsize=font_size+1, fontweight=font_weight)
+        ax.yaxis.set_label_coords(-.04, 1.025)
     pretty_plot(ax)
     return ax
 
@@ -219,15 +208,15 @@ def pretty_slices(scores, times=None, sig=None, sig_diagoff=None, tois=None,
     if times is None:
         times = np.arange(scores.shape[0]) / float(sfreq)
 	#times = np.arange(scores.shape[1]) /float(sfreq) #modified by Darinka Feb. 8th 2016 to fit my data
-    # Setup TOIs
+    #Setup TOIs
     if tois is None:
         tois = np.linspace(min(times), max(times), 5)
-    # Setup Figure
+    #Setup Figure
     if axes is None:
         fig, axes = plt.subplots(len(tois), 1, figsize=[5, 6])
     ymin = np.min(scores.mean(0) - scores.std(0)/np.sqrt(len(scores)))
     ymax = np.max(scores.mean(0) + scores.std(0)/np.sqrt(len(scores)))
-    # Diagonalize
+    #Diagonalize
     scores_diag = np.array([np.diag(ii) for ii in scores]) #this just computes the diagonal
     if sig is not None:
         sig = np.array(sig)
@@ -235,7 +224,7 @@ def pretty_slices(scores, times=None, sig=None, sig_diagoff=None, tois=None,
     else:
         sig_diag = None
     for sel_time, ax in zip(tois, reversed(axes)):
-        # Select TOI
+        #Select TOI
         idx = np.argmin(abs(times - sel_time))
         scores_off = scores[:, idx, :] #averages over training time
         sig_off = sig[idx, :] if sig is not None else None
@@ -260,7 +249,7 @@ def pretty_slices(scores, times=None, sig=None, sig_diagoff=None, tois=None,
         ax.set_yticklabels(['%.2f' % ymin, 'chance', '%.2f' % ymax])
         ax.plot([sel_time] * 2, [ymin, scores_off.mean(0)[idx]],
                 color=colors[1], zorder=-2)
-        # Add indicator
+        #Add indicator
         ax.text(sel_time, ymin + .05 * np.ptp([ymin, ymax]),
                 '%i ms' % (np.array(sel_time) * 1e3),
                 color=colors[1], backgroundcolor='w', ha='center', zorder=-1)
