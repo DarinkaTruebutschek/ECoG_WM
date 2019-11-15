@@ -1,7 +1,7 @@
 ###Purpose: Basic stats functions of interest (adapted from J.R. King)
-###Project: MenRot
+###Project: ECoG
 ###Author: Darinka Trubutschek
-###Date: 18 December 2017
+###Date: 15 November 2019
 
 import numpy as np
 
