@@ -18,7 +18,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import roc_auc_score
 from sklearn.feature_selection import SelectKBest, f_classif
 
-def binaryClassif(data_train, label_train, data_test, label_test, generalization=False, proba=False, n_folds=5, predict_mode='cross-validation'):
+def binaryClassif(data_train, label_train, data_test, label_test, generalization=False, proba=False, n_folds=5, predict_mode='cross-validation', scoring=None):
 	"""
 	This function performs a binary classification task.
 	"""
@@ -34,16 +34,24 @@ def binaryClassif(data_train, label_train, data_test, label_test, generalization
 	#Pipeline
 	clf = make_pipeline(scaler, model)
 
+	#Scoring
+	if scoring is 'auc':
+		scorer = 'roc_auc'
+
 	##########################################
 	#Learning process
-	time_gen = GeneralizingEstimator(clf, scoring=None, n_jobs=-1, verbose=True)
+	if generalization:
+		time_gen = GeneralizingEstimator(clf, scoring=scorer, n_jobs=-1, verbose=True)
+	else:
+		time_gen = SlidingEstimator(clf, scoring=scorer, n_jobs=-1, verbose=True)
 
 	if predict_mode == 'cross-validation':
 		y_pred_all = []
 		test_index_all = []
+		scores = []
 
 		#Hard-code cv
-		cv = StratifiedKFold(n_folds)
+		cv = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=42)
 		print (cv)
 
 		for train_index, test_index in cv.split(data_train, label_train):
@@ -57,17 +65,26 @@ def binaryClassif(data_train, label_train, data_test, label_test, generalization
 
 			#Test on X_test
 			y_pred = time_gen.predict_proba(X_test)
+			print(np.shape(y_pred))
 
 			#Concatenate all predictions and test indices to be able to later on compute accuracy for multiple labels
 			y_pred_all.append(y_pred)
 			test_index_all.append(test_index)
 
-		#predictions = cross_val_multiscore(time_gen, X_train, y_train, cv=cv, n_jobs=-1) #matrix of size n_folds, n_labels, n_times
+			#Score 
+			if scoring is not None:
+				score_fold = time_gen.score(X_test, y_test)
+				scores.append(score_fold)
+
+		if scoring is not None:
+			scores = np.asarray(scores)
+			scores = np.mean(scores, axis=0)
+
 	elif predict_mode == 'mean-prediction':
 		time_gen.fit(X_train, y_train)
 		y_pred_all = time_gen.predict(X_test)
 
-	return time_gen, y_pred_all, test_index_all
+	return time_gen, y_pred_all, test_index_all, scores
 
 
 

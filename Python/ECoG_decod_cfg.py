@@ -13,7 +13,7 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #Preprocessing
-bl = [-0.15, 0]
+bl = [-0.14, 0]
 blc = 1 #baseline correction or not?
 
 ##########################################
@@ -30,8 +30,8 @@ decCond = 'indItems'
 
 generalization = 0 #0 = diagonal only, 1 = full matrix
 
-trainTime = [bl[0], 4.7]
-testTime = [bl[0], 4.7]
+trainTime = [bl[0], 4.3]
+testTime = [bl[0], 4.3]
 
 #CV
 n_folds = 5
@@ -39,3 +39,6 @@ predict_mode = 'cross-validation' #or mean-prediction
 
 #Specific to SVM
 proba = True #determines whether or not the output will be continous or not
+
+#Score
+score_method = 'auc'
