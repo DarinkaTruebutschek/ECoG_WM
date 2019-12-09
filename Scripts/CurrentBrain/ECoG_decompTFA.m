@@ -12,8 +12,9 @@ clc;
 ECoG_setPath;
 
 %% Define important variables
-%subnips = {'EG_I', 'HL', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'}; %subject KR has a different sampling frequency, to be checked carefully
-subnips = {'AP'};
+subnips = {'EG_I', 'HL', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'}; %subject KR has a different sampling frequency, to be checked carefully
+subnips = {'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'HL'};
+subnips = {'HL'};
 
 tfa_method = 'wavelet';
 
@@ -26,15 +27,15 @@ if strcmp(tfa_method, 'wavelet')
     freqoi = logspace(log10(minf), log10(maxf), nfreqs);
     freqoi = unique(round(freqoi));
     
-    %Chosen time window will last from -0.45s prior to cue onset to 500 ms
+    %Chosen time window will last from -0.445s prior to cue onset to 150 ms
     %post probe onset
-    toi = [-0.45 : 0.01 : 5.0];
+    toi = [-0.44 : 0.01 : 4.650];
 end
 
 %% Loop over subjects to decompose signal into time-frequency spectrum and save the resultant data file
 for subi = 1 : length(subnips)
     
-    if ~exist([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet.mat'])
+    if exist([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet.mat'])
         
         %Load initial data
         load([res_path subnips{subi} '/' subnips{subi} '_reref.mat']);
@@ -43,7 +44,41 @@ for subi = 1 : length(subnips)
         if reref.fsample ~= 1000
             disp('ATTENTION! Sample frequency deviates from 1000.');
         end
-    
+        
+        %Check whether timing axis begins at the exact same time or not
+        for triali = 1 : length(reref.time)
+            begin_t(triali) = reref.time{triali}(1);
+        end
+        
+        if numel(unique(begin_t))
+            display('ATTENTION! Adjusting time axis to facilitate following analyses');
+            
+            my_difference = begin_t - (-.45); 
+            
+            %Adjust be measured differences
+            for triali = 1 : length(reref.time)
+                tmp{triali} = reref.time{triali} - my_difference(triali);
+            end
+            
+            %Re-check
+            for triali = 1 : length(reref.time)
+                begin_t2(triali) = tmp{triali}(1);
+            end
+            
+            display(num2str(unique(begin_t2(triali))));
+            
+            pause;
+            
+            reref.time = tmp;
+        end
+            
+        %Select data to only include the time window of interest to begin
+        %with
+        cfg = [];
+        cfg.latency = [toi(1), toi(end)];
+        
+        tmp = ft_selectdata(cfg, reref);
+        
         cfg = [];
         cfg.method = 'tfr';
         cfg.output = 'pow'; % fourier to get complex values, pow to get power
@@ -51,8 +86,9 @@ for subi = 1 : length(subnips)
         cfg.foi = freqoi;
         cfg.toi = toi;
         cfg.width = 5; 
+        cfg.pad = 'nextpow2';
     
-        freq = ft_freqanalysis(cfg, reref);
+        freq = ft_freqanalysis(cfg, tmp);
     
         %Add missing info to frequency structure
         freq.elec = reref.elec;
@@ -95,7 +131,7 @@ for subi = 1 : length(subnips)
         pial_right = ft_determine_coordsys(pial_right);
     end   
     
-    [channels_left, channels_right] = ECoG_subjInfo(subnips{subi}, 'grid');
+    [channels_left, channels_right] = ECoG_subjInfo(subnips{subi}, 'depth');
     
     %Create the necessary layout
     cfg = [];

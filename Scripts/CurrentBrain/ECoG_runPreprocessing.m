@@ -647,7 +647,7 @@ save([res_path subnips{1} '/' subnips{1} '_filtered.mat'], 'data_filtered', '-v7
 if ~strcmp(subnips{1}, 'MG') && ~strcmp(subnips{1}, 'KR') && ~strcmp(subnips{1}, 'KJ_I') && ~strcmp(subnips{1}, 'LJ') && ~strcmp(subnips{1}, 'AS') && ~strcmp(subnips{1}, 'HL')
     data_combined = rmfield(data_filtered{1}, {'hdr', 'cfg', 'trial'});
     data_combined.trial = {[data_filtered{1}.trial{1}, data_filtered{2}.trial{1}]};
-    data_combined.time = {[data_filtered{1}.time{1} (data_filtered{2}.time{1} + max(data_filtered{1}.time{1}) + 1/data_filtered{1}.fsample)]};
+    data_combined.time = {[data_filtered{1}.time{1}, (data_filtered{2}.time{1} + max(data_filtered{1}.time{1}) + 1/data_filtered{1}.fsample)]};
     data_combined.sampleinfo = size(data_combined.time{1});
 
     trl_combined = [trl{1};(trl{2} + max(data_filtered{1}.sampleinfo))];
