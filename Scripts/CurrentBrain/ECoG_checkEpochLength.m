@@ -11,7 +11,7 @@ clc;
 ECoG_setPath;
 
 %% Define important variables
-subnips = {'EG_I', 'HL', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'};
+subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'HL'};
 
 %% Check min epch length
 for subi = 1 : length(subnips)
