@@ -13,12 +13,12 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #Preprocessing
-bl = [-0.14, 0]
 blc = 1 #baseline correction or not?
 
 ##########################################
 #TF parameters
-fmethod = 'tfa_wavelet'
+#fmethod = 'tfa_wavelet'
+fmethod = 'erp'
 
 ##########################################
 #Inclusion parameters
@@ -30,8 +30,14 @@ decCond = 'indItems'
 
 generalization = 0 #0 = diagonal only, 1 = full matrix
 
-trainTime = [bl[0], 4.3]
-testTime = [bl[0], 4.3]
+if fmethod is 'tfa_wavelet':
+	bl = [-0.14, 0] #baseline window
+	trainTime = [bl[0], 4.3]
+	testTime = [bl[0], 4.3]
+else:
+	bl = [-0.2, 0]
+	trainTime = [bl[0], 4.4985]
+	testTime = [bl[0], 4.4985]
 
 #CV
 n_folds = 5

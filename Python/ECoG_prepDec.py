@@ -21,7 +21,10 @@ def ECoG_prepDec(decCond, subject, foi):
 	##########################################
 	#Load data (X)
 	fname = data_path + subject + '/' +  subject + '_' + fmethod + '.mat'
-	data = ECoG_fldtrp2mne(fname, 'freq', 'tfa') #for tfa data, this is a 4d-matrix of size n_trials, n_channels, n_freqs, n_times
+	if fmethod is 'tfa_wavelet':
+		data = ECoG_fldtrp2mne(fname, 'freq', 'tfa') #for tfa data, this is a 4d-matrix of size n_trials, n_channels, n_freqs, n_times
+	elif fmethod is 'broadband_erp':
+		data = ECoG_fldtrp2mne(fname, 'data', 'erp') #for erp data, this is a 3d-matrix of sixe n_trials, n_channels, n_freqs, n_times
 
 	#Preprocess data: Extract specific frequencies, apply baseline correction, and then average over those frequencies
 	_, foi_1 = find_nearest(data.freqs, foi[0])

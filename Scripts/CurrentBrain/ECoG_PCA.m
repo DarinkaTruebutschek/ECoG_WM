@@ -22,7 +22,6 @@ time = [tmin : 0.004 : tmax];
 %% Define important variables
 %subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'HL'}; %subject KR has a different sampling frequency, to be checked carefully
 subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'};
-%subnips = {'EG_I'};
 
 %% Load data
 for subi = 1 : length(subnips)
@@ -85,7 +84,7 @@ for subi = 1 : length(subnips)
     data.label_all = reref.label_all;
     data.elec_all = reref.elec_all;
     data.elec_mni_frv_all = reref.elec_mni_frv_all;
-    data.trialInfo_all = reref.trialInfo_all;
+    %data.trialInfo_all = reref.trialInfo_all;
 
     %Timelock
     cfg = [];
@@ -103,3 +102,5 @@ for subi = 1 : length(subnips)
     
     clear ('tmp', 'tmp1', 'tmp2', 'data');
 end
+
+%% Plot average erp (for anatomically-defined subsets of channels)

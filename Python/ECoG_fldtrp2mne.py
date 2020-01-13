@@ -11,6 +11,7 @@ import pymatreader
 import scipy.io as sio
 
 from mne.io.meas_info import create_info
+from mne.epochs import EpochsArray
 from mne.time_frequency.tfr import EpochsTFR
 
 def ECoG_fldtrp2mne(filename, var, data_type):
@@ -48,5 +49,31 @@ def ECoG_fldtrp2mne(filename, var, data_type):
 		info = create_info(chan_names, sfreq, chan_types)
 		power = EpochsTFR(info, data, times, freqs)
 
-	return power
+		return power
 
+	elif data_type is 'erp':
+		#Identify basic parameters
+		n_trials, n_channels, n_time = np.shape(ft_data['trial']) #ATTENTION: This presumes equal epoch length!
+
+		#Initialize data array
+		data = np.zeros((n_trials, n_channels, n_time))
+
+		for triali in range(n_trials):
+			data[triali, :, :] = ft_data['trial'][triali]
+
+		#Initialize channel array
+		chan_types = list(range(n_channels))
+
+		#Add necessary info
+		sfreq = float(ft_data['fsample']) 
+		times = ft_data['time']
+		chan_names = ft_data['label']
+
+		for chani in chan_types:
+			chan_types[chani] = 'ecog'
+
+		#Create info and epochs
+		info = create_info(chan_names, sfreq, chan_types)
+		epochs = EpochsArray(data, info, events=None, tmin=np.min(times), verbose=False)
+
+		return epochs
