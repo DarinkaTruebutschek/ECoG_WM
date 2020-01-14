@@ -23,19 +23,25 @@ def ECoG_prepDec(decCond, subject, foi):
 	fname = data_path + subject + '/' +  subject + '_' + fmethod + '.mat'
 	if fmethod is 'tfa_wavelet':
 		data = ECoG_fldtrp2mne(fname, 'freq', 'tfa') #for tfa data, this is a 4d-matrix of size n_trials, n_channels, n_freqs, n_times
-	elif fmethod is 'broadband_erp':
+
+		#Preprocess data: Extract specific frequencies, apply baseline correction, and then average over those frequencies
+		_, foi_1 = find_nearest(data.freqs, foi[0])
+		_, foi_2 = find_nearest(data.freqs, foi[1])
+
+		data.crop(tmin=bl[0], tmax=trainTime[1], fmin=foi_1, fmax=foi_2)
+
+		if blc:
+			data.apply_baseline(baseline=bl, mode='zscore', verbose=True)
+
+		data.data = np.mean(data.data, axis=2)
+
+	elif fmethod is 'erp':
 		data = ECoG_fldtrp2mne(fname, 'data', 'erp') #for erp data, this is a 3d-matrix of sixe n_trials, n_channels, n_freqs, n_times
 
-	#Preprocess data: Extract specific frequencies, apply baseline correction, and then average over those frequencies
-	_, foi_1 = find_nearest(data.freqs, foi[0])
-	_, foi_2 = find_nearest(data.freqs, foi[1])
+		#Preprocess data: Apply baseline correction 
 
-	data.crop(tmin=bl[0], tmax=trainTime[1], fmin=foi_1, fmax=foi_2)
-
-	if blc:
-		data.apply_baseline(baseline=bl, mode='zscore', verbose=True)
-
-	data.data = np.mean(data.data, axis=2)
+		if blc:
+			data.apply_baseline(baseline=bl, verbose=True)
 
 	##########################################
 	#Load labels (y)
@@ -46,12 +52,19 @@ def ECoG_prepDec(decCond, subject, foi):
 	trialInfo = trialInfo[trialInfo.EEG_included != 0]
 
 	#Sanity check: Do X and y have the same dimensions?
-	if np.shape(data.data)[0] != np.shape(trialInfo)[0]:
-		print('X and y do not have the same dimensions')
+	if fmethod is 'tfa_wavelet':
+		if np.shape(data.data)[0] != np.shape(trialInfo)[0]:
+			print('X and y do not have the same dimensions')
+	elif fmethod is 'erp':
+		if np.shape(data.get_data())[0] != np.shape(trialInfo)[0]:
+			print('X and y do not have the same dimensions')
 
 	##########################################
 	#Prepare X and y specifically
-	X_train = data.data
+	if fmethod is 'tfa_wavelet':
+		X_train = data.data
+	elif fmethod is 'erp':
+		X_train = data.get_data()
 
 	if decCond is 'indItems':
 		y_train = []

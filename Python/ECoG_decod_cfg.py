@@ -35,7 +35,7 @@ if fmethod is 'tfa_wavelet':
 	trainTime = [bl[0], 4.3]
 	testTime = [bl[0], 4.3]
 else:
-	bl = [-0.2, 0]
+	bl = (-0.2, 0)
 	trainTime = [bl[0], 4.4985]
 	testTime = [bl[0], 4.4985]
 
