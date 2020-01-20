@@ -1,7 +1,7 @@
-#Purpose: This function runs the decoding analysis in frequency space.
+#Purpose: This function runs the decoding analysis in erps.
 #Project: ECoG
 #Author: D.T.
-#Date: 14 October 2019
+#Date: 13 January 2020
 
 ##########################################
 #Load common libraries
@@ -44,8 +44,8 @@ for subi, subject in enumerate(ListSubjects):
 
 		model, predictions, cv_test, score_label = binaryClassif(X_train, y_train[:, labeli], X_test, y_test[:, labeli], generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
 
-		time_gen.append(model)
-		y_pred.append(predictions) #shape: n_labels x n_folds, within each label: n_folds x n_testTrials x n_trainTime x n_TestTime x n_labels
+		time_gen.append(model) #shape:n_labels
+		y_pred.append(predictions) #shape: n_labels x n_folds, within each label: n_folds x n_testTrials x n_TestTime x n_labels
 		test_index.append(cv_test) #shape: n_labels x n_folds
 		score.append(score_label)
 

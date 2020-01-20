@@ -39,7 +39,6 @@ def ECoG_prepDec(decCond, subject, foi):
 		data = ECoG_fldtrp2mne(fname, 'data', 'erp') #for erp data, this is a 3d-matrix of sixe n_trials, n_channels, n_freqs, n_times
 
 		#Preprocess data: Apply baseline correction 
-
 		if blc:
 			data.apply_baseline(baseline=bl, verbose=True)
 
@@ -64,7 +63,31 @@ def ECoG_prepDec(decCond, subject, foi):
 	if fmethod is 'tfa_wavelet':
 		X_train = data.data
 	elif fmethod is 'erp':
-		X_train = data.get_data()
+		if win_size is not False:
+			X_train_tmp = data.get_data() #n_trials x n_channels x n_timepoints (decoding done seperately on each time point)
+		else:
+			X_train = data.get_data()
+
+	#If temporal, and not spatial (default) pattern is to be decoded,
+	#extract the appropriate channels of interest, time window of interest,
+	#and reformat the data (aka: n_channels x n_trials x n_timebins of size n_timepoints)
+	if win_size is not False:
+
+		#Determine how many time points will be included as features given the requested window size
+		step_size_sample = data.info['sfreq']*step_size #step size expressed in n_samples
+		win_size_sample = data.info['sfreq']*win_size #window size expressed in n_samples
+		timebins_onset = np.arange(find_nearest(data.times, bl[0])[0], np.shape(data.times)[0], step_size_sample) #vector corresponding to the onset times of the timebins (in samples)
+
+		X_train = np.zeros((np.shape(X_train_tmp)[1], np.shape(X_train_tmp)[0], int(win_size_sample+1), np.shape(timebins_onset)[0]-1)) #initialize empty data matrix
+
+		for toi_i, toi in enumerate(timebins_onset):
+			if int(toi+win_size_sample+1) <= np.shape(data.times)[0]:
+				#print(toi_i, toi)
+				slices = X_train_tmp[:, :, int(toi) : int(toi+win_size_sample+1)] #remember that the last sample will be exluded, so we add 1
+				slices = np.transpose(slices, (1, 0, 2)) #n_channels x n_trials x n_timepoints
+				X_train[:, :, :, toi_i] = slices
+
+		del X_train_tmp
 
 	if decCond is 'indItems':
 		y_train = []
@@ -81,7 +104,11 @@ def ECoG_prepDec(decCond, subject, foi):
 	if acc:
 		sel = np.where((trialInfo.resp == 1) | (trialInfo.resp == 3))
 
-		X_train = X_train[sel]
+		if win_size is not False:
+			X_train = X_train[:, sel, :, :]
+			X_train = np.squeeze(X_train)
+		else:
+			X_train = X_train[sel]
 		y_train = np.squeeze(y_train[sel, :])
 
 	#Define train and test sets
@@ -92,4 +119,4 @@ def ECoG_prepDec(decCond, subject, foi):
 	print('Training on:', np.shape(X_train), np.shape(y_train))
 	print('Testing on:', np.shape(X_test), np.shape(y_test))
 
-	return X_train, y_train, X_test, y_test, data.times
+	return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset if 'timebins_onset' in locals() else None

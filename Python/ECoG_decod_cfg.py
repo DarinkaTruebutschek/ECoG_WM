@@ -12,13 +12,29 @@ result_path = wkdir + 'Results/Decoding/'
 script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
-#Preprocessing
-blc = 1 #baseline correction or not?
-
-##########################################
 #TF parameters
 #fmethod = 'tfa_wavelet'
 fmethod = 'erp'
+
+##########################################
+#Preprocessing
+blc = 1 #baseline correction or not?
+
+if fmethod is 'tfa_wavelet':
+	bl = [-0.14, 0] #baseline window
+	trainTime = [bl[0], 4.3]
+	testTime = [bl[0], 4.3]
+else:
+	bl = (-0.2, 0)
+	trainTime = [bl[0], 4.4985]
+	testTime = [bl[0], 4.4985]
+
+##########################################
+#Slice definition
+coi = 'all' #which specific channels will be included
+toi = [bl[0], 4.4985] #which time window will be considered (i.e., default: beginning of baseline until end of epoch)
+win_size = 0.1 #how many time points will be added as feature dimensions; in sec; if decoding is to be done independently on each time point, set to False
+step_size = 0.1 #where to begin with this
 
 ##########################################
 #Inclusion parameters
@@ -29,15 +45,6 @@ acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct
 decCond = 'indItems'
 
 generalization = 0 #0 = diagonal only, 1 = full matrix
-
-if fmethod is 'tfa_wavelet':
-	bl = [-0.14, 0] #baseline window
-	trainTime = [bl[0], 4.3]
-	testTime = [bl[0], 4.3]
-else:
-	bl = (-0.2, 0)
-	trainTime = [bl[0], 4.4985]
-	testTime = [bl[0], 4.4985]
 
 #CV
 n_folds = 5
