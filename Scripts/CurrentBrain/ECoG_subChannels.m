@@ -25,6 +25,12 @@ if strcmp(subnip, 'MKL')
         channelSelection = {{''}}';
     elseif strcmp(brainArea, 'parietal_r')
         channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_bl')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_l')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_r')
+        channelSelection = {{''}};
     end
     
 elseif strcmp(subnip, 'EG_I')
@@ -46,6 +52,12 @@ elseif strcmp(subnip, 'EG_I')
         channelSelection = {{''}}';
     elseif strcmp(brainArea, 'parietal_r')
         channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_bl')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_l')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_r')
+        channelSelection = {{''}};
     end
 
 elseif strcmp(subnip, 'HS')
@@ -67,27 +79,39 @@ elseif strcmp(subnip, 'HS')
         channelSelection = {{''}}';
     elseif strcmp(brainArea, 'parietal_r')
         channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_bl')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_l')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_r')
+        channelSelection = {{''}};
     end
 
 elseif strcmp(subnip, 'MG')
     if strcmp(brainArea, 'frontal_bl')
-        channelSelection = {{'FAL*', 'FBL*', 'FLL*', 'FAR*'}}';
+        channelSelection = {{'FL*'}}';
     elseif strcmp(brainArea, 'frontal_l')
-        channelSelection = {{'FAL*', 'FBL*', 'FLL*'}}';
-    elseif strcmp(brainArea, 'frontal_r')
-        channelSelection = {{'FAR*'}}';  
-    elseif strcmp(brainArea, 'temporal_bl')
         channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'frontal_r')
+        channelSelection = {{'FL*'}}';  
+    elseif strcmp(brainArea, 'temporal_bl')
+        channelSelection = {{'TLS*', 'TLI*', 'CA*', 'HIP*', 'TBP*'}}';
     elseif strcmp(brainArea, 'temporal_l')
         channelSelection = {{''}}';
     elseif strcmp(brainArea, 'temporal_r')
-        channelSelection = {{''}}';
+        channelSelection = {{'TLS*', 'TLI*', 'CA*', 'HIP*', 'TBP*'}};
     elseif strcmp(brainArea, 'parietal_bl')
-        channelSelection = {{''}}';
+        channelSelection = {{'CP*'}}';
     elseif strcmp(brainArea, 'parietal_l')
         channelSelection = {{''}}';
     elseif strcmp(brainArea, 'parietal_r')
+        channelSelection = {{'CP*'}}';
+    elseif strcmp(brainArea, 'occipital_bl')
+        channelSelection = {{'OB1*'}}';
+    elseif strcmp(brainArea, 'occipital_l')
         channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_r')
+        channelSelection = {{'OB1*'}};
     end
     
 elseif strcmp(subnip, 'KR')
@@ -109,6 +133,12 @@ elseif strcmp(subnip, 'KR')
         channelSelection = {{''}}';
     elseif strcmp(brainArea, 'parietal_r')
         channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_bl')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_l')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_r')
+        channelSelection = {{''}};
     end
 
 elseif strcmp(subnip, 'WS')
@@ -130,6 +160,12 @@ elseif strcmp(subnip, 'WS')
         channelSelection = {{''}}';
     elseif strcmp(brainArea, 'parietal_r')
         channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_bl')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_l')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_r')
+        channelSelection = {{''}};
     end
     
 elseif strcmp(subnip, 'KJ_I')
@@ -151,6 +187,12 @@ elseif strcmp(subnip, 'KJ_I')
         channelSelection = {{''}}';
     elseif strcmp(brainArea, 'parietal_r')
         channelSelection = {{'PLR*'}}';
+    elseif strcmp(brainArea, 'occipital_bl')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_l')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_r')
+        channelSelection = {{''}};
     end    
 
 elseif strcmp(subnip, 'LJ')
@@ -172,6 +214,12 @@ elseif strcmp(subnip, 'LJ')
         channelSelection = {{''}}';
     elseif strcmp(brainArea, 'parietal_r')
         channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_bl')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_l')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_r')
+        channelSelection = {{''}};
     end
 
 elseif strcmp(subnip, 'AS')
@@ -193,6 +241,12 @@ elseif strcmp(subnip, 'AS')
         channelSelection = {{''}}';
     elseif strcmp(brainArea, 'parietal_r')
         channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_bl')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_l')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_r')
+        channelSelection = {{''}};
     end
     
 elseif strcmp(subnip, 'SB')
@@ -214,6 +268,12 @@ elseif strcmp(subnip, 'SB')
         channelSelection = {{''}}';
     elseif strcmp(brainArea, 'parietal_r')
         channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_bl')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_l')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_r')
+        channelSelection = {{''}};
     end
     
 elseif strcmp(subnip, 'AP')
@@ -235,5 +295,11 @@ elseif strcmp(subnip, 'AP')
         channelSelection = {{''}}';
     elseif strcmp(brainArea, 'parietal_r')
         channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_bl')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_l')
+        channelSelection = {{''}}';
+    elseif strcmp(brainArea, 'occipital_r')
+        channelSelection = {{''}};
     end
 end

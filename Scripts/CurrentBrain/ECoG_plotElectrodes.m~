@@ -15,13 +15,12 @@ clc;
 subnips = {'MKL', 'EG_I', 'HS', 'MG', 'KR', 'WS', 'KJ_I', 'LJ', 'AS', 'SB', 'AP'};
 
 %channelSelection = {{'CP*', 'FL*', 'TLS*', 'TLI*', 'CA*', 'HIP*', 'TBP*', 'OB*'}}';
-hemi = 'left';
-viewside = 'medial';
+hemi = 'right';
+viewside = 'lateral';
 
 %For plotting
 %my_colors = cbrewer('div', 'Spectral', 12); %use this when plotting single subjects
-%my_colors = cbrewer('div', 'Spectral', length(subnips));
-my_colors = cbrewer('qual', 'Paired', length(subnips));
+my_colors = cbrewer('div', 'Spectral', length(subnips));
 
 %% Import necessary paths
 ECoG_setPath;
@@ -110,38 +109,42 @@ light('Position', view_position);
 for subi = 1 : length(subnips)
     display(subnips{subi});
     
-%     %Quick fix to be able to plot subjects with less than three channels
-%     if ~isempty(channels{subi}.chanpos) && size(channels{subi}.chanpos, 1) < 3
-%         
-%         display('Adding dummy electrode for plotting purposes only ... ');
-%         
-%         %Update matrix
-%         channels{subi}.chanpos(end+1, :) = channels{subi}.chanpos(end, :)+diff(channels{subi}.chanpos);
-%         channels{subi}.chantype{end+1} = 'eeg';
-%         channels{subi}.chanunit{end+1} = 'V';
-%         channels{subi}.elecpos(end+1, :) = channels{subi}.elecpos(end, :)+diff(channels{subi}.elecpos);
-%         channels{subi}.label{end+1} = 'dummy_electrode';
-%         
-%         channels{subi}.tra = eye(size(channels{subi}.label, 1));
-%         
-%         %Update color information
-%         color_tmp = my_colors(subi, :);
-%         color_tmp = repmat(color_tmp, size(channels{subi}.tra, 1)-1, 1);
-%         color_tmp(end+1, :) = [.9, .9, .9]; %same as brain
-%         
-%         color_edge = ones(1, 3);
-%         color_edge = repmat(color_edge, size(channels{subi}.tra, 1)-1, 1);
-%         color_edge(end+1, :) = color_tmp(end, :);
-%         
-%         %my_handle = ft_plot_sens(channels{subi}, 'elecshape', 'point', 'elecsize', 30, 'facecolor', color_tmp, 'facealpha', 1);
-%         my_handle= plot3(channels{subi}.chanpos(:, 1), channels{subi}.chanpos(:, 2), channels{subi}.chanpos(:, 3), 'o', 'MarkerFaceColor', color_tmp(subi, :), 'MarkerEdgeColor', color_edge, 'MarkerSize', 6, 'DisplayName', subnips{subi});
-%     end
+    %Quick fix to be able to plot subjects with less than three channels
+    if ~isempty(channels{subi}.chanpos) && size(channels{subi}.chanpos, 1) < 3
+        
+        display('Adding dummy electrode for plotting purposes only ... ');
+        
+        %Update matrix
+        channels{subi}.chanpos(end+1, :) = channels{subi}.chanpos(end, :)+diff(channels{subi}.chanpos);
+        channels{subi}.chantype{end+1} = 'eeg';
+        channels{subi}.chanunit{end+1} = 'V';
+        channels{subi}.elecpos(end+1, :) = channels{subi}.elecpos(end, :)+diff(channels{subi}.elecpos);
+        channels{subi}.label{end+1} = 'dummy_electrode';
+        
+        channels{subi}.tra = eye(size(channels{subi}.label, 1));
+        
+        %Update color information
+        color_tmp = my_colors(subi, :);
+        color_tmp = repmat(color_tmp, size(channels{subi}.tra, 1)-1, 1);
+        color_tmp(end+1, :) = [.9, .9, .9]; %same as brain
+        
+        color_edge = repmat(color_tmp, size(channels{subi}.tra, 1)-1, 1);
+        color_edge(
+        color_edge(end+1) = color_tmp(end, :);
+        
+        %my_handle = ft_plot_sens(channels{subi}, 'elecshape', 'point', 'elecsize', 30, 'facecolor', color_tmp, 'facealpha', 1);
+        my_handle= plot3(channels{subi}.chanpos(:, 1), channels{subi}.chanpos(:, 2), channels{subi}.chanpos(:, 3), 'o', 'MarkerFaceColor', color_tmp(subi, :), 'MarkerEdgeColor', 'k', 'MarkerSize', 6, 'DisplayName', subnips{subi});
+    end
     
+    %my_handle = ft_plot_sens(channels{subi}, 'elecshape', 'point', 'elecsize', 30, 'facecolor', my_colors(subi, :), 'facealpha', 1);
     if ~isempty(channels{subi}.chanpos)
         my_handle = plot3(channels{subi}.chanpos(:, 1), channels{subi}.chanpos(:, 2), channels{subi}.chanpos(:, 3), 'o', 'MarkerFaceColor', my_colors(subi, :), 'MarkerEdgeColor', 'k', 'MarkerSize', 6, 'DisplayName', subnips{subi});
+        %my_handle = plot3(channels{subi}.chanpos(:, 1), channels{subi}.chanpos(:, 2), channels{subi}.chanpos(:, 3), '.', 'Color', my_colors(subi, :), 'MarkerSize', 30, 'DisplayName', subnips{subi});
     else
         plot3(nan, nan, nan, 'o', 'MarkerFaceColor', my_colors(subi, :), 'MarkerEdgeColor', 'k', 'MarkerSize', 6, 'DisplayName', subnips{subi});
     end
+    
+
 end
 
 legend(subnips{:}, 'Location', 'best', 'NumColumns', 6);
