@@ -74,20 +74,40 @@ def ECoG_prepDec(decCond, subject, foi):
 	if win_size is not False:
 
 		#Determine how many time points will be included as features given the requested window size
-		step_size_sample = data.info['sfreq']*step_size #step size expressed in n_samples
-		win_size_sample = data.info['sfreq']*win_size #window size expressed in n_samples
-		timebins_onset = np.arange(find_nearest(data.times, bl[0])[0], np.shape(data.times)[0], step_size_sample) #vector corresponding to the onset times of the timebins (in samples)
+		step_size_sample = np.round(data.info['sfreq'])*step_size #step size expressed in n_samples
+		win_size_sample = np.round(data.info['sfreq'])*win_size #window size expressed in n_samples
+
+		if np.mod(.2, win_size) != 0: #first time bin should automatically correspond to the baseline period, with the first real time bin starting at cue onset
+			first_onset = find_nearest(data.times, bl[0])[0]
+			timebins_onset = np.arange(find_nearest(data.times, bl[1])[0], np.shape(data.times)[0], step_size_sample)
+			timebins_onset = np.hstack((first_onset, timebins_onset))
+		else:
+			timebins_onset = np.arange(find_nearest(data.times, bl[0])[0], np.shape(data.times)[0], step_size_sample) #vector corresponding to the onset times of the timebins (in samples)
+
+		#Display which times will actually be trained on
+		print(data.times[timebins_onset.astype(int)])
 
 		X_train = np.zeros((np.shape(X_train_tmp)[1], np.shape(X_train_tmp)[0], int(win_size_sample+1), np.shape(timebins_onset)[0]-1)) #initialize empty data matrix
 
 		for toi_i, toi in enumerate(timebins_onset):
 			if int(toi+win_size_sample+1) <= np.shape(data.times)[0]:
 				#print(toi_i, toi)
-				slices = X_train_tmp[:, :, int(toi) : int(toi+win_size_sample+1)] #remember that the last sample will be exluded, so we add 1
+				if (np.mod(.2, win_size) != 0) & (toi_i == 0):
+					slices = np.full((np.shape(X_train_tmp)[0], np.shape(X_train_tmp)[1], int(win_size_sample+1)), np.nan)
+					slices[:, :, toi_i : int(np.diff((timebins_onset[0], timebins_onset[1]))+1)] = X_train_tmp[:, :, int(toi) : int(timebins_onset[1])+1] #first time bin encompasses baseline period
+				else:
+					slices = X_train_tmp[:, :, int(toi) : int(toi+win_size_sample+1)] #remember that the last sample will be exluded, so we add 1
 				slices = np.transpose(slices, (1, 0, 2)) #n_channels x n_trials x n_timepoints
 				X_train[:, :, :, toi_i] = slices
 
 		del X_train_tmp
+
+		#Take relative baseline if need be (i.e., subtract the mean within each time bin seperately for each trial and channel)
+		if rel_blc:
+			my_mean = np.mean(X_train, axis=2)
+
+			for t, timepoint in enumerate(np.arange(np.shape(X_train)[2])):
+				X_train[:, :, t, :] = X_train[:, :, t, :] - my_mean
 
 	if decCond is 'indItems':
 		y_train = []

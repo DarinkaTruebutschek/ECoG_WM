@@ -4,7 +4,7 @@
 %Author: D.T.
 %Date: 23 May 2019
 
-function electrodes = ECoG_splitElectrodes(dataIn, chansel)
+function [electrodes, ind] = ECoG_splitElectrodes(dataIn, chansel)
 
 electrodes = dataIn;
 

@@ -73,5 +73,5 @@ line_color = sns.color_palette("colorblind")
 
 #Font properties
 font_name = 'Arial'
-font_size = 12
-font_weight = 'bold'
+font_size = 6
+font_weight = 'normal'

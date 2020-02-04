@@ -18,7 +18,8 @@ fmethod = 'erp'
 
 ##########################################
 #Preprocessing
-blc = 1 #baseline correction or not?
+blc = 0 #baseline correction or not?
+rel_blc = 1 #relative baseline correction or not?
 
 if fmethod is 'tfa_wavelet':
 	bl = [-0.14, 0] #baseline window
@@ -33,8 +34,8 @@ else:
 #Slice definition
 coi = 'all' #which specific channels will be included
 toi = [bl[0], 4.4985] #which time window will be considered (i.e., default: beginning of baseline until end of epoch)
-win_size = 0.1 #how many time points will be added as feature dimensions; in sec; if decoding is to be done independently on each time point, set to False
-step_size = 0.1 #where to begin with this
+win_size = 0.5 #how many time points will be added as feature dimensions; in sec; if decoding is to be done independently on each time point, set to False
+step_size = 0.5 #where to begin with this
 
 ##########################################
 #Inclusion parameters
