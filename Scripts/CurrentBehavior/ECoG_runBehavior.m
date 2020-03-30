@@ -17,9 +17,9 @@ addpath(script_path);
 addpath(toolbox_path);
 
 %% Define important variables
-subnips = {'MKL','EG_I','HS','MG','KR','WS','KJ_I','LJ','AS','SB','HL','AP'}; %all available subjects included in analysis
+subnips = {'MKL','EG_I','HS','MG','KR','WS','KJ_I','LJ','AS','SB','HL','AP', 'MV'}; %all available subjects included in analysis
 subnips = {'MKL','EG_I','HS','MG','KR','KJ_I','AS','SB','AP'}; %all subjects included in analysis
-%subnips = {'MKL'};
+subnips = {'CD'};
 condition = 'memory';
 
 %% Extract behavioral data from original files and save as a .mat file
@@ -64,6 +64,10 @@ for subi = 1 : length(subnips)
             dirname = [dat_path subnips{subi} '/Explogs/'];
         case 'AK_001'
             dirname = [dat_path subnips{subi} '/Explogs/'];
+        case 'MV'
+            dirname = [dat_path subnips{subi} '/Explogs/'];
+        case 'CD'
+            dirname = [dat_path subnips{subi} '/Explogs/'];
     end
 
     [data_mem, data_reward] = ECoG_getBehavior(dirname);
@@ -85,18 +89,18 @@ for subi = 1 : length(subnips)
     
     %Plot inividual data
     plotPrettyBar(no_rule{subi}, cbrewer('qual', 'Set1', 2), [], [], {'', '# trials'}, {'', 'Rule1', 'Rule2', ''}, 0);
-    %printfig(gcf, [0 0 5 8], [res_path subnips{subi} '_NoTrials_Rule.tiff']);
+    printfig(gcf, [0 0 5 8], [res_path subnips{subi} '_NoTrials_Rule.tiff']);
     
     plotPrettyBar(no_load{subi}, cbrewer('seq', 'Greens', 3), [], [], {'', '# trials'}, {'', 'Load1', 'Load2', 'Load3', ''}, 0);
-    %printfig(gcf, [0 0 6 8], [res_path subnips{subi} '_NoTrials_Load.tiff']);
+    printfig(gcf, [0 0 6 8], [res_path subnips{subi} '_NoTrials_Load.tiff']);
     
     plotPrettyBar(no_rule_stimID{subi}(1, :), cbrewer('seq', 'OrRd', 10), [], [], {'', '# trials'}, {'', 'Stim1', 'Stim2', 'Stim3', 'Stim4', 'Stim5', ...
         'Stim6', 'Stim7', 'Stim8', 'Stim9', 'Stim10', ''}, 0);
-    %printfig(gcf, [0 0 15 8], [res_path subnips{subi} '_NoTrials_StimxRule_1.tiff']);
+    printfig(gcf, [0 0 15 8], [res_path subnips{subi} '_NoTrials_StimxRule_1.tiff']);
     
     plotPrettyBar(no_rule_stimID{subi}(2, :), cbrewer('seq', 'Blues', 10), [], [], {'', '# trials'}, {'', 'Stim1', 'Stim2', 'Stim3', 'Stim4', 'Stim5', ...
         'Stim6', 'Stim7', 'Stim8', 'Stim9', 'Stim10', ''}, 0);
-    %printfig(gcf, [0 0 15 8], [res_path subnips{subi} '_NoTrials_StimxRule_2.tiff']);
+    printfig(gcf, [0 0 15 8], [res_path subnips{subi} '_NoTrials_StimxRule_2.tiff']);
     
     close all;
     pause;

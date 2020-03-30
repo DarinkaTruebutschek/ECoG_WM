@@ -566,14 +566,7 @@ for sessi = 1 : length(raw_data_file)
         
         tmp{sessi} = ismember(annotations, realTrigs);
         trigval{sessi} = annotations(tmp{sessi});
-        trigval{sessi} = cellfun(@str2num, trigval{sessi});
-        
-        trigsamp{sessi} = double(events(1, tmp{sessi}));
-        
-        %Check whether the triggers seem to make sense
-        figure;
-        plot(trigsamp{sessi}, trigval{sessi});
-    end
+        trigsamp{sessi} = double(events(1, tmp{sessi});
 end
 
 %% Check triggers and compare them to the behavioral data
@@ -595,7 +588,7 @@ if data{1}.fsample ~= 1000
     display('Attention! Different sample frequency ...');
 end
 
-if ~strcmp(subnips, 'KJ_I') && ~ strcmp(subnips, 'SB') && ~strcmp(subnips, 'HL') && ~strcmp(subnips, 'MKL') && ~strcmp(subnips, 'MV')
+if ~strcmp(subnips, 'KJ_I') && ~ strcmp(subnips, 'SB') && ~strcmp(subnips, 'HL') && ~strcmp(subnips, 'MKL')
     for sessi = 1 : length(raw_data_file)
         trl{sessi} = [alltimes{sessi}(:, 2)-450, alltimes{sessi}(:, 7), ones(size(alltrig{sessi}, 1), 1)*-450];  %matrix: [beginning sample, end sample, offset of 
     end
@@ -610,11 +603,7 @@ elseif strcmp(subnips, 'KJ_I') || strcmp(subnips, 'SB') || strcmp(subnips, 'MKL'
 elseif strcmp(subnips, 'HL') %sampling frequency of 200!
       for sessi = 1 : length(raw_data_file)
         trl{sessi} = [alltimes{sessi}(:, 2)-90, alltimes{sessi}(:, 7), ones(size(alltrig{sessi}, 1), 1)*-90];  %matrix: [beginning sample, end sample, offset of 
-      end
-elseif strcmp(subnips, 'MV') %sampling frequency of 5000
-    for sessi = 1 : length(raw_data_file)
-         trl{sessi} = [alltimes{sessi}(:, 2)-2250, alltimes{sessi}(:, 7), ones(size(alltrig{sessi}, 1), 1)*-2250];  %matrix: [beginning sample, end sample, offset of 
-    end  
+    end
 end
 
 %% Exclude non-EEG channels
@@ -642,8 +631,6 @@ elseif strcmp(subnips{1}, 'HL')
     channels = {'BAR*', 'ALR*', 'PLR*', 'MER*', 'SMR*', 'MEL*'};
 elseif strcmp(subnips{1}, 'AP')
     channels = {'TLL*', 'TAL*', 'TML*', 'TPL*', 'TLR*', 'TAR*', 'TMR*', 'TPR*'};
-elseif strcmp(subnips{1}, 'MV')
-    channels = {'FL*', 'TLL*', 'HL*', 'TBL*', 'HR*'};
 end
 
 cfg = [];

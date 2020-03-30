@@ -80,7 +80,7 @@ my_title = {'Precue baseline', 'Cue', 'Delay 1', 'Memory array', 'Delay 2', 'RT'
 figure;
 for eventi = 1 : size(durations, 2)
     subplot(2, 3, eventi);
-    hist(durations(:, eventi) / sampfreq, 20)
+    hist(durations(:, eventi) / sampfreq, 30)
     title(my_title{eventi});
     xlabel('Duration (s)');
 end

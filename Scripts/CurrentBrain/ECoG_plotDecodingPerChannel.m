@@ -12,11 +12,11 @@ clc;
 
 subnips = {'MKL', 'EG_I', 'HS', 'MG', 'KR', 'WS', 'KJ_I', 'LJ', 'AS', 'SB', 'AP'};
 
-hemi = 'right';
+hemi = 'left';
 viewside = 'lateral';
 
-score_type = 'bl';
-filename = 'erp_TimDim_timeBin_500_stepSize_500';
+score_type = 'postItem';
+filename = 'erp_TimDim_timeBin_500_stepSize_500_meanSubtraction';
 
 %For plotting
 my_colors = cbrewer('seq', 'YlOrRd', 12);
