@@ -15,10 +15,10 @@ from ECoG_decoders import binaryClassif
 
 ##########################################
 #Define important variables
-#ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'AS', 'AP', 'KR']
-ListSubjects = ['KR']
+ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'AS', 'AP', 'KR', 'CD']
+#ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG']
 #ListFreqs = [[8, 12], [13, 30], [31, 70], [71, 160]]
-ListFilenames = ['erp']
+ListFilenames = ['erp_100']
 
 if generalization:
 	gen_filename = 'timeGen'
@@ -39,19 +39,23 @@ for subi, subject in enumerate(ListSubjects):
 	test_index = []
 	score = []
 
-	for labeli, _ in enumerate(range(np.shape(y_train)[1])):
-		print('Running decoding on label ', labeli)
+	if decCond is 'indItems':
+		for labeli, _ in enumerate(range(np.shape(y_train)[1])):
+			print('Running decoding on label ', labeli)
 
-		model, predictions, cv_test, score_label = binaryClassif(X_train, y_train[:, labeli], X_test, y_test[:, labeli], generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
-
-		time_gen.append(model) #shape:n_labels
-		y_pred.append(predictions) #shape: n_labels x n_folds, within each label: n_folds x n_testTrials x n_TestTime x n_labels
-		test_index.append(cv_test) #shape: n_labels x n_folds
-		score.append(score_label)
+			model, predictions, cv_test, score_label = binaryClassif(X_train, y_train[:, labeli], X_test, y_test[:, labeli], generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
+	else:	
+		model, predictions, cv_test, score_label = binaryClassif(X_train, y_train, X_test, y_test, generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
+		
+	time_gen.append(model) #shape:n_labels
+	y_pred.append(predictions) #shape: n_labels x n_folds, within each label: n_folds x n_testTrials x n_TestTime x n_labels
+	test_index.append(cv_test) #shape: n_labels x n_folds
+	score.append(score_label)
 
 	#Compute average score for all labels
 	score = np.asarray(score)
-	if score.ndim > 2:
+	if decCond is 'indItems':
+	#if score.ndim > 2:
 		average_score = np.mean(score, axis=0)
 
 	#Save all data
@@ -64,8 +68,9 @@ for subi, subject in enumerate(ListSubjects):
 	np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_test_index.npy', test_index, allow_pickle=True)
 	np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_score.npy', score, allow_pickle=True)
 
-	if score.ndim > 2:
-		np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[freqi] + '_average_score.npy', average_score, allow_pickle=True)
+	if decCond is 'indItems':
+	#if score.ndim > 2:
+		np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_average_score.npy', average_score, allow_pickle=True)
 
 
 

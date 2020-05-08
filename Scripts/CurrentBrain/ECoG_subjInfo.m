@@ -150,5 +150,18 @@ switch char(subnip)
                 channels_left = {'TLL*', 'TAL*', 'TPL*'};
                 channels_right = {'TLR*', 'TAR*', 'TMR*', 'TPR*'};
            end
+    case 'CD'
+           switch char(elecType)
+            case 'grid'
+                channels_left = {};
+                channels_right = {};
+            case 'depth'
+                channels_left = {'CA*', 'HKL*', 'HDL*'};
+                channels_right = {}; 
+            case 'all'
+                channels_left = {'TLL*', 'TAL*', 'TPL*'};
+                channels_right = {'TLR*', 'TAR*', 'TMR*', 'TPR*'};
+           end
+
 end
 end

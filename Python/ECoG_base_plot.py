@@ -280,8 +280,7 @@ def pretty_plot(ax=None):
     return ax
 
 
-def pretty_colorbar(im=None, ax=None, ticks=None, ticklabels=None, nticks=3,
-                    **kwargs):
+def pretty_colorbar(im=None, ax=None, ticks=None, ticklabels=None, nticks=3, **kwargs):
 
     if ax is None:
         ax = plt.gca()
@@ -301,7 +300,7 @@ def pretty_colorbar(im=None, ax=None, ticks=None, ticklabels=None, nticks=3,
     cb = plt.colorbar(im, ax=ax, ticks=ticks, **kwargs)
     if ticklabels is None:
         ticklabels = ['%.2f' % ii for ii in ticks]
-    cb.ax.set_yticklabels(ticklabels, color='dimgray', fontdict = {'fontname': 'Times New Roman', 'fontsize': 14})
+    cb.ax.set_yticklabels(ticklabels, color='dimgray', fontdict={'fontname': 'Arial', 'fontsize': 12})
     cb.ax.xaxis.label.set_color('dimgray')
     cb.ax.yaxis.label.set_color('dimgray')
     cb.ax.spines['left'].set_color('dimgray')

@@ -14,7 +14,7 @@ ECoG_setPath;
 %% Define important variables
 subnips = {'EG_I', 'HL', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'}; %subject KR has a different sampling frequency, to be checked carefully
 subnips = {'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'HL'};
-subnips = {'HL'};
+subnips = {'CD'};
 
 tfa_method = 'wavelet';
 
@@ -35,7 +35,7 @@ end
 %% Loop over subjects to decompose signal into time-frequency spectrum and save the resultant data file
 for subi = 1 : length(subnips)
     
-    if exist([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet.mat'])
+    if ~exist([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet.mat'])
         
         %Load initial data
         load([res_path subnips{subi} '/' subnips{subi} '_reref.mat']);
@@ -99,8 +99,8 @@ for subi = 1 : length(subnips)
     
         %Save
         save([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet.mat'], 'freq', '-v7.3');
-    else
-        display(['TFA decomposition file already exists for subject: ' subnips{subi}]);
+    %else
+        %display(['TFA decomposition file already exists for subject: ' subnips{subi}]);
     end
 end
 

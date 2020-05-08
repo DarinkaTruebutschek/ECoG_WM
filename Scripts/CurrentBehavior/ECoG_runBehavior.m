@@ -19,7 +19,7 @@ addpath(toolbox_path);
 %% Define important variables
 subnips = {'MKL','EG_I','HS','MG','KR','WS','KJ_I','LJ','AS','SB','HL','AP', 'MV'}; %all available subjects included in analysis
 subnips = {'MKL','EG_I','HS','MG','KR','KJ_I','AS','SB','AP'}; %all subjects included in analysis
-subnips = {'CD'};
+subnips = {'SB_Sept19'};
 condition = 'memory';
 
 %% Extract behavioral data from original files and save as a .mat file
@@ -67,6 +67,10 @@ for subi = 1 : length(subnips)
         case 'MV'
             dirname = [dat_path subnips{subi} '/Explogs/'];
         case 'CD'
+            dirname = [dat_path subnips{subi} '/Explogs/'];
+        case 'SM'
+            dirname = [dat_path subnips{subi} '/Explogs/'];
+        case 'SB_Sept19'
             dirname = [dat_path subnips{subi} '/Explogs/'];
     end
 

@@ -71,6 +71,16 @@ tmp2 = alltimes(tmp, :);
 alltrig = tmp1;
 alltimes = tmp2;
 
+if strcmp(subject, 'SB_Sept19')
+    [tmp, ~] = find(alltrig(:, 1)~=0);
+    tmp1 = alltrig(tmp, :);
+    tmp2 = alltimes(tmp, :);
+    
+    alltrig = tmp1;
+    alltimes = tmp2;
+end
+
+
 %Then, check that timing of individual events is appropriate
 for triali = 1 : size (alltrig, 1)
     durations(triali, :) = diff(alltimes(triali, :));

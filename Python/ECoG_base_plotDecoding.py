@@ -5,25 +5,34 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.ma as ma
 
 from ECoG_base_plot import pretty_plot, plot_sem, plot_widths, pretty_colorbar
-from ECoG_plotDecoding_cfg import font_name, font_size, font_weight
+from ECoG_plotDecoding_cfg import font_name, font_size, font_weight, font_name_gen, font_size_gen, font_weight_gen
 
 
 def pretty_gat(scores, times=None, chance=0, ax=None, sig=None, cmap='RdBu_r',
                clim=None, colorbar=True, xlabel='Test Times',
                ylabel='Train Times', sfreq=250, diagonal=None,
-               test_times=None, smoothWindow=0, classLines=None, classColors=None, contourPlot=None, steps=None):
-
-    scores = np.array(scores)
+               test_times=None, classLines=None, classColors=None, contourPlot=None, steps=None):
+    
+    #Check if array is masked or not
+    if ma.is_masked(scores):
+        scores
+    else:
+        scores = np.array(scores)
 
     if times is None:
         times = np.arange(scores.shape[0]) / float(sfreq)
 
     #Setup color range
     if clim is None:
-        spread = 2 * np.round(np.percentile(
-            np.abs(scores - chance), 99) * 1e2) / 1e2
+        if ma.is_masked(scores):
+            spread = 2 * np.round(np.percentile(
+                np.abs(scores.data[~scores.mask] - chance), 99) * 1e2) /1e2
+        else:
+            spread = 2 * np.round(np.percentile(
+                np.abs(scores - chance), 99) * 1e2) / 1e2
         m = chance
         vmin, vmax = m + spread * np.array([-.6, .6])
     elif len(clim) == 1:
@@ -43,10 +52,6 @@ def pretty_gat(scores, times=None, chance=0, ax=None, sig=None, cmap='RdBu_r',
     #Setup plot
     if ax is None:
         ax = plt.gca()
-    
-    #Smooth data if wanted
-    #if smoothWindow > 0:
-		#scores = smooth(scores, window=smoothWindow)
 
     #Plot score
     if contourPlot is None:
@@ -54,20 +59,12 @@ def pretty_gat(scores, times=None, chance=0, ax=None, sig=None, cmap='RdBu_r',
     else:
         im = ax.contourf(scores, levels=steps, extent=extent, cmap=cmap, origin='lower', vmin=vmin, vmax=vmax, aspect='equal')
         #im.cmap.set_over(maxColor)
-        plt.contour(scores, levels=steps, extent=extent, origin='lower', vmin=vmin, vmax=vmax, aspect='equal', linewidths = 1, colors = 'k')
+        plt.contour(scores, levels=steps, extent=extent, origin='lower', vmin=vmin, vmax=vmax, aspect='equal', linewidths = 0, colors = 'k')
         pretty_colorbar(im=im, ax=None, ticks=steps, ticklabels=None, nticks=np.size(steps))
 
     #Plot sig
     if sig is not None:
         sig = np.array(sig)
-		
-		#Smooth data if wanted
-		#if smoothWindow > 0:
-			#sig = smooth(sig, window=smoothWindow)
-		
-		#Construct binary input
-        sig[sig > .05] = 1
-        sig[sig < .05] = 0
 
         xx, yy = np.meshgrid(test_times, times, copy=False, indexing='xy')
         ax.contour(xx, yy, sig, colors= 'k', linestyles='solid', linewidths = 0.25)
@@ -91,19 +88,19 @@ def pretty_gat(scores, times=None, chance=0, ax=None, sig=None, cmap='RdBu_r',
         ax.plot([np.max([min(times), min(test_times)]),
                  np.min([max(times), max(test_times)])],
                 [np.max([min(times), min(test_times)]),
-                 np.min([max(times), max(test_times)])], color=diagonal, linestyle = 'dashed', linewidth = 1)
+                 np.min([max(times), max(test_times)])], color=diagonal, linestyle = 'dashed', linewidth = 2)
 
     #Setup ticks
     xticks, xticklabels = _set_ticks(test_times)
     ax.set_xticks(xticks)
-    ax.set_xticklabels(xticklabels, fontdict={'fontname': 'Times New Roman', 'fontsize': 14})
+    ax.set_xticklabels(xticklabels, fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen)
     yticks, yticklabels = _set_ticks(times)
     ax.set_yticks(yticks)
-    ax.set_yticklabels(yticklabels, fontdict={'fontname': 'Times New Roman', 'fontsize': 14})
+    ax.set_yticklabels(yticklabels, fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen)
     if len(xlabel):
-        ax.set_xlabel(xlabel, fontdict={'fontname': 'Times New Roman', 'fontsize': 14})
+        ax.set_xlabel(xlabel, fontname=font_name_gen, fontsize=font_size_gen+1, fontweight=font_weight_gen)
     if len(ylabel):
-        ax.set_ylabel(ylabel, fontdict={'fontname': 'Times New Roman', 'fontsize': 14})
+        ax.set_ylabel(ylabel, fontname=font_name_gen, fontsize=font_size_gen+1, fontweight=font_weight_gen)
     ax.set_xlim(min(test_times), max(test_times))
     ax.set_ylim(min(times), max(times))
     pretty_plot(ax)
@@ -111,8 +108,7 @@ def pretty_gat(scores, times=None, chance=0, ax=None, sig=None, cmap='RdBu_r',
 
 def pretty_decod(scores, times=None, chance=0, ax=None, sig=None, width=3.,
                  color='k', fill=False, ylabel='AUC', xlabel='Time (s)', sfreq=250, alpha=.75, scat=False, line=False, lim=None, thickness=4,
-                 thicknessScat=20, schrift=14):
-    scores = np.array(scores)
+                 thicknessScat=20):
 
     if (scores.ndim == 1) or (scores.shape[1] <= 1): 
         scores = scores[:, None].T

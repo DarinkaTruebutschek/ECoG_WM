@@ -13,15 +13,24 @@ clc;
 ECoG_setPath;
 
 %% Define important variables
+sf = 100;
 
-tmin = -0.421;
-tmax = 4.499;
+if sf == 250
+    tmin = -0.421;
+    tmax = 4.499;
 
-time = [tmin : 0.004 : tmax];
+    time = [tmin : 0.004 : tmax];
+elseif sf == 100
+    tmin = -0.42;
+    tmax = 4.49;
+    
+    time = [tmin : 0.01 : tmax];
+end
 
 %% Define important variables
 %subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'HL'}; %subject KR has a different sampling frequency, to be checked carefully
-subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'};
+subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'CD'};
+%subnips = {'CD'};
 
 %% Load data
 for subi = 1 : length(subnips)
@@ -74,7 +83,8 @@ for subi = 1 : length(subnips)
     
     %Extract ERPs: downsammple
     cfg = [];
-    cfg.resamplefs = 250;
+    cfg.resamplefs = 100;
+    %cfg.resamplefs = 250;
     cfg.detrend = 'no'; %detrending should only be used prior to TFA analysis, but not when looking at evoked fields
     
     data = ft_resampledata(cfg, tmp2);
@@ -97,7 +107,7 @@ for subi = 1 : length(subnips)
     plot(time, squeeze(mean(erp{subi}.avg)));
     
     %Save
-    save([res_path subnips{subi} '/' subnips{subi} '_erp.mat'], 'data', '-v7.3');
+    save([res_path subnips{subi} '/' subnips{subi} '_erp_100.mat'], 'data', '-v7.3');
     %pause;
     
     clear ('tmp', 'tmp1', 'tmp2', 'data');

@@ -86,6 +86,21 @@ elseif strcmp(subnips, 'MV')
     pre_mri_file = [mri_path subnips{1} '/SE000005_t1_mpr_sag_p2_iso0_8_320_3D_20190131155911_6.nii.gz'];
     post_ct_file = [ct_path subnips{1} '/SE000002_01_CCT_20191120095628_3_Tilt_1.nii.gz'];
     raw_data_file{1} = [dat_path subnips{1} '/MV_Oxford_22-11-2019 Data.cdt']; %to be used in preprocessing of functional data
+elseif strcmp(subnips, 'CD')
+    pre_mri_file = [mri_path subnips{1} '/SE000005_t1_mpr_sag_p2_iso0_8_320_3D_20181010080252_6.nii.gz'];
+    %post_ct_file = [ct_path subnips{1} '/SE000002_01_CCT_20190716115939_3_Tilt_1.nii.gz'];
+    post_ct_file = [ct_path subnips{1} '/rawCT_fused_rawMRI.nii.gz']; %raw CT fused with acpc MRI
+    raw_data_file{1} = [dat_path subnips{1} '/CD_22072019.mat']; %to be used in preprocessing of functional data
+elseif strcmp(subnips, 'SM')
+    pre_mri_file = [mri_path subnips{1} '/SE000005_t1_mpr_sag_p2_iso0_9_320_20181130130749_6.nii.gz'];
+    %post_ct_file = [ct_path subnips{1} '/SE000002_01_CCT_20191105122921_3_Tilt_1.nii.gz']; 
+    post_ct_file = [ct_path subnips{1} '/rawCT_fused_rawMRI.nii.gz']; %raw CT fused with raw MRI
+    raw_data_file{1} = [dat_path subnips{1} '/SM_Oxford_08112019 Data.cdt']; %to be used in preprocessing of functional data
+elseif strcmp(subnips, 'SB_Sept19')
+    pre_mri_file = [mri_path subnips{1} '/SE000009_t1_mpr_sag_p2_iso0_8_320_20180924120240_10.nii.gz'];
+    %post_ct_file = [ct_path subnips{1} '/SE000002_01_CCT_20190911082529_3_Tilt_1.nii.gz']; 
+    post_ct_file = [ct_path subnips{1} '/rawCT_fused_acpcMRI.nii.gz']; %raw CT fused with acpc MRI
+    raw_data_file{1} = [dat_path subnips{1} '/SB_Oxford_16092019 Data.cdt']; %to be used in preprocessing of functional data
 end
 %% %% Anatomical preprocessing %% %%
 
@@ -154,7 +169,6 @@ if exist('ct_acpc')
 else
     ct_acpc_f = ft_volumerealign(cfg, ct_ctf, mri_acpc);
 end
-
 
 %% FreeSurfer (takes ~10h)
 fshome = '/usr/local/freesurfer';
@@ -245,6 +259,18 @@ elseif strcmp(subnips{1}, 'MV')
     fsmri_acpc = ft_read_mri([mri_path subnips{1} '/freesurfer/mri/T1.mgz']);
     ct_acpc = ft_read_mri([ct_path subnips{1} '/' subnips{1} '_CT_acpc.nii']); 
     ct_acpc.coordsys = 'acpc';
+elseif strcmp(subnips{1}, 'CD')
+    fsmri_acpc = ft_read_mri([mri_path subnips{1} '/freesurfer/mri/T1.mgz']);
+    ct_acpc = ft_read_mri([ct_path subnips{1} '/' subnips{1} '_CT_acpc.nii']); 
+    ct_acpc.coordsys = 'acpc';   
+elseif strcmp(subnips{1}, 'SM')
+    fsmri_acpc = ft_read_mri([mri_path subnips{1} '/freesurfer/mri/T1.mgz']);
+    ct_acpc = ft_read_mri([ct_path subnips{1} '/' subnips{1} '_CT_acpc.nii']); 
+    ct_acpc.coordsys = 'acpc'; 
+elseif strcmp(subnips{1}, 'SB_Sept19')
+    fsmri_acpc = ft_read_mri([mri_path subnips{1} '/freesurfer/mri/T1.mgz']);
+    ct_acpc = ft_read_mri([ct_path subnips{1} '/' subnips{1} '_CT_acpc.nii']); 
+    ct_acpc.coordsys = 'acpc';
 end
 
 %% Fuse MRI with CT scan and save resulting file
@@ -267,13 +293,31 @@ ft_volumewrite(cfg, ct_acpc_f);
 
 %% Electrode placement
 
-%Read in channel info from edf file
-for sessi = 1 : length(raw_data_file)
-    hdr_tmp{sessi} = ft_read_header(raw_data_file{sessi});
-end
+if ~strcmp(subnips{1}, 'CD')
 
-exclude_chans = {'DC','TP9','TP10', 'EKG','X','-','E'};
-remain_chan_ind = sum(cell2mat(cellfun(@(x) startsWith(hdr_tmp{1}.label, x), exclude_chans, 'un', 0)), 2) == 0;
+    %Read in channel info from edf file
+    for sessi = 1 : length(raw_data_file)
+        hdr_tmp{sessi} = ft_read_header(raw_data_file{sessi});
+    end
+    
+    exclude_chans = {'DC','TP9','TP10', 'EKG','X','-','E', 'Trigger'};
+    remain_chan_ind = sum(cell2mat(cellfun(@(x) startsWith(hdr_tmp{1}.label, x), exclude_chans, 'un', 0)), 2) == 0;
+else
+    hdr_tmp{sessi}.label = labels;
+    
+    exclude_chans = {'DC','TP9','TP10', 'EKG','X','-','E', 'Trigger'};
+    remain_chan_ind_tmp = cell2mat(cellfun(@(x) startsWith(hdr_tmp{1}.label, x), exclude_chans, 'un', 0));
+    remain_chan_ind(1, 1 : 62) = remain_chan_ind_tmp(1 : 62);
+    remain_chan_ind(2, 1 : 62) = remain_chan_ind_tmp(63 : 124);
+    remain_chan_ind(3, 1 : 62) = remain_chan_ind_tmp(125 : 186);
+    remain_chan_ind(4, 1 : 62) = remain_chan_ind_tmp(187 : 248);
+    remain_chan_ind(5, 1 : 62) = remain_chan_ind_tmp(249 : 310);
+    remain_chan_ind(6, 1 : 62) = remain_chan_ind_tmp(311 : 372);
+    remain_chan_ind(7, 1 : 62) = remain_chan_ind_tmp(373 : 434);
+    remain_chan_ind(8, 1 : 62) = remain_chan_ind_tmp(435 : 496);
+    
+    remain_chan_ind = sum(remain_chan_ind) == 0;
+end
 
 hdr.nChans = sum(remain_chan_ind);
 hdr.label = hdr_tmp{1}.label(remain_chan_ind);
@@ -434,6 +478,14 @@ elseif strcmp(subnips{1}, 'MV')
     cfg.nonlinear = 'yes';
     cfg.spmversion = 'spm12';
     cfg.spmmethod = 'new';
+elseif strcmp(subnips{1}, 'CD')
+    cfg.nonlinear = 'yes';
+    cfg.spmversion = 'spm12';
+    cfg.spmmethod = 'new';
+elseif strcmp(subnips{1}, 'SB_Sept19')
+    cfg.nonlinear = 'yes';
+    cfg.spmversion = 'spm12';
+    cfg.spmmethod = 'new';
 end
 
 fsmri_mni = ft_volumenormalise(cfg, fsmri_acpc);
@@ -493,19 +545,58 @@ table = generate_electable(e_pos, 'xldir', xldir, 'fsdir', fsdir, 'elec_nat', el
 %% Load in data
 for sessi = 1 : length(raw_data_file)
     
-    disp(num2str(sessi));
-    
-    cfg = [];
-    cfg.dataset = raw_data_file{sessi}; 
+    if ~strcmp(subnips{1}, 'CD')
+        disp(num2str(sessi));
 
-    cfg.continuous = 'yes';
-    data{sessi} = ft_preprocessing(cfg);
+        cfg = [];
+        cfg.dataset = raw_data_file{sessi}; 
+
+        cfg.continuous = 'yes';
+        data{sessi} = ft_preprocessing(cfg);
+    else
+        %Load in another subject just to be able to get data structure
+        %right
+        cfg = [];
+        cfg.dataset = [dat_path 'LJ/OA8887R9.EDF'];
+        cfg.continous = 'yes';
+        temp_data = ft_preprocessing(cfg);
+        
+        %Create current structure
+        temp_data.hdr.Fs = fFrequency;
+        temp_data.hdr.nChans = nChannels;
+        temp_data.hdr.label = labels;
+        temp_data.hdr.nSamples = nSamples;
+        temp_data.hdr.nSamplesPre = 0;
+        temp_data.hdr.nTrials = 1;
+        temp_data.hdr.chanunit(63 : end) = [];
+        temp_data.hdr.chantype(63 : end) = [];
+        
+        temp_data.label = labels;
+        temp_data.time{1} = [0 : 1/fFrequency : (nSamples*(1/fFrequency))];
+        temp_data.time{1}(end) = [];
+        %temp_data.time{1} = time;
+        temp_data.trial{1} = data;
+        temp_data.fsample = fFrequency;
+        temp_data.sampleinfo = [1 nSamples];
+        
+        temp_data.cfg.dataset =  '/media/darinka/Data0/iEEG/Results/RawData/CD/CD_22072019.mat';
+        temp_data.cfg.channel = labels;
+        temp_data.cfg.datafile = '/media/darinka/Data0/iEEG/Results/RawData/CD/CD_22072019.mat';
+        temp_data.cfg.headerfile = '/media/darinka/Data0/iEEG/Results/RawData/CD/CD_22072019.mat';
+        temp_data.cfg.trl = [1 nSamples 0];
+        
+        clear data;
+        
+        data{sessi} = temp_data;
+        
+        clear temp_data;
+    end
 end
 
 %% Extract trigger channels
 for sessi = 1 : length(raw_data_file)
     
-    if ~strcmp(subnips{1}, 'MV')
+    if ~strcmp(subnips{1}, 'MV') && ~strcmp(subnips{1}, 'CD') && ~strcmp(subnips{1}, 'SB_Sept19')
         data_trig{sessi} = data{sessi}.trial{1}(startsWith(data{sessi}.label, 'DC'), :);
     end
     
@@ -514,7 +605,7 @@ end
 %% Binarize triggers: everything over 10 (uV?) counts as bit-on, otherwise as bit-off
 for sessi = 1 : length(raw_data_file)
     
-    if ~strcmp(subnips{1}, 'MV')
+    if ~strcmp(subnips{1}, 'MV') && ~strcmp(subnips{1}, 'CD') && ~strcmp(subnips{1}, 'SB_Sept19')
         data_trig{sessi} = data_trig{sessi} > 10;
     end
     
@@ -523,7 +614,7 @@ end
 %% Combine bits into a single trigger channel
 for sessi = 1 : length(raw_data_file)
     
-    if ~strcmp(subnips{1}, 'MV')
+    if ~strcmp(subnips{1}, 'MV') && ~strcmp(subnips{1}, 'CD') && ~strcmp(subnips{1}, 'SB_Sept19')
         trigchan{sessi} = zeros(1, size(data_trig{sessi}, 2));
     
         for eventi = 1 : size(data_trig{sessi}, 1)
@@ -536,7 +627,7 @@ end
 %% Extract actual trigger values and sample indices
 for sessi = 1 : length(raw_data_file)
     
-    if ~strcmp(subnips{1}, 'MV')
+    if ~strcmp(subnips{1}, 'MV') && ~strcmp(subnips{1}, 'CD') && ~strcmp(subnips{1}, 'SB_Sept19')
         trigsamp{sessi} = []; %sample indices of trigger onsets
         trigval{sessi} = []; %actual trigger values
     
@@ -560,15 +651,61 @@ for sessi = 1 : length(raw_data_file)
         figure;
         plot(trigsamp{sessi}, trigval{sessi});
     else
-        realTrigs = {1, 2, 3, 4, 5, 7, 8, 10, 11, 12, ...
+        
+        if strcmp(subnips{1}, 'MV') || strcmp(subnips{1}, 'SB_Sept19')
+            realTrigs = {1, 2, 3, 4, 5, 7, 8, 10, 11, 12, ...
             20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39};
-        realTrigs = cellfun(@num2str, realTrigs, 'un', 0);
+            realTrigs = cellfun(@num2str, realTrigs, 'un', 0);
         
-        tmp{sessi} = ismember(annotations, realTrigs);
-        trigval{sessi} = annotations(tmp{sessi});
-        trigval{sessi} = cellfun(@str2num, trigval{sessi});
-        
-        trigsamp{sessi} = double(events(1, tmp{sessi}));
+            tmp{sessi} = ismember(annotations, realTrigs);
+            trigval{sessi} = annotations(tmp{sessi});
+            trigval{sessi} = cellfun(@str2num, trigval{sessi});
+            
+            trigsamp{sessi} = double(events(1, tmp{sessi}));
+        elseif strcmp(subnips{1}, 'CD') 
+            realTrigs = [1 : 5, 7, 8, 10 : 12, 20 : 39];
+            
+            %Recode trigger values found in curry
+            events(2, events(2, :) == 1664) = 10;
+            events(2, events(2, :) == 3904) = 21;
+            events(2, events(2, :) == 960) = 23;
+            events(2, events(2, :) == 1536) = 24;
+            events(2, events(2, :) == 2112) = 25;
+            
+            [~, tmp_ind] = find(events(2, :) == 2688);
+            
+            for tmp_i = 1 : length(tmp_ind)
+                if (events(2, tmp_ind(tmp_i)-1) == 5) && ismember(events(2, tmp_ind(tmp_i)+1), [7, 8])
+                    events(2, tmp_ind) = 26;
+                end
+            end
+            
+            events(2, events(2, :) == 3264) = 27;
+            events(2, events(2, :) == 3840) = 28;
+            events(2, events(2, :) == 320) = 29;
+            events(2, events(2, :) == 896) = 30;
+            events(2, events(2, :) == 1472) = 31;
+            events(2, events(2, :) == 2048) = 32;
+            events(2, events(2, :) == 2624) = 33;
+            events(2, events(2, :) == 3200) = 34;
+            events(2, events(2, :) == 3776) = 35;
+            events(2, events(2, :) == 832) = 37;
+            
+            [~, tmp_ind] = find(events(2, :) == 1408);
+            
+            for tmp_i = 1 : length(tmp_ind)
+                if (events(2, tmp_ind(tmp_i)-1) == 5) && ismember(events(2, tmp_ind(tmp_i)+1), [7, 8])
+                    events(2, tmp_ind) = 38;
+                end
+            end
+            
+            events(2, events(2, :) == 1984) = 39;
+            
+            tmp{sessi} = ismember(events(2, :), realTrigs);
+            trigval{sessi} = double(events(2, tmp{sessi}));
+            
+            trigsamp{sessi} = double(events(1, tmp{sessi}));
+        end
         
         %Check whether the triggers seem to make sense
         figure;
@@ -595,7 +732,7 @@ if data{1}.fsample ~= 1000
     display('Attention! Different sample frequency ...');
 end
 
-if ~strcmp(subnips, 'KJ_I') && ~ strcmp(subnips, 'SB') && ~strcmp(subnips, 'HL') && ~strcmp(subnips, 'MKL') && ~strcmp(subnips, 'MV')
+if ~strcmp(subnips, 'KJ_I') && ~ strcmp(subnips, 'SB') && ~strcmp(subnips, 'HL') && ~strcmp(subnips, 'MKL') && ~strcmp(subnips, 'MV') && ~strcmp(subnips, 'CD') && ~strcmp(subnips, 'SB_Sept19')
     for sessi = 1 : length(raw_data_file)
         trl{sessi} = [alltimes{sessi}(:, 2)-450, alltimes{sessi}(:, 7), ones(size(alltrig{sessi}, 1), 1)*-450];  %matrix: [beginning sample, end sample, offset of 
     end
@@ -611,7 +748,7 @@ elseif strcmp(subnips, 'HL') %sampling frequency of 200!
       for sessi = 1 : length(raw_data_file)
         trl{sessi} = [alltimes{sessi}(:, 2)-90, alltimes{sessi}(:, 7), ones(size(alltrig{sessi}, 1), 1)*-90];  %matrix: [beginning sample, end sample, offset of 
       end
-elseif strcmp(subnips, 'MV') %sampling frequency of 5000
+elseif strcmp(subnips, 'MV') || strcmp(subnips{1}, 'CD') || strcmp(subnips{1}, 'SB_Sept19') %sampling frequency of 5000
     for sessi = 1 : length(raw_data_file)
          trl{sessi} = [alltimes{sessi}(:, 2)-2250, alltimes{sessi}(:, 7), ones(size(alltrig{sessi}, 1), 1)*-2250];  %matrix: [beginning sample, end sample, offset of 
     end  
@@ -644,6 +781,10 @@ elseif strcmp(subnips{1}, 'AP')
     channels = {'TLL*', 'TAL*', 'TML*', 'TPL*', 'TLR*', 'TAR*', 'TMR*', 'TPR*'};
 elseif strcmp(subnips{1}, 'MV')
     channels = {'FL*', 'TLL*', 'HL*', 'TBL*', 'HR*'};
+elseif strcmp(subnips{1}, 'CD')
+    channels = {'CA*', 'HKL*', 'HDL*'};
+elseif strcmp(subnips{1}, 'SB_Sept19')
+    channels = {'LAL*', 'CAL*', 'LPL*', 'HKL*', 'TPR*', 'TAR*'};
 end
 
 cfg = [];
@@ -655,51 +796,154 @@ end
 
 %% Quality check: Quick look at frequency spectrum
 for sessi = 1 : length(raw_data_file)
+    
+    if strcmp(subnips{1}, 'SB_Sept19') || strcmp(subnips{1}, 'CD')
+        if sel_data{sessi}.fsample ~= 1000;
+            %Downsample first
+            cfg = [];
+            cfg.resamplefs = 1000;
+            cfg.sampleinfo = sel_data{sessi}.sampleinfo;
+            cfg.sampleindex = 'yes';
+
+            data_tmp{sessi} = ft_resampledata(cfg, sel_data{sessi});
+            data_tmp{sessi}.sampleinfo = [1, sel_data{sessi}.sampleinfo(2)/5];
+            sel_data = data_tmp;
+        end
+    end
+        
     cfg = [];
     cfg.method = 'mtmfft';
     cfg.taper = 'hanning';
-    cfg.pad = 'nextpow2';
     
-    freq_spec{sessi}  = ft_freqanalysis(cfg, sel_data{sessi});
+    if ~strcmp(subnips{1}, 'CD')
+        cfg.pad = 'nextpow2';
+    else 
+        cfg.pad = 'nextpow2';
+    end
+    
+    if ~iscvar('data_filtered')
+        freq_spec{sessi}  = ft_freqanalysis(cfg, sel_data{sessi});
+    else
+        freq_spec{sessi}  = ft_freqanalysis(cfg, data_filtered{sessi});
+    end
 
     freq_spec{sessi}.logspctrm = log10(freq_spec{sessi}.powspctrm);
     
     %Plot
     cfg = [];
+    %cfg.parameter = 'powspctrm';
     cfg.parameter = 'logspctrm';
+    %cfg.xlim = [0.2 240];
+    %cfg.ylim = [0, 0.01];
+    %cfg.channel = freq_spec{1}.label{4};
     
     ft_singleplotER(cfg,freq_spec{sessi});
     
     pause;
 end
 
-clear freq_spec; 
+% %Additional analyses to identidy artifact: Plot each channel
+% independently
+% if strcmp(subnips{1}, 'CD')
+%     for sessi = 1 : length(raw_data_file)
+%         for chani = 1 : length(sel_data{sessi}.label)
+%             subplot(6, 5, chani);
+%             
+%             cfg = [];
+%             cfg.parameter = 'logspctrm';
+%             cfg.channel = sel_data{sessi}.label{chani};
+%             cfg.xlim = [0, 200];
+%             
+%             ft_singleplotER(cfg, freq_spec{sessi});
+%         end
+%     end
+% end
+
+%Identify those frequencies beyond a certain power
+% if strcmp(subnips{1}, 'CD')
+%     for sessi = 1 : length(raw_data_file)
+%         tmp{sessi} = mean(freq_spec{sessi}.logspctrm) > -3;
+%         strong_freqs{sessi} = freq_spec{sessi}.freq(tmp{sessi}); %real issue seems to begin at index 82534
+%         my_diff{sessi} = diff(strong_freqs{sessi});
+%         freqs_of_interest{sessi} = strong_freqs{sessi}(82534 : end);
+%     end
+% end
+% 
+% figure;
+% hist_handle = histogram(round(freqs_of_interest{1}), 100);
+% 
+% x_ticks = [];
+% 
+% for ticki = 1 : length(hist_handle.BinEdges)-1
+%     tmp = mean([hist_handle.BinEdges(ticki), hist_handle.BinEdges(ticki+1)]);
+%     x_ticks(end+1) = tmp;
+% end
+%     
+% xticks(round(x_ticks));
+% 
+% ylim([0 50]);
+% xlim([0 250]);
+% 
+% xlabel('Rounded center frequency (in Hz)');
+% ylabel('Count');
+% 
+% set(gca, 'box', 'off');
+
+%clear freq_spec
 %% Filter the data for high-frequency and power-line noise
 for sessi = 1 : length(raw_data_file)
     cfg = [];
     cfg.demean = 'yes';
     cfg.baselinewindow = 'all';
     cfg.bpfilter = 'yes';
-    if ~strcmp(subnips{1}, 'HL')
+    if ~strcmp(subnips{1}, 'HL') 
         cfg.bpfreq = [0.2 240];
-    else
+    elseif strcmp(subnips{1}, 'HL')
         cfg.bpfreq = [0.2 98];
+    %elseif strcmp(subnips{1}, 'CD') 
+%         if ~isfile([res_path subnips{1} '/' subnips{1} '_filtered.mat'])
+%             cfg.bpfreq = [0.2 998];
+%         else
+%             cfg.bpfreq = [0.2 240]; %run this a second time as there seemed to be huge artifact left
+%         end
     end
     cfg.bsfilter = 'yes';
     cfg.bsfiltord = 3;
     
-    if ~strcmp(subnips{1}, 'HL')
+    if ~strcmp(subnips{1}, 'HL') && ~strcmp(subnips{1}, 'CD')
         cfg.bsfreq = [49 51; 99 101; 149 151; 199 201];
-    else
+    elseif strcmp(subnips{1}, 'HL')
         cfg.bsfreq = [49 51];
+    elseif strcmp(subnips{1}, 'CD') 
+%         if ~isfile([res_path subnips{1} '/' subnips{1} '_filtered.mat'])
+%             cfg.bsfreq = [49 51; 99 101; 149 151; 199 201; 249 251; 299 301; 349 351; 399 401; 449 451; 499 501; ...
+%                 549 551; 599 601; 649 651; 699 701; 749 751; 799 801; 849 851; 899 901; 949 951];
+%         else
+%             cfg.bsfreq = [49 51; 99 101; 149 151; 199 201];
+%         end
+        cfg.bsfreq = [24.3 24.5; 26.7 26.9; 29.1 29.3; 34.1 34.3; 43.8 44; 48.8 48.9; ...
+            49 51; 53.7 53.9; 68.3 68.5; 87.8 88; 99 101; 102.4 102.6; 107.4 107.6; ...
+            122 122.2; 126.9 127.1; 141.6 141.8; 146.4 146.6; 149 151; 161.1 161.3; ...
+            166 166.2; 180.6 180.8; 185.5 185.7; 199 201; 205 205.2; 219.7 219.9; ...
+            224.6 224.8; 239.2 239.4];
+        %cfg.bsfreq = [49 51; 99 101; 149 150; 199 201;];
     end
-
-    data_filtered{sessi} = ft_preprocessing(cfg, sel_data{sessi});
+    
+    data_filtered{sessi} = ft_preprocessing(cfg, sel_data{sessi});       
 end
 
+% if ~strcmp(subnips{1}, 'CD') 
+%     save([res_path subnips{1} '/' subnips{1} '_filtered.mat'], 'data_filtered', '-v7.3');
+% elseif strcmp(subnips{1}, 'CD')
+%     if ~isfile([res_path subnips{1} '/' subnips{1} '_filtered.mat'])
+%         save([res_path subnips{1} '/' subnips{1} '_filtered.mat'], 'data_filtered', '-v7.3');
+%     else
+%         save([res_path subnips{1} '/' subnips{1} '_filtered.mat'], 'data_filtered', '-v7.3');
+%     end
+% end
 save([res_path subnips{1} '/' subnips{1} '_filtered.mat'], 'data_filtered', '-v7.3');
 %% Append sessions
-if ~strcmp(subnips{1}, 'MG') && ~strcmp(subnips{1}, 'KR') && ~strcmp(subnips{1}, 'KJ_I') && ~strcmp(subnips{1}, 'LJ') && ~strcmp(subnips{1}, 'AS') && ~strcmp(subnips{1}, 'HL')
+if ~strcmp(subnips{1}, 'MG') && ~strcmp(subnips{1}, 'KR') && ~strcmp(subnips{1}, 'KJ_I') && ~strcmp(subnips{1}, 'LJ') && ~strcmp(subnips{1}, 'AS') && ~strcmp(subnips{1}, 'HL') && ~strcmp(subnips{1}, 'CD')
     data_combined = rmfield(data_filtered{1}, {'hdr', 'cfg', 'trial'});
     data_combined.trial = {[data_filtered{1}.trial{1}, data_filtered{2}.trial{1}]};
     data_combined.time = {[data_filtered{1}.time{1}, (data_filtered{2}.time{1} + max(data_filtered{1}.time{1}) + 1/data_filtered{1}.fsample)]};
@@ -730,7 +974,7 @@ elseif strcmp(subnips{1}, 'MG') || strcmp(subnips{1}, 'KJ_I')
     elseif strcmp(subnips{1}, 'KJ_I') %due to initial sample frequency of 2000 instead of 1000
         trl_combined(:, 3) = -900;
     end
-elseif strcmp(subnips{1}, 'KR') || strcmp(subnips{1}, 'LJ') || strcmp(subnips{1}, 'AS') || strcmp(subnips{1}, 'HL')
+elseif strcmp(subnips{1}, 'KR') || strcmp(subnips{1}, 'LJ') || strcmp(subnips{1}, 'AS') || strcmp(subnips{1}, 'HL') 
     data_combined = rmfield(data_filtered{1}, {'hdr', 'cfg', 'trial'});
     data_combined.trial = {[data_filtered{1}.trial{1}]};
     data_combined.time = {[data_filtered{1}.time{1}]};
@@ -738,16 +982,26 @@ elseif strcmp(subnips{1}, 'KR') || strcmp(subnips{1}, 'LJ') || strcmp(subnips{1}
 
     trl_combined = [trl{1}];
     
-    if ~strcmp(subnips{1}, 'HL')
+    if ~strcmp(subnips{1}, 'HL') && ~strcmp(subnips{1}, 'CD')
         trl_combined(:, 3) = -450;
-    else
+    elseif strcmp(subnips{1}, 'HL')
         trl_combined(:, 3) = -90;
+%     else
+%         trl_combined(:, 3) = -2250;
     end
+elseif strcmp(subnips{1}, 'CD') %data was downsampled before
+    tmp_combined = trl{1};
+    
+    tmp_combined = tmp_combined ./5;
+    
+    trl_combined(:, 1) = round(tmp_combined(:, 1) - tmp_combined(1, 1)+1);
+    trl_combined(:, 2) = round(tmp_combined(:, 2) - tmp_combined(1, 1)+1);
 end
 
 save([res_path subnips{1} '/' subnips{1} '_combined.mat'], 'data_combined', 'trl_combined', '-v7.3');
 
 %% Epoch data
+
 cfg = [];
 cfg.trl = trl_combined;
 
@@ -762,8 +1016,15 @@ data = data_epoched;
 clear('data_epoched');
 
 %% Quick check to see whether epoching worked by plotting ERF
+% cfg = [];
+% cfg.demean = 'yes';
+% cfg.baselinewindow = [-0.2, 0];
+% 
+% data_epoched = ft_preprocessing(cfg, data_epoched);
+
 cfg = [];
 cfg.latency = [-0.2, 5.0];
+%cfg.trials = [2:33, 36:400];
 
 data_avg = ft_timelockanalysis(cfg, data);
 
@@ -772,6 +1033,13 @@ plot(data_avg.time, mean(data_avg.avg,1), 'k-');
 
 figure;
 plot(data_avg.time, data_avg.avg);
+
+% for triali = 1 : 400
+%     figure;
+%     plot(data_epoched.time{triali}, data_epoched.trial{triali});
+%     
+%     pause;
+% end
 
 clear ('data_avg');
 
@@ -873,6 +1141,9 @@ elseif strcmp(subnips{1}, 'AP')
         '-TLL2-10', '-TLL2-1', '-TLL2-9', '-TLL3-1', '-TLL3-2', '-TLL3-3', '-TLR4', '-TLR5', '-TML*', '-TAL1', ...
         '-TAl2', '-TPR2'};
     selchan = ft_channelselection(bad_channels, data.label);
+elseif strcmp(subnips{1}, 'CD')
+    bad_channels = {'all', '-CA1', '-CA2', '-HDL1', '-HKL1', '-HKL2', '-HKL3'};
+    selchan = ft_channelselection(bad_channels, data.label);
 end
 
 cfg = [];
@@ -893,7 +1164,8 @@ if ~strcmp(subnips{1}, 'MG') && ~strcmp(subnips{1}, 'KR') && ~strcmp(subnips{1},
     data_tmp.alltrig_all = [alltrig{1}; alltrig{2}];
 elseif strcmp(subnips{1}, 'MG') || strcmp(subnips{1}, 'KJ_I')
      data_tmp.alltrig_all = [alltrig{1}; alltrig{2}; alltrig{3}];
-elseif strcmp(subnips{1}, 'KR') || strcmp(subnips{1}, 'LJ') || strcmp(subnips{1}, 'AS') || strcmp(subnips{1}, 'HL')
+elseif strcmp(subnips{1}, 'KR') || strcmp(subnips{1}, 'LJ') || strcmp(subnips{1}, 'AS') || strcmp(subnips{1}, 'HL') ...
+        || strcmp(subnips{1}, 'CD')
     data_tmp.alltrig_all = [alltrig{1}];
 end
 
@@ -1002,6 +1274,10 @@ elseif strcmp(subnips{1}, 'AP')
         619, 625, 635, 636, 637, 640, 644, 645, 652, 655, 656, 663, 668, 674, 675, 678, 683, 686, 695, 703, ...
         704, 709, 711, 729, 730, 731, 733, 742, 743, 745, 746, 750, 754, 762, 775, 778, 779, 780, 783, 785, ...
         798];
+elseif strcmp(subnips{1}, 'CD')
+    bad_trials = [1, 4, 6, 14, 15, 17, 20, 23, 32, 34, 35, 36, 38, 42, 48, 49, 52, 50, 55, 56, 59, 72, 87, 89, ...
+        90, 93, 97, 103, 104, 107, 108, 115, 119, 128, 130, 140, 144, 147, 148, 150, 151, 154, 166, 177, 184, ...
+        185, 201, 212, 215, 219, 236, 237, 238, 240, 247, 282, 304, 322, 326, 338, 348, 399];
 end
 
 trials_all(bad_trials) = []; %indices of included trials
@@ -1012,7 +1288,8 @@ if ~strcmp(subnips{1}, 'MG') && ~strcmp(subnips{1}, 'KR') && ~strcmp(subnips{1},
     alltrig = [alltrig{1}; alltrig{2}];
 elseif strcmp(subnips{1}, 'MG') || strcmp(subnips{1}, 'KJ_I')
     alltrig = [alltrig{1}; alltrig{2}; alltrig{3}];
-elseif strcmp(subnips{1}, 'KR') || strcmp(subnips{1}, 'LJ') || strcmp(subnips{1}, 'AS') || strcmp(subnips{1}, 'HL')
+elseif strcmp(subnips{1}, 'KR') || strcmp(subnips{1}, 'LJ') || strcmp(subnips{1}, 'AS') || strcmp(subnips{1}, 'HL') || ...
+        strcmp(subnips{1}, 'CD');
    alltrig = [alltrig{1}]; 
 end
 
@@ -1115,6 +1392,8 @@ elseif strcmp(subnips{1}, 'SB')
     depths = {'FAL*', 'FR*'};
 elseif strcmp(subnips{1}, 'HL')
     depths = {'BAR*', 'ALR*', 'PLR*', 'MER*', 'SMR*', 'MEL*'};
+elseif strcmp(subnips{1}, 'CD')
+    depths = {'CA*', 'HKL*', 'HDL*'};
 end
 
 %This automatically updates the chanpos in the data.elec field (so in the
@@ -1146,7 +1425,7 @@ cfg = [];
 cfg.appendsens = 'yes';
 
 if strcmp(subnips{1}, 'EG_I') || strcmp(subnips{1}, 'KR') || strcmp(subnips{1}, 'WS') || strcmp(subnips{1}, 'LJ') ...
-        || strcmp(subnips{1}, 'SB') || strcmp(subnips{1}, 'HL') || strcmp(subnips{1}, 'MKL')
+        || strcmp(subnips{1}, 'SB') || strcmp(subnips{1}, 'HL') || strcmp(subnips{1}, 'MKL') || strcmp(subnips{1}, 'CD')
     reref = ft_appenddata(cfg, reref_depths{:});
 elseif ~strcmp(subnips{1}, 'MG') && ~strcmp(subnips{1}, 'KJ_I') && ~strcmp(subnips{1}, 'AS') && ~strcmp(subnips{1}, 'AP')
     reref = ft_appenddata(cfg, reref_grids, reref_depths{:});
@@ -1185,7 +1464,7 @@ cfg = [];
 cfg.appendsens = 'yes';
 
 if strcmp(subnips{1}, 'EG_I') || strcmp(subnips{1}, 'KR') || strcmp(subnips{1}, 'WS') || strcmp(subnips{1}, 'LJ') ...
-        || strcmp(subnips{1}, 'SB') || strcmp(subnips{1}, 'HL') || strcmp(subnips{1}, 'MKL')
+        || strcmp(subnips{1}, 'SB') || strcmp(subnips{1}, 'HL') || strcmp(subnips{1}, 'MKL') || strcmp(subnips{1}, 'CD')
     reref_mni = ft_appenddata(cfg, reref_depths_mni{:}); 
 elseif ~strcmp(subnips{1}, 'MG') && ~strcmp(subnips{1}, 'KJ_I') && ~strcmp(subnips{1}, 'AS') && ~strcmp(subnips{1}, 'AP')
     reref_mni = ft_appenddata(cfg, reref_grids_mni, reref_depths_mni{:}); 

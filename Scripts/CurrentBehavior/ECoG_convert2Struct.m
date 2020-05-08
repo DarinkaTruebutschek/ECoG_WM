@@ -13,6 +13,7 @@ ECoG_setPath;
 
 %% Define important variables
 subnips = {'EG_I', 'HL', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'};
+subnips = {'CD'};
 
 %% Convert to structure
 for subi = 1 : length(subnips)

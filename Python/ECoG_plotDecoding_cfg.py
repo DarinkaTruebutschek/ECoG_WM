@@ -3,7 +3,10 @@
 ###Author: D.T.
 ###Date: 15 November 2019
 
+import numpy as np
 import seaborn as sns
+
+from matplotlib.colors import ListedColormap
 
 ##########################################
 #Paths
@@ -15,13 +18,13 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #TF parameters
-fmethod = 'erp'
+fmethod = 'erp_100'
 
 ##########################################
 #Preprocessing
 if fmethod is 'tfa_wavelet':
 	bl = [-.14, 0]
-elif fmethod is 'erp':
+elif (fmethod is 'erp') | (fmethod is 'erp_100'):
 	bl = [-.2, 0]
 
 blc = 1 #baseline correction or not?
@@ -32,9 +35,9 @@ acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct
 
 ##########################################
 #Decoding
-decCond = 'indItems'
+decCond = 'cue' #'indItems'
 
-generalization = 0 #0 = diagonal only, 1 = full matrix
+generalization = 1 #0 = diagonal only, 1 = full matrix
 
 if fmethod is 'tfa_wavelet':
 	trainTime = [bl[0], 4.3]
@@ -42,6 +45,9 @@ if fmethod is 'tfa_wavelet':
 elif fmethod is 'erp':
 	trainTime = [bl[0], 4.4985]
 	testTime = [bl[0], 4.4985]
+elif fmethod is 'erp_100':
+	trainTime = [bl[0], 4.48]
+	testTime = [bl[0], 4.48]
 
 #CV
 n_folds = 5
@@ -60,18 +66,27 @@ n_permutations = 5000
 stat_alpha = .05
 
 chance = 0.5
-tail = 1 #0 = 2-sided, 1 = 1-sided
+tail = 0 #0 = 2-sided, 1 = 1-sided
 
 ##########################################
 #Figure
 #Data properties
+sfreq = 100
 smoothWindow = 2 #Will the data (but not the stats be smoothed?)
 
 #Figure properties
 line_thickness = 2
-line_color = sns.color_palette("colorblind")
+line_color = sns.color_palette("Spectral", 11) #sns.color_palette("colorblind")
+
+map_color = ListedColormap(sns.color_palette("RdBu_r", 10))
+maskSig = 1 #mask all insignificant values or not
+contour_steps = np.linspace(chance+.01, .6, 10)
 
 #Font properties
 font_name = 'Arial'
 font_size = 6
 font_weight = 'normal'
+
+font_name_gen = 'Arial'
+font_size_gen = 12
+font_weight_gen = 'normal'

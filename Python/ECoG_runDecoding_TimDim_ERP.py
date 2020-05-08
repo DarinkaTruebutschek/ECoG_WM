@@ -16,10 +16,10 @@ from ECoG_decoders import binaryClassif
 
 ##########################################
 #Define important variables
-ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'AS', 'AP', 'KR']
+ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'AS', 'AP', 'KR', 'CD']
 #ListSubjects = ['EG_I']
 #ListFreqs = [[8, 12], [13, 30], [31, 70], [71, 160]]
-ListFilenames = ['erp_TimDim_timeBin_500_stepSize_500_meanSubtraction']
+ListFilenames = ['erp_TimDim_timeBin_100_stepSize_100_meanSubtraction']
 
 if generalization:
 	gen_filename = 'timeGen'

@@ -35,7 +35,7 @@ def ECoG_prepDec(decCond, subject, foi):
 
 		data.data = np.mean(data.data, axis=2)
 
-	elif fmethod is 'erp':
+	elif (fmethod is 'erp') | (fmethod is 'erp_100'):
 		data = ECoG_fldtrp2mne(fname, 'data', 'erp') #for erp data, this is a 3d-matrix of sixe n_trials, n_channels, n_freqs, n_times
 
 		#Preprocess data: Apply baseline correction 
@@ -54,7 +54,7 @@ def ECoG_prepDec(decCond, subject, foi):
 	if fmethod is 'tfa_wavelet':
 		if np.shape(data.data)[0] != np.shape(trialInfo)[0]:
 			print('X and y do not have the same dimensions')
-	elif fmethod is 'erp':
+	elif (fmethod is 'erp') | (fmethod is 'erp_100'):
 		if np.shape(data.get_data())[0] != np.shape(trialInfo)[0]:
 			print('X and y do not have the same dimensions')
 
@@ -62,7 +62,7 @@ def ECoG_prepDec(decCond, subject, foi):
 	#Prepare X and y specifically
 	if fmethod is 'tfa_wavelet':
 		X_train = data.data
-	elif fmethod is 'erp':
+	elif (fmethod is 'erp') | (fmethod is 'erp_100'):
 		if win_size is not False:
 			X_train_tmp = data.get_data() #n_trials x n_channels x n_timepoints (decoding done seperately on each time point)
 		else:
@@ -119,17 +119,22 @@ def ECoG_prepDec(decCond, subject, foi):
 		del tmp	
 
 		y_train = MultiLabelBinarizer().fit_transform(y_train)
+	elif decCond is 'cue':
+		y_train = trialInfo.values[:, 3]
 
-	#Select only those trials, in which the subject responded correctly
+	#Select only those trials, in which the subject responded correctly & throw out any additional nan entries
 	if acc:
-		sel = np.where((trialInfo.resp == 1) | (trialInfo.resp == 3))
+		sel = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3))))
+	else:
+		sel = np.where(~np.isnan(trialInfo.block_id))
 
-		if win_size is not False:
-			X_train = X_train[:, sel, :, :]
-			X_train = np.squeeze(X_train)
-		else:
-			X_train = X_train[sel]
+	if win_size is not False:
+		X_train = X_train[:, sel, :, :]
+		X_train = np.squeeze(X_train)
 		y_train = np.squeeze(y_train[sel, :])
+	else:
+		X_train = X_train[sel]
+		y_train = np.squeeze(y_train)[sel]
 
 	#Define train and test sets
 	if predict_mode == 'cross-validation':
@@ -138,5 +143,7 @@ def ECoG_prepDec(decCond, subject, foi):
 
 	print('Training on:', np.shape(X_train), np.shape(y_train))
 	print('Testing on:', np.shape(X_test), np.shape(y_test))
+	
+	return X_train, y_train, X_test, y_test, data.times
 
-	return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset if 'timebins_onset' in locals() else None
+	#return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset if 'timebins_onset' in locals() else None
