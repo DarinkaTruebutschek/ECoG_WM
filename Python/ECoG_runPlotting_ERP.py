@@ -40,8 +40,8 @@ scores = []
 for subi, subject in enumerate(ListSubjects):
 
 	#Load all of the data 
-	score = np.squeeze(np.load(data_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_score.npy'))
-	time = np.load(data_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_time.npy')
+	score = np.squeeze(np.load(data_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_score.npy'))
+	time = np.load(data_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_time.npy')
 
 	#Include only relevant period of the trial (i.e., baseline + epoch)
 	begin_t = find_nearest(time, bl[0])
@@ -70,10 +70,10 @@ for subi, subject in enumerate(ListSubjects):
 	ax_diag.set_title('Average ' + ListFilenames[0] + ' for subject ' + subject, fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
 
 	#Save
-	plt.savefig(result_path + ListFilenames[0] + '/Figures/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_decodingTimecourse.svg',
+	plt.savefig(result_path + ListFilenames[0] + '/Figures/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_decodingTimecourse.svg',
 		format = 'svg', dpi = 300, bbox_inches = 'tight')
-	tmp = svg2rlg(result_path + ListFilenames[0] + '/Figures/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_decodingTimecourse.svg')
-	renderPDF.drawToFile(tmp, result_path + ListFilenames[0] + '/Figures/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_decodingTimecourse.pdf')
+	tmp = svg2rlg(result_path + ListFilenames[0] + '/Figures/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_decodingTimecourse.svg')
+	renderPDF.drawToFile(tmp, result_path + ListFilenames[0] + '/Figures/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_decodingTimecourse.pdf')
 
 	#Close all figures
 	#plt.close()
@@ -98,10 +98,10 @@ for subi, subject in enumerate(ListSubjects):
 		ax_gen.set_yticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
 
 		#Save
-		plt.savefig(result_path + ListFilenames[0] + '/Figures/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_gat.svg',
+		plt.savefig(result_path + ListFilenames[0] + '/Figures/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_gat.svg',
 			format = 'svg', dpi = 300, bbox_inches = 'tight')
-		tmp = svg2rlg(result_path + ListFilenames[0] + '/Figures/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_gat.svg')
-		renderPDF.drawToFile(tmp, result_path + ListFilenames[0] + '/Figures/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_gat.pdf')
+		tmp = svg2rlg(result_path + ListFilenames[0] + '/Figures/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_gat.svg')
+		renderPDF.drawToFile(tmp, result_path + ListFilenames[0] + '/Figures/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_gat.pdf')
 
 	if gen_filename is 'diag':
 		scores.append(np.mean(score, axis=0))
@@ -124,11 +124,15 @@ if stats is 'permutation':
 		p_values_diag = myStats(np.array(scores)[:, :, None] - chance, tail=tail, permutations=n_permutations)
 		sig_diag = p_values_diag < stat_alpha
 	else:
-		p_values = myStats(np.array(scores) - chance, tail=tail, n_jobs=10, permutations=n_permutations)
-		p_values_diag = p_values.diagonal() / 2 #to get 1-tailed significance
+		tmp = [np.diag(sc) for sc in scores]
+		p_values = myStats(np.array(scores) - chance, tail=tail, permutations=n_permutations)
+		p_values_diag = myStats(np.array(tmp)[:, :, None] - chance, tail=1, permutations=n_permutations)
+		#p_values_diag = p_values.diagonal() / 2 #to get 1-tailed significance
 
 		sig = p_values < stat_alpha
 		sig_diag = p_values_diag < stat_alpha
+
+		del tmp
 
 	np.save(result_path + ListFilenames[0] + '/Stats/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_stats.npy', 'p_values')
 else:
@@ -156,10 +160,10 @@ ax_group.set_xticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5
 ax_group.set_title('Average ' + ListFilenames[0], fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
 
 #Save
-plt.savefig(result_path + ListFilenames[0] + '/Figures/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_decodingTimecourse.svg',
+plt.savefig(result_path + ListFilenames[0] + '/Figures/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_decodingTimecourse.svg',
 	format = 'svg', dpi = 300, bbox_inches = 'tight')
-tmp = svg2rlg(result_path + ListFilenames[0] + '/Figures/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_decodingTimecourse.svg')
-renderPDF.drawToFile(tmp, result_path + ListFilenames[0] + '/Figures/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_decodingTimecourse.pdf')
+tmp = svg2rlg(result_path + ListFilenames[0] + '/Figures/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_decodingTimecourse.svg')
+renderPDF.drawToFile(tmp, result_path + ListFilenames[0] + '/Figures/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_decodingTimecourse.pdf')
 
 if gen_filename is 'timeGen':
 	fig_group_gen, ax_group_gen = plt.subplots(1, 1, sharey=True, figsize=[10, 10])
@@ -181,7 +185,7 @@ if gen_filename is 'timeGen':
 		range_min = chance+.001
 		range_max = np.max(np.mean(scores, axis=0))
 		contour_steps = np.linspace(range_min, range_max, 10)
-		
+
 		pretty_gat(scores_m, times=time[begin_t[0] :], chance=chance, ax=ax_group_gen, sig=sig, cmap=map_color, clim=None, colorbar=None, 
 			xlabel='Test times (in s)', ylabel='Train times (in s)', sfreq=sfreq, diagonal='dimgrey', test_times=None, classLines=None, classColors=None, contourPlot=True, steps=contour_steps)
 
@@ -196,10 +200,18 @@ if gen_filename is 'timeGen':
 	ax_group_gen.set_yticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
 
 	#Save
-	plt.savefig(result_path + ListFilenames[0] + '/Figures/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_gat.svg',
+	plt.savefig(result_path + ListFilenames[0] + '/Figures/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_gat.svg',
 		format = 'svg', dpi = 300, bbox_inches = 'tight')
-	tmp = svg2rlg(result_path + ListFilenames[0] + '/Figures/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_gat.svg')
-	renderPDF.drawToFile(tmp, result_path + ListFilenames[0] + '/Figures/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_gat.pdf')
+	tmp = svg2rlg(result_path + ListFilenames[0] + '/Figures/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_gat.svg')
+	renderPDF.drawToFile(tmp, result_path + ListFilenames[0] + '/Figures/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_gat.pdf')
+
+	#######Retrieve relevant info regarding stats######
+	time_short = time[begin_t[0] :]
+	sig_time = time_short[p_values_diag < stat_alpha]
+
+	if ~sig_time.size == 0:
+		print('Diagonal decoding is significant at the following times: ' + sig_time)
+
 
 
 

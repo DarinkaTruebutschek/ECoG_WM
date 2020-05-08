@@ -31,11 +31,11 @@ blc = 1 #baseline correction or not?
 
 ##########################################
 #Inclusion parameters
-acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct trials
+acc = 0 #0 = include both correct and incorrect trials, 1 = include only correct trials
 
 ##########################################
 #Decoding
-decCond = 'cue' #'indItems'
+decCond = 'buttonPress' #'indItems', 'cue'
 
 generalization = 1 #0 = diagonal only, 1 = full matrix
 

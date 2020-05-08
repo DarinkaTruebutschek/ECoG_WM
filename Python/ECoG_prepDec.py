@@ -35,7 +35,7 @@ def ECoG_prepDec(decCond, subject, foi):
 
 		data.data = np.mean(data.data, axis=2)
 
-	elif (fmethod is 'erp') | (fmethod is 'erp_100'):
+	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100'):
 		data = ECoG_fldtrp2mne(fname, 'data', 'erp') #for erp data, this is a 3d-matrix of sixe n_trials, n_channels, n_freqs, n_times
 
 		#Preprocess data: Apply baseline correction 
@@ -54,7 +54,7 @@ def ECoG_prepDec(decCond, subject, foi):
 	if fmethod is 'tfa_wavelet':
 		if np.shape(data.data)[0] != np.shape(trialInfo)[0]:
 			print('X and y do not have the same dimensions')
-	elif (fmethod is 'erp') | (fmethod is 'erp_100'):
+	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'erp_100'):
 		if np.shape(data.get_data())[0] != np.shape(trialInfo)[0]:
 			print('X and y do not have the same dimensions')
 
@@ -62,7 +62,7 @@ def ECoG_prepDec(decCond, subject, foi):
 	#Prepare X and y specifically
 	if fmethod is 'tfa_wavelet':
 		X_train = data.data
-	elif (fmethod is 'erp') | (fmethod is 'erp_100'):
+	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'erp_100'):
 		if win_size is not False:
 			X_train_tmp = data.get_data() #n_trials x n_channels x n_timepoints (decoding done seperately on each time point)
 		else:
@@ -121,6 +121,10 @@ def ECoG_prepDec(decCond, subject, foi):
 		y_train = MultiLabelBinarizer().fit_transform(y_train)
 	elif decCond is 'cue':
 		y_train = trialInfo.values[:, 3]
+	elif decCond is 'buttonPress':
+		y_train = trialInfo.values[:, 12]
+		y_train[y_train == 2] = 1 #1/2 = trigger pulled
+		y_train[(y_train == 3) | (y_train == 4)] = 0 #3/4 = trigger not pulled
 
 	#Select only those trials, in which the subject responded correctly & throw out any additional nan entries
 	if acc:
