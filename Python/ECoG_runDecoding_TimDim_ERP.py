@@ -19,7 +19,7 @@ from ECoG_decoders import binaryClassif
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'AS', 'AP', 'KR', 'CD']
 #ListSubjects = ['EG_I']
 #ListFreqs = [[8, 12], [13, 30], [31, 70], [71, 160]]
-ListFilenames = ['erp_TimDim_timeBin_100_stepSize_100_meanSubtraction']
+ListFilenames = ['respLocked_erp_TimDim_timeBin_100_stepSize_100_meanSubtraction']
 
 if generalization:
 	gen_filename = 'timeGen'
@@ -45,35 +45,46 @@ for subi, subject in enumerate(ListSubjects):
 	for chani, _ in enumerate(np.arange(np.shape(X_train)[0])):
 		print('Decoding channel numnber ', chani)
 
-		for labeli, _ in enumerate(range(np.shape(y_train)[1])):
-			print('Running decoding on label ', labeli)
+		if decCond is 'indItems':
+			for labeli, _ in enumerate(range(np.shape(y_train)[1])):
+				print('Running decoding on label ', labeli)
 
-			if (np.mod(.2, win_size) != 0): #without baseline to facilitate code
-				 model, predictions, cv_test, score_label = binaryClassif(X_train[chani, :, :, 1:], y_train[:, labeli], X_test[chani, :, :, 1:], y_test[:, labeli], generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
-			else: 
-				model, predictions, cv_test, score_label = binaryClassif(X_train[chani, :, :, :], y_train[:, labeli], X_test[chani, :, :, :], y_test[:, labeli], generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
+				if (np.mod(.2, win_size) != 0): #without baseline to facilitate code
+				 	model, predictions, cv_test, score_label = binaryClassif(X_train[chani, :, :, 1:], y_train[:, labeli], X_test[chani, :, :, 1:], y_test[:, labeli], generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
+				else: 
+					model, predictions, cv_test, score_label = binaryClassif(X_train[chani, :, :, :], y_train[:, labeli], X_test[chani, :, :, :], y_test[:, labeli], generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
 
-			time_gen.append(model) #shape: (n_channels_n_labels)
-			y_pred.append(predictions) #shape: (n_channels x n_labels) x n_folds, within each label: n_folds x n_testTrials x n_testTime x n_labels
+				time_gen.append(model) #shape: (n_channels_n_labels)
+				y_pred.append(predictions) #shape: (n_channels x n_labels) x n_folds, within each label: n_folds x n_testTrials x n_testTime x n_labels
+				test_index.append(cv_test) #shape: (n_channels x n_folds) x n_testTrials
+				score.append(score_label) #shape: (n_channels x n_labels) x n_testTime
+
+		else:
+			model, predictions, cv_test, score_label = binaryClassif(X_train[chani, :, :, :], y_train, X_test[chani, :, :, :], y_test, generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
+
+			time_gen.append(model) #shape: (n_channels)
+			y_pred.append(predictions) #shape: (n_channels x n_folds), within each fold: n_testTrials x n_testTime x n_labels
 			test_index.append(cv_test) #shape: (n_channels x n_folds) x n_testTrials
-			score.append(score_label) #shape: (n_channels x n_labels) x n_testTime
+			score.append(score_label) #shape: (n_channels x n_testTime)
 
 	#Reshape variables
 	y_pred = np.asarray(y_pred)
 	test_index = np.asarray(test_index)
 	score = np.asarray(score)
 
-	if (np.mod(.2, win_size) != 0): #without baseline to facilitate code
-		y_pred = np.transpose(np.reshape(y_pred, (labeli+1, chani+1, n_folds)), (1, 0, 2)) #channels x labels x folds
-		test_index = np.transpose(np.reshape(test_index, (labeli+1, chani+1, n_folds)), (1, 0, 2)) #channels x labels x folds
-		score = np.transpose(np.reshape(score, (labeli+1, chani+1, np.shape(trainTimes_onsets)[0]-2)), (1, 0, 2)) #channels x labels x folds
-	else:
-		y_pred = np.transpose(np.reshape(y_pred, (labeli+1, chani+1, n_folds)), (1, 0, 2)) #channels x labels x folds
-		test_index = np.transpose(np.reshape(test_index, (labeli+1, chani+1, n_folds)), (1, 0, 2)) #channels x labels x folds
-		score = np.transpose(np.reshape(score, (labeli+1, chani+1, np.shape(trainTimes_onsets)[0]-1)), (1, 0, 2)) #channels x labels x folds
+	if (fmethod != 'respLocked_erp_100') & (decCond != 'indItems'):
+		if (np.mod(.2, win_size) != 0): #without baseline to facilitate code
+			y_pred = np.transpose(np.reshape(y_pred, (labeli+1, chani+1, n_folds)), (1, 0, 2)) #channels x labels x folds
+			test_index = np.transpose(np.reshape(test_index, (labeli+1, chani+1, n_folds)), (1, 0, 2)) #channels x labels x folds
+			score = np.transpose(np.reshape(score, (labeli+1, chani+1, np.shape(trainTimes_onsets)[0]-2)), (1, 0, 2)) #channels x labels x folds
+		else:
+			y_pred = np.transpose(np.reshape(y_pred, (labeli+1, chani+1, n_folds)), (1, 0, 2)) #channels x labels x folds
+			test_index = np.transpose(np.reshape(test_index, (labeli+1, chani+1, n_folds)), (1, 0, 2)) #channels x labels x folds
+			score = np.transpose(np.reshape(score, (labeli+1, chani+1, np.shape(trainTimes_onsets)[0]-1)), (1, 0, 2)) #channels x labels x folds
 
 	#Compute average score for all labels
-	if score.ndim > 2:
+	if decCond is 'indItems':
+	#if score.ndim > 2:
 		average_score = np.mean(score, axis=1)
 
 	#Save all data
@@ -88,7 +99,8 @@ for subi, subject in enumerate(ListSubjects):
 	np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_test_index.npy', test_index, allow_pickle=True)
 	np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_score.npy', score, allow_pickle=True)
 
-	if score.ndim > 2:
+	if decCond is 'indItems':
+	#if score.ndim > 2:
 		np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_average_score.npy', average_score, allow_pickle=True)
 
 

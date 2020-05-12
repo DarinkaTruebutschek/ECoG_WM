@@ -183,8 +183,11 @@ def _set_ticks(times):
     if np.round(max(times) * 10.) / 10. == max(times):
         ticks = np.append(ticks, max(times))
     ticks = np.round(ticks * 10.) / 10.
-    dis = np.where(ticks == 0) #find out what the distance between the individual listings will have to be
-    dis = int(dis[0][0])
+    if 0. in ticks:
+        dis = np.where(ticks == 0) #find out what the distance between the individual listings will have to be
+        dis = int(dis[0][0])
+    else:
+        dis = np.where(np.min(ticks))[0][0]
     tickmarks = ticks[dis : : 5]
     #ticklabels = ([int(ticks[0] * 1e3)] +
                   #['' for ii in ticks[1:-1]] +

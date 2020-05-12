@@ -18,7 +18,7 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #TF parameters
-fmethod = 'erp_100'
+fmethod = 'respLocked_erp_100'
 
 ##########################################
 #Preprocessing
@@ -27,7 +27,7 @@ if fmethod is 'tfa_wavelet':
 elif (fmethod is 'erp') | (fmethod is 'erp_100'):
 	bl = [-.2, 0]
 
-blc = 1 #baseline correction or not?
+blc = 0 #baseline correction or not?
 
 ##########################################
 #Inclusion parameters
@@ -37,7 +37,7 @@ acc = 0 #0 = include both correct and incorrect trials, 1 = include only correct
 #Decoding
 decCond = 'buttonPress' #'indItems', 'cue'
 
-generalization = 1 #0 = diagonal only, 1 = full matrix
+generalization = 0 #0 = diagonal only, 1 = full matrix
 
 if fmethod is 'tfa_wavelet':
 	trainTime = [bl[0], 4.3]
@@ -48,6 +48,9 @@ elif fmethod is 'erp':
 elif fmethod is 'erp_100':
 	trainTime = [bl[0], 4.48]
 	testTime = [bl[0], 4.48]
+elif fmethod is 'respLocked_erp_100':
+	trainTime = [-4.0, 0.]
+	testTime = [-4.0, 0.]
 
 #CV
 n_folds = 5

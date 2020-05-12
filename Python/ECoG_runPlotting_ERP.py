@@ -23,7 +23,7 @@ from ECoG_base_stats import myStats
 #Define important variables
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'AS', 'AP', 'KR', 'CD']
 #ListSubjects = ['EG_I', 'HS']
-ListFilenames = ['erp_100']
+ListFilenames = ['respLocked_erp_100']
 
 
 if generalization:
@@ -44,7 +44,10 @@ for subi, subject in enumerate(ListSubjects):
 	time = np.load(data_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_time.npy')
 
 	#Include only relevant period of the trial (i.e., baseline + epoch)
-	begin_t = find_nearest(time, bl[0])
+	if ListFilenames[0] != 'respLocked_erp_100':
+		begin_t = find_nearest(time, bl[0])
+	else:
+		begin_t = find_nearest(time, trainTime[0])
 
 	if gen_filename is 'diag':
 		score = score[:, begin_t[0] :]
@@ -62,10 +65,14 @@ for subi, subject in enumerate(ListSubjects):
 		pretty_decod(np.diagonal(score), times=time[begin_t[0] :], color=line_color[0], sig=None, chance=chance, ax=ax_diag, thickness=line_thickness)
 
 	#Add relevant info
-	ax_diag.axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
+	if ListFilenames[0] != 'respLocked_erp_100':
+		ax_diag.axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
 
-	ax_diag.set_xticks(np.arange(0., 4.5, .5)), 
-	ax_diag.set_xticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+		ax_diag.set_xticks(np.arange(0., 4.5, .5)), 
+		ax_diag.set_xticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+	else:
+		ax_diag.set_xticks(np.arange(-4.0, 0, .5)), 
+		ax_diag.set_xticklabels(['-4.0', '-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'R'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 
 	ax_diag.set_title('Average ' + ListFilenames[0] + ' for subject ' + subject, fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
 
@@ -76,7 +83,7 @@ for subi, subject in enumerate(ListSubjects):
 	renderPDF.drawToFile(tmp, result_path + ListFilenames[0] + '/Figures/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_decodingTimecourse.pdf')
 
 	#Close all figures
-	#plt.close()
+	plt.close()
 
 	#######Then, plot generalization for individual subjects######
 	if gen_filename is 'timeGen':
@@ -88,14 +95,21 @@ for subi, subject in enumerate(ListSubjects):
 			xlabel='Test times (in s)', ylabel='Train times (in s)', sfreq=sfreq, diagonal='dimgrey', test_times=None, classLines=None, classColors=None, contourPlot=None, steps=None)
 
 		#Add relevant info
-		ax_gen.axvline(1.500, color='k') #indicates item onset
-		ax_gen.axhline(1.500, color='k') #indicates item onset
+		if ListFilenames[0] != 'respLocked_erp_100':
+			ax_gen.axvline(1.500, color='k') #indicates item onset
+			ax_gen.axhline(1.500, color='k') #indicates item onset
 
-		ax_gen.set_xticks(np.arange(0., 4.5, .5)), 
-		ax_gen.set_xticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
+			ax_gen.set_xticks(np.arange(0., 4.5, .5)), 
+			ax_gen.set_xticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
 
-		ax_gen.set_yticks(np.arange(0., 4.5, .5)), 
-		ax_gen.set_yticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
+			ax_gen.set_yticks(np.arange(0., 4.5, .5)), 
+			ax_gen.set_yticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
+		else:
+			ax_gen.set_xticks(np.arange(-4.0, 0, .5)), 
+			ax_gen.set_xticklabels(['-4.0', '-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'R'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
+
+			ax_gen.set_yticks(np.arange(-4.0, 0., .5)), 
+			ax_gen.set_yticklabels(['-4.0', '-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'R'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
 
 		#Save
 		plt.savefig(result_path + ListFilenames[0] + '/Figures/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_gat.svg',
@@ -111,7 +125,7 @@ for subi, subject in enumerate(ListSubjects):
 	np.asarray(scores)
 
 	#Close all figures
-	#plt.close()
+	plt.close()
 
 #######Then, plot group######	
 scores = np.array(scores)
@@ -152,10 +166,14 @@ else:
 	pretty_decod(np.asarray([np.diag(sc) for sc in scores]), times=time[begin_t[0] :], color=line_color[0], sig=sig_diag, chance=chance, fill=True, ax=ax_group, thickness=line_thickness)
 
 #Add relevant info
-ax_group.axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
+if ListFilenames[0] != 'respLocked_erp_100':
+	ax_group.axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
 
-ax_group.set_xticks(np.arange(0., 4.5, .5)), 
-ax_group.set_xticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+	ax_group.set_xticks(np.arange(0., 4.5, .5)), 
+	ax_group.set_xticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+else:
+	ax_group.set_xticks(np.arange(-4.0, 0, .5)), 
+	ax_group.set_xticklabels(['-4.0', '-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'R'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 
 ax_group.set_title('Average ' + ListFilenames[0], fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
 
@@ -190,18 +208,28 @@ if gen_filename is 'timeGen':
 			xlabel='Test times (in s)', ylabel='Train times (in s)', sfreq=sfreq, diagonal='dimgrey', test_times=None, classLines=None, classColors=None, contourPlot=True, steps=contour_steps)
 
 	#Add relevant info
-	ax_group_gen.axvline(1.500, color='k') #indicates item onset
-	ax_group_gen.axhline(1.500, color='k') #indicates item onset
+	if ListFilenames[0] != 'respLocked_erp_100':
+		ax_group_gen.axvline(1.500, color='k') #indicates item onset
+		ax_group_gen.axhline(1.500, color='k') #indicates item onset
 
-	ax_group_gen.set_xticks(np.arange(0., 4.5, .5)), 
-	ax_group_gen.set_xticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
+		ax_group_gen.set_xticks(np.arange(0., 4.5, .5)), 
+		ax_group_gen.set_xticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
 
-	ax_group_gen.set_yticks(np.arange(0., 4.5, .5)), 
-	ax_group_gen.set_yticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
+		ax_group_gen.set_yticks(np.arange(0., 4.5, .5)), 
+		ax_group_gen.set_yticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
+	else:
+		ax_group_gen.set_xticks(np.arange(-4.0, 0, .5)), 
+		ax_group_gen.set_xticklabels(['-4.0', '-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'R'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
+
+		ax_group_gen.set_yticks(np.arange(-4.0, 0, .5)), 
+		ax_group_gen.set_yticklabels(['-4.0', '-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'R'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
+
 
 	#Save
 	plt.savefig(result_path + ListFilenames[0] + '/Figures/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_gat.svg',
 		format = 'svg', dpi = 300, bbox_inches = 'tight')
+	plt.savefig(result_path + ListFilenames[0] + '/Figures/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_gat.tiff',
+		format = 'tiff', dpi = 300, bbox_inches = 'tight')
 	tmp = svg2rlg(result_path + ListFilenames[0] + '/Figures/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_gat.svg')
 	renderPDF.drawToFile(tmp, result_path + ListFilenames[0] + '/Figures/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_gat.pdf')
 
