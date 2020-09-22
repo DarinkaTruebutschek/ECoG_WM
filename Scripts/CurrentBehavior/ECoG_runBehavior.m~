@@ -17,8 +17,9 @@ addpath(script_path);
 addpath(toolbox_path);
 
 %% Define important variables
-subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'};
-subnips = {'CD'};
+subnips = {'MKL','EG_I','HS','MG','KR','WS','KJ_I','LJ','AS','SB','HL','AP', 'MV'}; %all available subjects included in analysis
+subnips = {'MKL','EG_I','HS','MG','KR','KJ_I','AS','SB','AP'}; %all subjects included in analysis
+subnips = {'EG_I'};
 condition = 'memory';
 
 %% Extract behavioral data from original files and save as a .mat file
@@ -529,6 +530,5 @@ for figi = 1 : 2
         printfig(gcf, [0 0 26 8], [res_path 'Group_RT_LoadxTaskRuleEffect.tiff']);
     end
 end
-
 
     

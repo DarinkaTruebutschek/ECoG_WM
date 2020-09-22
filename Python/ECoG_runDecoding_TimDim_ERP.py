@@ -19,7 +19,7 @@ from ECoG_decoders import binaryClassif
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'AS', 'AP', 'KR', 'CD']
 #ListSubjects = ['EG_I']
 #ListFreqs = [[8, 12], [13, 30], [31, 70], [71, 160]]
-ListFilenames = ['respLocked_erp_TimDim_timeBin_100_stepSize_100_meanSubtraction']
+ListFilenames = ['respLocked_erp_TimDim_timeBin_4000_stepSize_4000_meanSubtraction']
 
 if generalization:
 	gen_filename = 'timeGen'
@@ -58,9 +58,13 @@ for subi, subject in enumerate(ListSubjects):
 				y_pred.append(predictions) #shape: (n_channels x n_labels) x n_folds, within each label: n_folds x n_testTrials x n_testTime x n_labels
 				test_index.append(cv_test) #shape: (n_channels x n_folds) x n_testTrials
 				score.append(score_label) #shape: (n_channels x n_labels) x n_testTime
-
 		else:
-			model, predictions, cv_test, score_label = binaryClassif(X_train[chani, :, :, :], y_train, X_test[chani, :, :, :], y_test, generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
+			if X_train.ndim == 4: #aka, there aree multiple training time windowds
+				model, predictions, cv_test, score_label = binaryClassif(X_train[chani, :, :, :], y_train, X_test[chani, :, :, :], y_test, generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
+			elif X_train.ndim == 3: #aka, we are just testing on one big time bin
+				X_train_tmp = X_train[chani, :, :]
+				X_test_tmp = X_test[chani, :, :]
+				model, predictions, cv_test, score_label = binaryClassif(X_train_tmp[:, :, np.newaxis], y_train, X_test_tmp[:, :, np.newaxis], y_test, generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
 
 			time_gen.append(model) #shape: (n_channels)
 			y_pred.append(predictions) #shape: (n_channels x n_folds), within each fold: n_testTrials x n_testTime x n_labels

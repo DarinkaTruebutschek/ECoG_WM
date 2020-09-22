@@ -12,12 +12,10 @@ clc;
 ECoG_setPath;
 
 %% Define important variables
-subnips = {'EG_I', 'HL', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'}; %subject KR has a different sampling frequency, to be checked carefully
-subnips = {'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'HL'};
-subnips = {'CD'};
+subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'}; %included subnips
 
 tfa_method = 'wavelet';
-
+epoch = 'cueLocked';
 %% Specify parameters to be used for time-frequency analysis
 if strcmp(tfa_method, 'wavelet')
     minf = 2; 
@@ -29,55 +27,102 @@ if strcmp(tfa_method, 'wavelet')
     
     %Chosen time window will last from -0.445s prior to cue onset to 150 ms
     %post probe onset
-    toi = [-0.44 : 0.01 : 4.650];
+    if ~strcmp(epoch, 'respLocked')
+        toi = [-0.44 : 0.01 : 4.650];
+    else
+        toi = [-4.0 : 0.01 : 0];
+    end
 end
 
 %% Loop over subjects to decompose signal into time-frequency spectrum and save the resultant data file
 for subi = 1 : length(subnips)
     
-    if ~exist([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet.mat'])
+    if ~strcmp(epoch, 'respLocked')
+        if ~exist([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet_final.mat'])
         
-        %Load initial data
-        load([res_path subnips{subi} '/' subnips{subi} '_reref.mat']);
+            %Load initial data
+            load([res_path subnips{subi} '/' subnips{subi} '_reref.mat']);
     
+            %Check sampling frequency to make sure 
+            if reref.fsample ~= 1000
+                disp('ATTENTION! Sample frequency deviates from 1000.');
+            end
+        
+            %Check whether timing axis begins at the exact same time or not
+            for triali = 1 : length(reref.time)
+                begin_t(triali) = reref.time{triali}(1);
+            end
+        
+            if numel(unique(begin_t)) > 1
+                display('ATTENTION! Adjusting time axis to facilitate following analyses');
+            
+                my_difference = begin_t - (-.45); 
+            
+                %Adjust be measured differences
+                for triali = 1 : length(reref.time)
+                    tmp{triali} = reref.time{triali} - my_difference(triali);
+                end
+            
+                %Re-check
+                for triali = 1 : length(reref.time)
+                    begin_t2(triali) = tmp{triali}(1);
+                end
+            
+                display(num2str(unique(begin_t2(triali))));
+            
+                %pause;
+            
+                reref.time = tmp;
+                
+                clear('tmp');
+            end
+            
+            %Select data to only include the time window of interest to begin
+            %with
+            cfg = [];
+            cfg.latency = [toi(1), toi(end)];
+        
+            tmp = ft_selectdata(cfg, reref);
+            
+            cfg = [];
+            cfg.method = 'tfr';
+            cfg.output = 'pow'; % fourier to get complex values, pow to get power
+            cfg.keeptrials = 'yes';
+            cfg.foi = freqoi;
+            cfg.toi = toi;
+            cfg.width = 5; 
+            cfg.pad = 'nextpow2';
+            cfg.polyremoval = 1; %to demean & detrend
+    
+            freq = ft_freqanalysis(cfg, tmp);
+    
+            %Add missing info to frequency structure
+            freq.elec = reref.elec;
+            freq.elec_mni_frv = reref.elec_mni_frv;
+            freq.label_all = reref.label_all;
+            freq.elec_all = reref.elec_all;
+            freq.elec_mni_frv_all = reref.elec_mni_frv_all;
+    
+            %Save
+            save([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet_final.mat'], 'freq', '-v7.3');
+            
+            clear('tmp');
+            
+        end         
+    else
+        %Load initial data
+        load([res_path subnips{subi} '/' subnips{subi} '_respLocked_erp_1000.mat']);
+        
         %Check sampling frequency to make sure 
-        if reref.fsample ~= 1000
+        if data_respLocked.fsample ~= 1000
             disp('ATTENTION! Sample frequency deviates from 1000.');
         end
         
-        %Check whether timing axis begins at the exact same time or not
-        for triali = 1 : length(reref.time)
-            begin_t(triali) = reref.time{triali}(1);
-        end
+        %Remove trialInfo field 
+        trialInfo_all = data_respLocked.trialInfo_all;
+        data_respLocked = rmfield(data_respLocked, 'trialInfo_all');
         
-        if numel(unique(begin_t))
-            display('ATTENTION! Adjusting time axis to facilitate following analyses');
-            
-            my_difference = begin_t - (-.45); 
-            
-            %Adjust be measured differences
-            for triali = 1 : length(reref.time)
-                tmp{triali} = reref.time{triali} - my_difference(triali);
-            end
-            
-            %Re-check
-            for triali = 1 : length(reref.time)
-                begin_t2(triali) = tmp{triali}(1);
-            end
-            
-            display(num2str(unique(begin_t2(triali))));
-            
-            pause;
-            
-            reref.time = tmp;
-        end
-            
-        %Select data to only include the time window of interest to begin
-        %with
-        cfg = [];
-        cfg.latency = [toi(1), toi(end)];
-        
-        tmp = ft_selectdata(cfg, reref);
+        tmp = data_respLocked;
         
         cfg = [];
         cfg.method = 'tfr';
@@ -87,20 +132,20 @@ for subi = 1 : length(subnips)
         cfg.toi = toi;
         cfg.width = 5; 
         cfg.pad = 'nextpow2';
+        cfg.polyremoval = 1; %to demean & detrend
     
         freq = ft_freqanalysis(cfg, tmp);
     
         %Add missing info to frequency structure
-        freq.elec = reref.elec;
-        freq.elec_mni_frv = reref.elec_mni_frv;
-        freq.label_all = reref.label_all;
-        freq.elec_all = reref.elec_all;
-        freq.elec_mni_frv_all = reref.elec_mni_frv_all;
+        freq.elec = data_respLocked.elec;
+        freq.elec_mni_frv = data_respLocked.elec_mni_frv;
+        freq.label_all = data_respLocked.label_all;
+        freq.elec_all = data_respLocked.elec_all;
+        freq.elec_mni_frv_all = data_respLocked.elec_mni_frv_all;
+        freq.trialInfo_all = trialInfo_all;
     
         %Save
-        save([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet.mat'], 'freq', '-v7.3');
-    %else
-        %display(['TFA decomposition file already exists for subject: ' subnips{subi}]);
+        save([res_path subnips{subi} '/' subnips{subi} '_respLocked_tfa_wavelet.mat'], 'freq', '-v7.3');
     end
 end
 

@@ -21,14 +21,14 @@ def ECoG_prepDec(decCond, subject, foi):
 	##########################################
 	#Load data (X)
 	fname = data_path + subject + '/' +  subject + '_' + fmethod + '.mat'
-	if fmethod is 'tfa_wavelet':
+	if (fmethod is 'tfa_wavelet') | (fmethod is 'respLocked_tfa_wavelet'):
 		data = ECoG_fldtrp2mne(fname, 'freq', 'tfa') #for tfa data, this is a 4d-matrix of size n_trials, n_channels, n_freqs, n_times
 
 		#Preprocess data: Extract specific frequencies, apply baseline correction, and then average over those frequencies
 		_, foi_1 = find_nearest(data.freqs, foi[0])
 		_, foi_2 = find_nearest(data.freqs, foi[1])
 
-		data.crop(tmin=bl[0], tmax=trainTime[1], fmin=foi_1, fmax=foi_2)
+		data.crop(tmin=trainTime[0], tmax=trainTime[1], fmin=foi_1, fmax=foi_2)
 
 		if blc:
 			data.apply_baseline(baseline=bl, mode='zscore', verbose=True)
@@ -42,6 +42,7 @@ def ECoG_prepDec(decCond, subject, foi):
 			data.apply_baseline(baseline=bl, verbose=True)
 	elif (fmethod is 'respLocked_erp_100'):
 		data = ECoG_fldtrp2mne(fname, 'data_respLocked', 'erp') #for erp data, this is a 3d-matrix of sixe n_trials, n_channels, n_freqs, n_times
+		data.crop(tmin=trainTime[0], tmax=trainTime[1])
 
 		#Preprocess data: Apply baseline correction 
 		if blc:
@@ -65,7 +66,7 @@ def ECoG_prepDec(decCond, subject, foi):
 
 	##########################################
 	#Prepare X and y specifically
-	if fmethod is 'tfa_wavelet':
+	if (fmethod is 'tfa_wavelet') | (fmethod is 'respLocked_tfa_wavelet'):
 		X_train = data.data
 	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100'):
 		if win_size is not False:
@@ -163,6 +164,6 @@ def ECoG_prepDec(decCond, subject, foi):
 	print('Training on:', np.shape(X_train), np.shape(y_train))
 	print('Testing on:', np.shape(X_test), np.shape(y_test))
 	
-	#return X_train, y_train, X_test, y_test, data.times
+	return X_train, y_train, X_test, y_test, data.times
 
-	return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset if 'timebins_onset' in locals() else None
+	#return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset if 'timebins_onset' in locals() else None

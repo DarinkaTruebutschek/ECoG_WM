@@ -12,7 +12,7 @@ ECoG_setPath;
 
 %% Define important variables
 subnips = {'MKL','EG_I','HS','MG','KR','WS','KJ_I','LJ','AS','SB','HL','AP'}; %all subjects included in analysis
-subnips = {'MV'};
+subnips = {'CD'};
 
 %Paths to anatomical/functional data
 if strcmp(subnips, 'MKL')
@@ -545,7 +545,7 @@ table = generate_electable(e_pos, 'xldir', xldir, 'fsdir', fsdir, 'elec_nat', el
 %% Load in data
 for sessi = 1 : length(raw_data_file)
     
-    if ~strcmp(subnips{1}, 'CD')
+    if ~strcmp(subnips{1}, 'CD') 
         disp(num2str(sessi));
 
         cfg = [];
@@ -553,7 +553,7 @@ for sessi = 1 : length(raw_data_file)
 
         cfg.continuous = 'yes';
         data{sessi} = ft_preprocessing(cfg);
-    else
+    elseif strcmp(subnips{1}, 'CD')
         %Load in another subject just to be able to get data structure
         %right
         cfg = [];
@@ -711,6 +711,7 @@ for sessi = 1 : length(raw_data_file)
         figure;
         plot(trigsamp{sessi}, trigval{sessi});
     end
+   
 end
 
 %% Check triggers and compare them to the behavioral data
@@ -720,6 +721,35 @@ for sessi = 1 : length(raw_data_file)
     [alltrig{sessi}, alltimes{sessi}, durations{sessi}, data_mem] = ECoG_checkTriggers(trigval{sessi}, trigsamp{sessi}, sessi, data_mem, subnips{1}, data{sessi}.fsample);
 end
 
+%Replace missing behavioral info in table
+if strcmp(subnips, 'MKL')
+    data_mem.cue(1:80) = alltrig{1}(1:80, 2)-2;
+    
+    data_mem.load(1:80) = alltrig{1}(1:80, 4)-9;
+    data_mem.load(data_mem.load == 3) = 4;
+    
+    data_mem.probe_id(1:80) = alltrig{1}(1:80, 6)-20;
+    data_mem.probe(data_mem.probe_id(1:80) > 9) = 1;
+    data_mem.probe(data_mem.probe_id(1:80) <= 9) = 0;
+    data_mem.probe_id(data_mem.probe_id(1:80) > 9) = data_mem.probe_id(data_mem.probe_id(1:80) > 9)-10;
+
+    data_mem.correctResp(data_mem.cue(1:80) == data_mem.probe(1:80)) = 0;
+    data_mem.correctResp(data_mem.cue(1:80) ~= data_mem.probe(1:80)) = 1;
+    
+    data_mem.stimA_id(data_mem.probe(1:80) == 0) = data_mem.probe_id(data_mem.probe(1:80) == 0); %of course, this is only a proxy, as the matchning stimulus could also have been in a different position
+
+    data_mem.resp(1:80) = alltrig{1}(1:80, 7);
+    data_mem.resp(data_mem.resp(1:80) == 7) = 0;
+    data_mem.resp(data_mem.resp(1:80) == 8) = 1;
+    
+    data_mem.resp(data_mem.resp(1:80) == 0 & data_mem.correctResp(1:80) == 1) = 4;
+    data_mem.resp(data_mem.resp(1:80) == 0 & data_mem.correctResp(1:80) == 0) = 3;
+    data_mem.resp(data_mem.resp(1:80) == 1 & data_mem.correctResp(1:80) == 0) = 2;
+    data_mem.resp(data_mem.resp(1:80) == 1 & data_mem.correctResp(1:80) == 1) = 1;
+    
+    data_mem.RT(1:80) = durations{1}(1:80, 6) ./ data{1}.fsample; 
+end
+    
 save([res_path subnips{1} '/' subnips{1} '_alltrig.mat'], 'alltrig', 'alltimes');
 save([behavior_path subnips{1} '_memory_behavior.mat'], 'data_mem');
 %% Create trial structure so that each epoch will be aligned to cue onset 

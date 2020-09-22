@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import scipy.io as sio
+import seaborn as sns
 
 from termcolor import colored
 from svglib.svglib import svg2rlg
@@ -23,9 +24,9 @@ from ECoG_base_stats import myStats
 ##########################################
 #Define important variables
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'AS', 'AP', 'KR', 'CD']
-ListFilenames = ['respLocked_erp_TimDim_timeBin_100_stepSize_100']
+ListFilenames = ['respLocked_erp_TimDim_timeBin_4000_stepSize_4000_meanSubtraction']
 
-winSize = 100 #in msec
+winSize = 4000 #in msec
 
 if generalization:
 	gen_filename = 'timeGen'
@@ -77,6 +78,25 @@ for subi, subject in enumerate(ListSubjects):
 	#First, plot individual channels for each subject to get an idea
 	print('Plotting ', subject)
 
+	if np.shape(score)[1] == 1: #this happens if trained on entire time window (in this case, just plot a bar plot and exit)
+		fig_bar = plt.figure(figsize=[60, 8])
+		sns.set_style("dark")
+		ax = sns.barplot(x=channel, y=np.squeeze(score), palette="Spectral")
+		
+		#Add relevant info
+		ax.axhline(0.5, color='dimgray', zorder=-3) #indicates chance
+		#plt.rcParams.update({'fontname': font_name, 'font.size': font_size, 'font.weight': font_weight})
+
+		#Save
+		plt.savefig(result_path + ListFilenames[0] + '/Figures/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_barPlot_Channels.svg',
+		 format = 'svg', dpi = 300, bbox_inches = 'tight')
+		tmp = svg2rlg(result_path + ListFilenames[0] + '/Figures/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_barPlot_Channels.svg')
+		renderPDF.drawToFile(tmp, result_path + ListFilenames[0] + '/Figures/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_barPlot_Channels.pdf')
+
+	#Close figure
+	#plt.close()
+
+	'''
 	#fig_diag, ax_diag = plt.subplots(7, 7, sharex=True, sharey=True, squeeze=True, figsize=[30, 30])
 	fig_diag = plt.figure(figsize=[30, 30])
 	gs = fig_diag.add_gridspec(7, 7, wspace=.5, hspace=.5)
@@ -162,4 +182,4 @@ plt.savefig(result_path + ListFilenames[0] + '/Figures/Group_averageDecodingPerC
 	format = 'svg', dpi = 300, bbox_inches = 'tight')
 tmp = svg2rlg(result_path + ListFilenames[0] + '/Figures/Group_averageDecodingPerChannel_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_decodingTimecourse.svg')
 renderPDF.drawToFile(tmp, result_path + ListFilenames[0] + '/Figures/Group_averageDecodingPerChannel_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_decodingTimecourse.pdf')
-
+'''

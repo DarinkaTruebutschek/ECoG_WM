@@ -13,18 +13,22 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #TF parameters
-#fmethod = 'tfa_wavelet'
-fmethod = 'respLocked_erp_100' #erp_100: downsampled to 100 Hz, erp: downsampled to 250 Hz
+fmethod = 'respLocked_tfa_wavelet'
+#fmethod = 'respLocked_erp_100' #erp_100: downsampled to 100 Hz, erp: downsampled to 250 Hz
 
 ##########################################
 #Preprocessing
 blc = 0 #baseline correction or not?
-rel_blc = 1 #relative baseline correction or not?
+rel_blc = 0 #relative baseline correction or not?
 
 if fmethod is 'tfa_wavelet':
 	bl = [-0.14, 0] #baseline window
 	trainTime = [bl[0], 4.3]
 	testTime = [bl[0], 4.3]
+elif fmethod is 'respLocked_tfa_wavelet':
+	bl = [-3.5, -3.3] #there is no appropriate baseline in this case
+	trainTime = [-3.5, -0.35]
+	teestTime = [-3.5, -0.35]
 else:
 	bl = (-0.2, 0)
 	if fmethod is 'erp':
@@ -34,8 +38,8 @@ else:
 		trainTime = [bl[0], 4.48]
 		testTime = [bl[0], 4.48]
 	elif fmethod is 'respLocked_erp_100':
-		trainTime = [-4., 0.]
-		testTime = [-4., 0.]
+		trainTime = [-1., 0.]
+		testTime = [-1., 0.]
 
 ##########################################
 #Slice definition
@@ -46,10 +50,10 @@ if fmethod is 'erp':
 elif fmethod is 'erp_100':
 	toi = [bl[0], 4.48]
 elif fmethod is 'respLocked_erp_100':
-	toi = [-4.0, 0]
+	toi = [-1.0, 0] #[-4.0, 0]
 
-win_size = 0.1#0.5 #how many time points will be added as feature dimensions; in sec; if decoding is to be done independently on each time point, set to False
-step_size = 0.1#0.5 #where to begin with this
+win_size = False#0.5 #how many time points will be added as feature dimensions; in sec; if decoding is to be done independently on each time point, set to False
+step_size = 1.0#0.5 #where to begin with this
 
 ##########################################
 #Inclusion parameters
@@ -59,7 +63,7 @@ acc = 0 #0 = include both correct and incorrect trials, 1 = include only correct
 #Decoding
 decCond = 'buttonPress' #other options: 'indItems', 'cue'
 
-generalization = 0 #0 = diagonal only, 1 = full matrix
+generalization = 1 #0 = diagonal only, 1 = full matrix
 
 #CV
 n_folds = 5
