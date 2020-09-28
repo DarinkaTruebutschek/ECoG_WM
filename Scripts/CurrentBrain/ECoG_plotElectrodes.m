@@ -12,15 +12,15 @@ clc;
 %% Specify important variables
 
 %subnips = {'MG', 'EG_I', 'HL', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'};
-subnips = {'MKL', 'EG_I', 'HS', 'MG', 'KR', 'WS', 'KJ_I', 'LJ', 'AS', 'SB', 'AP'};
+subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'};
+sublabels = {'Sub1', 'Sub2', 'Sub3', 'Sub4', 'Sub5', 'Sub6', 'Sub7', 'Sub8', 'Sub9', 'Sub10', 'Sub11'};
 
 %channelSelection = {{'CP*', 'FL*', 'TLS*', 'TLI*', 'CA*', 'HIP*', 'TBP*', 'OB*'}}';
 hemi = 'left';
-viewside = 'medial';
+viewside = 'lateral';
 
 %For plotting
 %my_colors = cbrewer('div', 'Spectral', 12); %use this when plotting single subjects
-%my_colors = cbrewer('div', 'Spectral', length(subnips));
 my_colors = cbrewer('qual', 'Paired', length(subnips));
 
 %% Import necessary paths
@@ -144,13 +144,13 @@ for subi = 1 : length(subnips)
     end
 end
 
-legend(subnips{:}, 'Location', 'best', 'NumColumns', 6);
+legend(sublabels{:}, 'Location', 'best', 'NumColumns', 6);
 legend('boxon');
 
 hold off
 
 %Save
-filename = ['/media/darinka/Data0/iEEG/Results/Figures/Group/ElectrodeCov_' hemi '_' viewside];
+filename = ['/media/darinka/Data0/iEEG/Results/Figures/Group/Final_ElectrodeCov_' hemi '_' viewside];
 printfig(gcf, [0, 0, 25 12.5], filename);
 
 

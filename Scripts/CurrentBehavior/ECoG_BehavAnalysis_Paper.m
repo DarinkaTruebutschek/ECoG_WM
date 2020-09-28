@@ -305,7 +305,7 @@ for taski = 1 : 2
     set(gca, 'xtick', [1.5, 3.5], 'xticklabel', {'Probe-Match', 'Probe-Mismatch'}, 'FontName', 'Arial', 'FontSize', font_medium);
     set(gca, 'ytick', [0, .25, .5, .75, 1], 'yticklabel', {'0', '25', '50', '75', '100'}, 'FontName', 'Arial', 'FontSize', font_medium);
     
-    ylabel('% trials', 'FontName', 'Arial', 'FontSize', font_large);
+    ylabel('% correct', 'FontName', 'Arial', 'FontSize', font_large);
     %xlabel('Probe', 'FontName', 'Arial', 'FontSize', 14);
     
     if taski == 1
@@ -397,7 +397,7 @@ for taski = 1 : 2
     set(gca, 'xtick', [1.5, 3.5], 'xticklabel', {'Probe-Match', 'Probe-Mismatch'}, 'FontName', 'Arial', 'FontSize', font_medium);
     set(gca, 'ytick', [0, 2, 4, 6], 'yticklabel', {'0', '2', '4', '6'}, 'FontName', 'Arial', 'FontSize', font_medium);
     
-    ylabel('Reaction time', 'FontName', 'Arial', 'FontSize', font_large);
+    ylabel('Reaction time (in s)', 'FontName', 'Arial', 'FontSize', font_large);
     %xlabel('Probe', 'FontName', 'Arial', 'FontSize', 14);
     
     if taski == 1

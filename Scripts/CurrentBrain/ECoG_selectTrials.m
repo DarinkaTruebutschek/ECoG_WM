@@ -4,7 +4,7 @@
 %Author: D.T.
 %Date: 26 September 2019
 
-function [filter] = ECoG_selectTrials(params, data)
+function [allTrials, filter] = ECoG_selectTrials(params, data)
 
 %First, make sure to only consider those trials also included in the ECoG
 %analyses
