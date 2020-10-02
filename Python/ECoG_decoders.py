@@ -15,7 +15,7 @@ from sklearn import svm
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import make_scorer, roc_auc_score, confusion_matrix
 from sklearn.feature_selection import SelectKBest, f_classif
 
 def binaryClassif(data_train, label_train, data_test, label_test, generalization=False, proba=False, n_folds=5, predict_mode='cross-validation', scoring=None):
@@ -37,6 +37,8 @@ def binaryClassif(data_train, label_train, data_test, label_test, generalization
 	#Scoring
 	if scoring is 'auc':
 		scorer = 'roc_auc'
+	elif scoring is 'auc_multiclass':
+		scorer =  make_scorer(roc_auc_score, average='macro', multi_class='ovr')
 
 	##########################################
 	#Learning process
@@ -73,7 +75,15 @@ def binaryClassif(data_train, label_train, data_test, label_test, generalization
 
 			#Score 
 			if scoring is not None:
-				score_fold = time_gen.score(X_test, y_test)
+				if scoring is 'auc':
+					score_fold = time_gen.score(X_test, y_test)
+				elif scoring is 'auc_multiclass': #This has to be done by hand, as it seems incompatible with the GeneralizingEstimator parallelization
+					score_fold = np.zeros((np.shape(y_pred)[1], np.shape(y_pred)[2]))
+
+					for train_time in np.arange(np.shape(y_pred)[1]):
+						print('Scoring train_time: ' train_time)
+						for test_time in np.arange(np.shape(y_pred)[2]):
+							score_fold[train_time, test_time] = roc_auc_score(y_test, y_pred[:, train_time, test_time, :], multi_class='ovr')
 				scores.append(score_fold)
 
 		if scoring is not None:

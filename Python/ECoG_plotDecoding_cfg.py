@@ -18,7 +18,7 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #TF parameters
-fmethod = 'respLocked_erp_100'
+fmethod = 'erp'
 
 ##########################################
 #Preprocessing
@@ -31,13 +31,13 @@ blc = 0 #baseline correction or not?
 
 ##########################################
 #Inclusion parameters
-acc = 0 #0 = include both correct and incorrect trials, 1 = include only correct trials
+acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct trials
 
 ##########################################
 #Decoding
-decCond = 'buttonPress' #'indItems', 'cue'
+decCond = 'cue' #'indItems', 'cue'
 
-generalization = 0 #0 = diagonal only, 1 = full matrix
+generalization = 1 #0 = diagonal only, 1 = full matrix
 
 if fmethod is 'tfa_wavelet':
 	trainTime = [bl[0], 4.3]
@@ -75,7 +75,7 @@ tail = 0 #0 = 2-sided, 1 = 1-sided
 #Figure
 #Data properties
 sfreq = 100
-smoothWindow = 2 #Will the data (but not the stats be smoothed?)
+smoothWindow = 4 #Will the data (but not the stats be smoothed?)
 
 #Figure properties
 line_thickness = 2

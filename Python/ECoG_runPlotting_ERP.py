@@ -21,9 +21,9 @@ from ECoG_base_stats import myStats
 
 ##########################################
 #Define important variables
-ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'AS', 'AP', 'KR', 'CD']
+ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP']
 #ListSubjects = ['EG_I', 'HS']
-ListFilenames = ['respLocked_erp_100']
+ListFilenames = ['erp_100']
 
 
 if generalization:

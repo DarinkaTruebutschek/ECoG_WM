@@ -134,5 +134,19 @@ function params = ECoG_getParams(condition)
         params.id = 'all';
         params.probe_id = 'all';
         params.resp = 'correct';
+    elseif strcmp(condition, 'button_press')
+        params.cue = 'all';
+        params.load = 'all';
+        params.probe = 'all';
+        params.id = 'all';
+        params.probe_id = 'all';
+        params.resp = 'button_press';
+    elseif strcmp(condition, 'no_button_press')
+        params.cue = 'all';
+        params.load = 'all';
+        params.probe = 'all';
+        params.id = 'all';
+        params.probe_id = 'all';
+        params.resp = 'no_button_press';
     end
 end

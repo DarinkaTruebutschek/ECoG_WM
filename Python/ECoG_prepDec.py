@@ -136,6 +136,11 @@ def ECoG_prepDec(decCond, subject, foi):
 		y_train = MultiLabelBinarizer().fit_transform(y_train)
 	elif decCond is 'cue':
 		y_train = trialInfo.values[:, 3]
+	elif decCond is 'load':
+		y_train = trialInfo.values[:, 6] #labels: 1, 2, & 4
+		y_train[y_train == 1] = 0
+		y_train[y_train == 2] = 1
+		y_train[y_train == 4] = 2
 	elif decCond is 'buttonPress':
 		y_train = trialInfo.values[:, 12]
 		y_train[y_train == 2] = 1 #1/2 = trigger pulled

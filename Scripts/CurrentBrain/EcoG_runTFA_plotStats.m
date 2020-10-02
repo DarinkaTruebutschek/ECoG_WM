@@ -1,116 +1,131 @@
-%This script runs the final TFA analysis.
+%This script plots the results of the cluster-based permutation test.
 %Project: ECoG_WM
 %Author: D.T.
-%Date: 25 September 2020
+%Date: 01 October 2020
 
 clc;
 clear all;
 close all;
 
-%% Add relevant paths
+%% Set Path
 ECoG_setPath;
-
 %% Define important variables
 subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'}; %included subnips
 
+epoch = 'cueLocked'; %cue-locked or response-locked analyses?
+
 tfa_method = 'wavelet';
-condition = {'button_press', 'no_button_press'};
-contrast = {'button_press_VS_no_button_press'};
 
-epoch = 'respLocked'; %cue-locked or response-locked analyses?
-timeWin = 'all';
-freqWin = {[8, 12], [13, 30], [30, 70], [70, 180]};
-% freqWin = {[8, 12], [13, 30], [30, 70], [70, 180], ...
-%     [70, 80], [80, 90], [90, 100], [100, 110], [110, 120], ...
-%     [130, 140], [140, 150], [150, 160], [160, 170], [170, 180]};
-freqWin_analysis = [70, 180]; % this is simply used since I sometimes run the same script in more than one place
+condition = {'task_match_correct', 'task_mismatch_correct'};
+contrast = {'task_match_correct_VS_task_mismatch_correct'};
 
-%% Loop over subjects/conditions to extract/save condition-specific time-frequency estimates for each subject
-for condi = 1 : length(condition)
-    for subi = 1 : length(subnips)
-        
-        %Determine parameters
-        params = ECoG_getParams(condition{condi});
+blc = 0; %baseline correction or not?
 
-        %Load initial TFA/behavioral data
-        if strcmp(epoch, 'cueLocked')
-            load([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet_final.mat']);
-            load([behavior_path  '/' subnips{subi} '_memory_behavior.mat']); %behavioral file
-        else
-            load([res_path subnips{subi} '/' subnips{subi} '_respLocked_tfa_wavelet.mat']);
-            load([behavior_path  '/' subnips{subi} '_memory_behavior.mat']); %behavioral file
-        end
+%timeWin = {[-.25, -.1], [0, 0.5], [0.5, 1.5], [1.5, 2.5], [2.5, 4.5], [4.5, 4.65]}; %cluster-based statistics will be computed seperately for each TOI
+timeWin = {[-.25, -.1], [0, 0.5], [0.5, 1.5], [1.5, 2.5], [2.5, 4.5]};
+freqWin = {[8, 12], [13, 30], [30, 70], [70, 180], ...
+    [70, 80], [80, 90], [90, 100], [100, 110], [110, 120], ...
+    [130, 140], [140, 150], [150, 160], [160, 170], [170, 180]};
+designType = 'within-subject';
 
-        %Select data
-        [allTrials, selTrials] = ECoG_selectTrials(params, data_mem(data_mem.EEG_included == 1, :));
-        tmp = [1 : length(allTrials)];
+%% Initialize needed variables
 
-        cfg = [];
-        cfg.trials = tmp(selTrials);
-
-        freq_cond = ft_selectdata(cfg, freq);
-
-        %Save
-        if strcmp(epoch, 'cueLocked')
-            save([res_path subnips{subi} '/' subnips{subi} '_' condition{condi} '_tfa_wavelet_final.mat'], 'freq_cond', '-v7.3');
-        else
-            save([res_path subnips{subi} '/' subnips{subi} '_' condition{condi} '_' epoch '_tfa_wavelet_final.mat'], 'freq_cond', '-v7.3');
-        end
-        
-        clear('freq', 'freq_cond');
-    end
-end
-
-%% Loop over subjects/conditions to compare trial counts, subsample data (if need be), and perform cluster-based permutation test
+%% First, check whether there are any significant timepoints
 for contrasti = 1 : length(contrast)
     for freqi = 1 : length(freqWin)
         for subi = 1 : length(subnips)
-        
+            
+            %Load the stats file
             if strcmp(contrast{contrasti}, 'task_match_correct_VS_task_mismatch_correct') || ...
                     strcmp(contrast{contrasti}, 'button_press_VS_no_button_press')
-                
                 if strcmp(epoch, 'cueLocked')
-                    cond1 = load([res_path subnips{subi} '/' subnips{subi} '_' condition{1} '_tfa_wavelet_final.mat']);
-                    cond2 = load([res_path subnips{subi} '/' subnips{subi} '_' condition{2} '_tfa_wavelet_final.mat']);
+                    if ~strcmp(timeWin, 'all')
+                        load(['/media/darinka/Data0/iEEG/Results/TFA/Stats/' subnips{subi} '_ClustStat_' contrast{contrasti} '_allTOIs_' num2str(freqWin{freqi}(1)) '_to_' num2str(freqWin{freqi}(2)) 'Hz.mat']);
+                    end
+                end
+            end
+            
+            %Loop over the individual TOIs & determine whether there are
+            %any significant condition differences
+            for timei = 1 : length(timeWin)
+                
+                %Get time indices
+                time{contrasti}{timei} = stats{contrasti}{timei}.time;
+                
+                %Positive clusters?
+                if isfield(stats{contrasti}{timei}, 'posclusters')
+                    if isempty(stats{contrasti}{timei}.posclusters)
+                        pos{contrasti}{timei} = zeros(size(stats{contrasti}{timei}.prob, 1), size(stats{contrasti}{timei}.stat, 3));
+                    else
+                        pos_cluster_pvals{contrasti}{timei} = [stats{contrasti}{timei}.posclusters(:).prob];
+                        pos_signif_clust{contrasti}{timei} = find(pos_cluster_pvals{contrasti}{timei} < stats{contrasti}{timei}.cfg.alpha);
+                        pos{contrasti}{timei} = ismember(stats{contrasti}{timei}.posclusterslabelmat, pos_signif_clust{contrasti}{timei});
+                        pos{contrasti}{timei} = squeeze(pos{contrasti}{timei});
+                    end
                 else
-                    cond1 = load([res_path subnips{subi} '/' subnips{subi} '_' condition{1} '_' epoch '_tfa_wavelet_final.mat']);
-                    cond2 = load([res_path subnips{subi} '/' subnips{subi} '_' condition{2} '_' epoch '_tfa_wavelet_final.mat']);
+                    pos{contrasti}{timei} = zeros(size(stats{contrasti}{timei}.prob, 1), size(stats{contrasti}{timei}.stat, 3));
                 end
-                    
-                %Compare the trial numbers for the different conditions
-                trials1 = size(cond1.freq_cond.powspctrm, 1);
-                trials2 = size(cond2.freq_cond.powspctrm, 1);
-                trials = [trials1, trials2];
-
-                tmp_min = find(trials == min(trials));
-                tmp_max = find(trials == max(trials));
-
-                my_diff = trials(tmp_max) - trials(tmp_min);
-                display(num2str(my_diff));
-                %pause;
-
-                if my_diff/trials(tmp_max) > .15
-
-                    %Subsample/bootstrap
+                
+                %Negative clusters?
+                if isfield(stats{contrasti}{timei}, 'negclusters')
+                    if isempty(stats{contrasti}{timei}.negclusters)
+                        neg{contrasti}{timei} = zeros(size(stats{contrasti}{timei}.prob, 1), size(stats{contrasti}{timei}.stat, 3));
+                    else
+                        neg_cluster_pvals{contrasti}{timei} = [stats{contrasti}{timei}.negclusters(:).prob];
+                        neg_signif_clust{contrasti}{timei} = find(neg_cluster_pvals{contrasti}{timei} < stats{contrasti}{timei}.cfg.alpha);
+                        neg{contrasti}{timei} = ismember(stats{contrasti}{timei}.negclusterslabelmat, neg_signif_clust{contrasti}{timei});
+                        neg{contrasti}{timei} = squeeze(neg{contrasti}{timei});
+                    end
+                else
+                    neg{contrasti}{timei} = zeros(size(stats{contrasti}{timei}.prob, 1), size(stats{contrasti}{timei}.stat, 3));
                 end
             end
+            
+            pos{contrasti} = cat(2, pos{contrasti}{:});
+            neg{contrasti} = cat(2, neg{contrasti}{:});
+            time{contrasti} = cat(2, time{contrasti}{:});
+            
+            %Quick & dirty plot
+            figure;
+            
+            subplot(2, 1, 1);
+            imagesc(time{contrasti}, [1 : length(stats{1}{1}.label)], pos{contrasti});
+            set(gca, 'YDir', 'normal');
+            title(['Positive clusters: ' contrast{contrasti} ', ' subnips{subi} ', ' num2str(freqWin{freqi}(1)) ' to ' num2str(freqWin{freqi}(2))]);
+                                
+            %Event markers
+            hold on;
+            plot([0, 0], [0, 240], '-k'); %cue
+            plot([1.5, 1.5], [0, 240], '-k'); %memory items
+            plot([4.5, 4.5], [0, 240], '-k'); %response
+                         
+            %ylabel
+            set(gca, 'ytick', [1 : 1 : length(stats{1}{1}.label)], 'yticklabel', stats{1}{1}.label');
 
-            %Within-subject cluster-based permutation test (to assess how
-            %reliable group differences are, and whether certain electrodes
-            %might be driving the effect
-            designType = 'within-subject';
-            stats{contrasti} = ECoG_computeClustStat(cond1, cond2, timeWin, freqWin{freqi}, designType, subi);
-
+            subplot(2, 1, 2);
+            imagesc(time{contrasti}, [1 : length(stats{1}{1}.label)], neg{contrasti});
+            set(gca, 'YDir', 'normal');
+            title('Negative clusters');
+            
+            %Event markers
+            hold on;
+            plot([0, 0], [0, 240], '-k'); %cue
+            plot([1.5, 1.5], [0, 240], '-k'); %memory items
+            plot([4.5, 4.5], [0, 240], '-k'); %response
+            
+            %ylabel
+            set(gca, 'ytick', [1 : 1 : length(stats{1}{1}.label)], 'yticklabel', stats{1}{1}.label');
+            
             %Save
-            if strcmp(epoch, 'cueLocked')
-                save(['/media/darinka/Data0/iEEG/Results/TFA/Stats/' subnips{subi} '_ClustStat_' contrast{contrasti} '_' timeWin '_' num2str(freqWin{freqi}(1)) '_to_' num2str(freqWin{freqi}(2)) 'Hz.mat'], 'stats');
-            else
-                save(['/media/darinka/Data0/iEEG/Results/TFA/Stats/' subnips{subi} '_ClustStat_' contrast{contrasti} '_' timeWin '_' epoch '_' num2str(freqWin{freqi}(1)) '_to_' num2str(freqWin{freqi}(2)) 'Hz.mat'], 'stats');
-            end
+            printfig(gcf, [0, 0, 18, 30], ['/media/darinka/Data0/iEEG/Results/TFA/Figures/' subnips{subi} '_SigClusters_' contrast{contrasti} '_allTOIs_' num2str(freqWin{freqi}(1)) '_to_' num2str(freqWin{freqi}(2)) 'Hz.tiff']);
+            close(gcf);
+            
+            clear('pos', 'neg', 'time');
         end
     end
 end
-                    
+ 
+
 %% Loop over subjects/conditions to identify significant frequencies/channels
 for contrasti = 1 : length(contrast)
     for subi = 1 : length(subnips)
@@ -231,17 +246,3 @@ for contrasti = 1 : length(contrast)
 end
 
 
- 
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-         

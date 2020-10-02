@@ -106,8 +106,7 @@ for subi = 1 : length(subnips)
             %Save
             save([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet_final.mat'], 'freq', '-v7.3');
             
-            clear('tmp');
-            
+            clear('tmp');       
         end         
     else
         %Load initial data

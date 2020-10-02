@@ -13,7 +13,7 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #TF parameters
-fmethod = 'respLocked_tfa_wavelet'
+fmethod = 'erp_100'
 #fmethod = 'respLocked_erp_100' #erp_100: downsampled to 100 Hz, erp: downsampled to 250 Hz
 
 ##########################################
@@ -28,7 +28,7 @@ if fmethod is 'tfa_wavelet':
 elif fmethod is 'respLocked_tfa_wavelet':
 	bl = [-3.5, -3.3] #there is no appropriate baseline in this case
 	trainTime = [-3.5, -0.35]
-	teestTime = [-3.5, -0.35]
+	testTime = [-3.5, -0.35]
 else:
 	bl = (-0.2, 0)
 	if fmethod is 'erp':
@@ -57,11 +57,11 @@ step_size = 1.0#0.5 #where to begin with this
 
 ##########################################
 #Inclusion parameters
-acc = 0 #0 = include both correct and incorrect trials, 1 = include only correct trials
+acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct trials
 
 ##########################################
 #Decoding
-decCond = 'buttonPress' #other options: 'indItems', 'cue'
+decCond = 'load' #other options: 'indItems', 'cue'
 
 generalization = 1 #0 = diagonal only, 1 = full matrix
 
@@ -73,4 +73,4 @@ predict_mode = 'cross-validation' #or mean-prediction
 proba = True #determines whether or not the output will be continous or not
 
 #Score
-score_method = 'auc'
+score_method = 'auc_multiclass'

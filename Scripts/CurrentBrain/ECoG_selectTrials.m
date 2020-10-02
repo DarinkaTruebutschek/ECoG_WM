@@ -96,6 +96,10 @@ elseif strcmp(params.resp, 'incorrect')
     resp = ismember(data.resp, [2, 4]);
 elseif strcmp(params.resp, 'all')
     resp = ismember(data.resp, [1 : 4]);
+elseif strcmp(params.resp, 'button_press')
+    resp = ismember(data.resp, [1, 2]);
+elseif strcmp(params.resp, 'no_button_press')
+    resp = ismember(data.resp, [3, 4]);
 end
 
 %Select all compatible trials
