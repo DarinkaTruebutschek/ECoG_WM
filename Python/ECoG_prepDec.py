@@ -16,12 +16,13 @@ from base import find_nearest, loadtablefrommat
 from ECoG_decod_cfg import *
 from ECoG_fldtrp2mne import ECoG_fldtrp2mne
 
+#def ECoG_prepDec(decCond, subject, foi, toi_i):
 def ECoG_prepDec(decCond, subject, foi):
 
 	##########################################
 	#Load data (X)
 	fname = data_path + subject + '/' +  subject + '_' + fmethod + '.mat'
-	if (fmethod is 'tfa_wavelet') | (fmethod is 'respLocked_tfa_wavelet'):
+	if (fmethod is 'tfa_wavelet') | (fmethod is 'respLocked_tfa_wavelet') | (fmethod is 'tfa_wavelet_final'):
 		data = ECoG_fldtrp2mne(fname, 'freq', 'tfa') #for tfa data, this is a 4d-matrix of size n_trials, n_channels, n_freqs, n_times
 
 		#Preprocess data: Extract specific frequencies, apply baseline correction, and then average over those frequencies
@@ -50,14 +51,14 @@ def ECoG_prepDec(decCond, subject, foi):
 
 	##########################################
 	#Load labels (y)
-	fname = behavior_path + subject + '_memory_behavior_forPython.mat'
+	fname = behavior_path + subject + '_memory_behavior_forPython_final.mat'
 	trialInfo = loadtablefrommat(fname, 'table_struct', 'table_columns')
 
 	#Select only that subset of data also used in the ECoG analyses
 	trialInfo = trialInfo[trialInfo.EEG_included != 0]
 
 	#Sanity check: Do X and y have the same dimensions?
-	if fmethod is 'tfa_wavelet':
+	if (fmethod is 'tfa_wavelet') | (fmethod is 'tfa_wavelet_final'):
 		if np.shape(data.data)[0] != np.shape(trialInfo)[0]:
 			print('X and y do not have the same dimensions')
 	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100'):
@@ -66,7 +67,7 @@ def ECoG_prepDec(decCond, subject, foi):
 
 	##########################################
 	#Prepare X and y specifically
-	if (fmethod is 'tfa_wavelet') | (fmethod is 'respLocked_tfa_wavelet'):
+	if (fmethod is 'tfa_wavelet') | (fmethod is 'respLocked_tfa_wavelet') | (fmethod is 'tfa_wavelet_final'):
 		X_train = data.data
 	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100'):
 		if win_size is not False:
@@ -77,42 +78,55 @@ def ECoG_prepDec(decCond, subject, foi):
 	#If temporal, and not spatial (default) pattern is to be decoded,
 	#extract the appropriate channels of interest, time window of interest,
 	#and reformat the data (aka: n_channels x n_trials x n_timebins of size n_timepoints)
-	if win_size is not False:
+	if (win_size is not False):
+		if (np.shape(win_size)[0] == 1):
 
-		#Determine how many time points will be included as features given the requested window size
-		step_size_sample = np.round(data.info['sfreq'])*step_size #step size expressed in n_samples
-		win_size_sample = np.round(data.info['sfreq'])*win_size #window size expressed in n_samples
+			#Determine how many time points will be included as features given the requested window size
+			step_size_sample = np.round(data.info['sfreq'])*step_size #step size expressed in n_samples
+			win_size_sample = np.round(data.info['sfreq'])*win_size #window size expressed in n_samples
 
-		if np.round(np.mod(.2, win_size)) != 0: #first time bin should automatically correspond to the baseline period, with the first real time bin starting at cue onset (for stim-locked analyses) & to the first sample for resp_locked analyses
-			first_onset = find_nearest(data.times, bl[0])[0]
-			timebins_onset = np.arange(find_nearest(data.times, bl[1])[0], np.shape(data.times)[0], step_size_sample)
-			timebins_onset = np.hstack((first_onset, timebins_onset))
-		else:
-			if fmethod != 'respLocked_erp_100':
-				timebins_onset = np.arange(find_nearest(data.times, bl[0])[0], np.shape(data.times)[0], step_size_sample) #vector corresponding to the onset times of the timebins (in samples)
+			if np.round(np.mod(.2, win_size)) != 0: #first time bin should automatically correspond to the baseline period, with the first real time bin starting at cue onset (for stim-locked analyses) & to the first sample for resp_locked analyses
+				first_onset = find_nearest(data.times, bl[0])[0]
+				timebins_onset = np.arange(find_nearest(data.times, bl[1])[0], np.shape(data.times)[0], step_size_sample)
+				timebins_onset = np.hstack((first_onset, timebins_onset))
 			else:
-				timebins_onset = np.arange(find_nearest(data.times, np.min(data.times))[0], np.shape(data.times)[0], step_size_sample)
-
-		#Display which times will actually be trained on
-		print(data.times[timebins_onset.astype(int)])
-
-		X_train = np.zeros((np.shape(X_train_tmp)[1], np.shape(X_train_tmp)[0], int(win_size_sample+1), np.shape(timebins_onset)[0]-1)) #initialize empty data matrix
-
-		for toi_i, toi in enumerate(timebins_onset):
-			if int(toi+win_size_sample+1) <= np.shape(data.times)[0]:
-				#print(toi_i, toi)
-				if (fmethod != 'respLocked_erp_100') & (np.mod(.2, win_size) != 0) & (toi_i == 0):
-					slices = np.full((np.shape(X_train_tmp)[0], np.shape(X_train_tmp)[1], int(win_size_sample+1)), np.nan)
-					slices[:, :, toi_i : int(np.diff((timebins_onset[0], timebins_onset[1]))+1)] = X_train_tmp[:, :, int(toi) : int(timebins_onset[1])+1] #first time bin encompasses baseline period
+				if fmethod != 'respLocked_erp_100':
+					timebins_onset = np.arange(find_nearest(data.times, bl[0])[0], np.shape(data.times)[0], step_size_sample) #vector corresponding to the onset times of the timebins (in samples)
 				else:
-					slices = X_train_tmp[:, :, int(toi) : int(toi+win_size_sample+1)] #remember that the last sample will be exluded, so we add 1
-				slices = np.transpose(slices, (1, 0, 2)) #n_channels x n_trials x n_timepoints
-				X_train[:, :, :, toi_i] = slices
+					timebins_onset = np.arange(find_nearest(data.times, np.min(data.times))[0], np.shape(data.times)[0], step_size_sample)
 
-		del X_train_tmp
+			#Display which times will actually be trained on
+			print(data.times[timebins_onset.astype(int)])
+
+			X_train = np.zeros((np.shape(X_train_tmp)[1], np.shape(X_train_tmp)[0], int(win_size_sample+1), np.shape(timebins_onset)[0]-1)) #initialize empty data matrix
+
+			for toi_i, toi in enumerate(timebins_onset):
+				if int(toi+win_size_sample+1) <= np.shape(data.times)[0]:
+					#print(toi_i, toi)
+					if (fmethod != 'respLocked_erp_100') & (np.mod(.2, win_size) != 0) & (toi_i == 0):
+						slices = np.full((np.shape(X_train_tmp)[0], np.shape(X_train_tmp)[1], int(win_size_sample+1)), np.nan)
+						slices[:, :, toi_i : int(np.diff((timebins_onset[0], timebins_onset[1]))+1)] = X_train_tmp[:, :, int(toi) : int(timebins_onset[1])+1] #first time bin encompasses baseline period
+					else:
+						slices = X_train_tmp[:, :, int(toi) : int(toi+win_size_sample+1)] #remember that the last sample will be exluded, so we add 1
+					slices = np.transpose(slices, (1, 0, 2)) #n_channels x n_trials x n_timepoints
+					X_train[:, :, :, toi_i] = slices
+
+			del X_train_tmp
+		elif np.shape(win_size)[0] > 1:
+			timebins_onset = find_nearest(data.times, win_size[toi_i][0])[0] 
+			win_size_sample = np.round(data.info['sfreq'])*(np.abs(win_size[toi_i][1]-win_size[toi_i][0]))
+
+			#Display which times will actually be trained on
+			#print(data.times[timebins_onset.astype(int)])
+
+			slices = X_train_tmp[:, :, int(timebins_onset) : int(timebins_onset+win_size_sample+1)]
+			slices = np.transpose(slices, (1, 0, 2)) #n_channels x n_trials x n_timepoints
+			X_train = slices
+
+			del X_train_tmp
 
 		#Take relative baseline if need be (i.e., subtract the mean within each time bin seperately for each trial and channel)
-		if rel_blc:
+		if rel_blc & (np.shape(win_size)[0] == 1):
 			if fmethod != 'respLocked_erp_100':
 				my_mean = np.mean(X_train, axis=2)
 
@@ -123,11 +137,26 @@ def ECoG_prepDec(decCond, subject, foi):
 
 				for t, timepoint in enumerate(np.arange(np.shape(X_train)[2])):
 					X_train[:, :, t, :] = X_train[:, :, t, :] - my_mean
+		elif rel_blc & (np.shape(win_size)[0] > 1):
+			my_mean = np.mean(X_train, axis=2)
+
+			for t, timepoint in enumerate(np.arange(np.shape(X_train)[2])):
+				X_train[:, :, t] = X_train[:, :, t] - my_mean
 
 	if decCond is 'indItems':
 		y_train = []
 		for _, row_i in enumerate(range(len(trialInfo))):
 			tmp = trialInfo.values[row_i, 7:11]
+			tmp = tmp[~np.isnan(tmp)]
+			y_train.append(tmp)
+
+		del tmp	
+
+		y_train = MultiLabelBinarizer().fit_transform(y_train)
+	elif decCond is 'itemPos':
+		y_train = []
+		for _, row_i in enumerate(range(len(trialInfo))):
+			tmp = trialInfo.values[row_i, 17:21]
 			tmp = tmp[~np.isnan(tmp)]
 			y_train.append(tmp)
 
@@ -141,6 +170,8 @@ def ECoG_prepDec(decCond, subject, foi):
 		y_train[y_train == 1] = 0
 		y_train[y_train == 2] = 1
 		y_train[y_train == 4] = 2
+	elif decCond is 'probe':
+		y_train = trialInfo.values[:, 4] 
 	elif decCond is 'buttonPress':
 		y_train = trialInfo.values[:, 12]
 		y_train[y_train == 2] = 1 #1/2 = trigger pulled
@@ -152,12 +183,17 @@ def ECoG_prepDec(decCond, subject, foi):
 	else:
 		sel = np.where(~np.isnan(trialInfo.block_id))
 
-	if win_size is not False:
-		X_train = X_train[:, np.squeeze(sel), :, :]
-		X_train = np.squeeze(X_train)
-		y_train = y_train[np.squeeze(sel)]
-		#y_train = np.squeeze(y_train[np.squeeze(sel), :])
-	else:
+	if (win_size is not False):
+		if (np.shape(win_size)[0] == 1):
+			X_train = X_train[:, np.squeeze(sel), :, :]
+			X_train = np.squeeze(X_train)
+			y_train = y_train[np.squeeze(sel)]
+			#y_train = np.squeeze(y_train[np.squeeze(sel), :])
+		elif (np.shape(win_size)[0] > 1):
+			X_train = X_train[:, np.squeeze(sel), :]
+			X_train = np.squeeze(X_train)
+			y_train = y_train[np.squeeze(sel)]
+	elif win_size is False:
 		X_train = X_train[sel]
 		y_train = np.squeeze(y_train)[sel]
 
@@ -171,4 +207,4 @@ def ECoG_prepDec(decCond, subject, foi):
 	
 	return X_train, y_train, X_test, y_test, data.times
 
-	#return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset if 'timebins_onset' in locals() else None
+	#return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset 

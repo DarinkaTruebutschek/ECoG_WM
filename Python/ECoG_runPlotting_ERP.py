@@ -22,8 +22,9 @@ from ECoG_base_stats import myStats
 ##########################################
 #Define important variables
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP']
+#ListSubjects = ['EG_I', 'HS', 'KJ_I', 'MG', 'MKL', 'SB', 'WS', 'AP']
 #ListSubjects = ['EG_I', 'HS']
-ListFilenames = ['erp_100']
+ListFilenames = ['respLocked_erp_100']
 
 
 if generalization:
@@ -40,7 +41,14 @@ scores = []
 for subi, subject in enumerate(ListSubjects):
 
 	#Load all of the data 
-	score = np.squeeze(np.load(data_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_score.npy'))
+	if (decCond is not 'indItems') & (decCond is not 'itemPos'):
+		score = np.squeeze(np.load(data_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_score.npy'))
+	elif decCond is 'indItems':
+		score = np.squeeze(np.load(data_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_average_score.npy'))
+	elif decCond is 'itemPos':
+		score = np.mean(np.load(data_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_score.npy'), axis=0)
+		score = np.squeeze(score)	#score_old = np.squeeze(np.load(data_path + ListFilenames[0] + '/orig_' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_score.npy'))
+	#average_score = np.squeeze(np.load(data_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_average_score.npy'))
 	time = np.load(data_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_time.npy')
 
 	#Include only relevant period of the trial (i.e., baseline + epoch)
@@ -150,6 +158,7 @@ if stats is 'permutation':
 
 	np.save(result_path + ListFilenames[0] + '/Stats/Group_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_stats.npy', 'p_values')
 else:
+	sig_diag = None
 	sig = None 
 
 #Preproces data if wanted
@@ -204,7 +213,7 @@ if gen_filename is 'timeGen':
 		range_max = np.max(np.mean(scores, axis=0))
 		contour_steps = np.linspace(range_min, range_max, 10)
 
-		pretty_gat(scores_m, times=time[begin_t[0] :], chance=chance, ax=ax_group_gen, sig=sig, cmap=map_color, clim=None, colorbar=None, 
+		pretty_gat(scores_m, times=time[begin_t[0] :], chance=chance, ax=ax_group_gen, sig=None, cmap=map_color, clim=None, colorbar=None, 
 			xlabel='Test times (in s)', ylabel='Train times (in s)', sfreq=sfreq, diagonal='dimgrey', test_times=None, classLines=None, classColors=None, contourPlot=True, steps=contour_steps)
 
 	#Add relevant info

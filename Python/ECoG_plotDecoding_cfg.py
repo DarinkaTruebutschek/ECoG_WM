@@ -18,7 +18,7 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #TF parameters
-fmethod = 'erp'
+fmethod = 'erp_100'
 
 ##########################################
 #Preprocessing
@@ -35,7 +35,7 @@ acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct
 
 ##########################################
 #Decoding
-decCond = 'cue' #'indItems', 'cue'
+decCond = 'load' # 'itemPos', indItems', 'cue', 'load'
 
 generalization = 1 #0 = diagonal only, 1 = full matrix
 
@@ -68,14 +68,14 @@ stats = 'permutation' #compute stats or not?
 n_permutations = 5000
 stat_alpha = .05
 
-chance = 0.5
+chance = .5 #for auc_multiclass: .3, else: .5
 tail = 0 #0 = 2-sided, 1 = 1-sided
 
 ##########################################
 #Figure
 #Data properties
 sfreq = 100
-smoothWindow = 4 #Will the data (but not the stats be smoothed?)
+smoothWindow = False#4 #Will the data (but not the stats be smoothed?)
 
 #Figure properties
 line_thickness = 2

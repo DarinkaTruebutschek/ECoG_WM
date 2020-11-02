@@ -23,10 +23,14 @@ from ECoG_base_stats import myStats
 
 ##########################################
 #Define important variables
-ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'AS', 'AP', 'KR', 'CD']
-ListFilenames = ['respLocked_erp_TimDim_timeBin_4000_stepSize_4000_meanSubtraction']
+ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP']
+ListFilenames = ['erp_100_TimDim_allTimeBins_meanSubtraction']
 
-winSize = 4000 #in msec
+#winSize = 4000 #in msec
+if fmethod is 'erp_100':
+	winSize = [[-.2, 0], [0, .5], [0.5, 1.5], [1.5, 2.5], [2.5, 4.5]]
+elif fmethod is 'respLocked_erp_100':
+	winSize = [[-4, -3], [-3, -2], [-2, -1], [-1, -.5], [-.5, 0]]
 
 if generalization:
 	gen_filename = 'timeGen'
@@ -43,37 +47,50 @@ channels = []
 for subi, subject in enumerate(ListSubjects):
 
 	#Load all of the data 
-	score = np.load(data_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_score.npy') #shape: channels x labels x timebins
+	if (decCond is not 'itemPos') & (decCond is not 'indItems'):
+		score = np.load(data_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_score.npy') #shape: channels x labels x timebins OR timebins x channels x 1 (if no sliding window was used )
+	elif decCond is 'itemPos':
+		#score = np.load(data_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_average_score.npy') #shape: channels x labels x timebins OR timebins x channels x 1 (if no sliding window was used )
+		score = np.load(data_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_score.npy') #shape: channels x labels x timebins OR timebins x channels x 1 (if no sliding window was used )
+		score = np.mean(score, axis=2)
+	else:
+		score = np.load(data_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_average_score.npy')
+
 	channel = np.load(data_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_channels.npy') #labels for the channels used
 
-	if (fmethod != 'respLocked_erp_100') & (winSize > 200): #to also get the baseline data if the time window is larger than the desired baseline window
-		score_bl_tmp = np.load(data_path + 'erp_TimDim_timeBin_100_stepSize_100/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_erp_TimDim_timeBin_100_stepSize_100_score.npy')
-		score_bl = score_bl_tmp[:, :, 0:2]
+	if np.shape(score)[2] == 1:
+		score = np.squeeze(score)
 
-		#Concatenate with original score matrix
-		score = np.concatenate((score_bl, score), axis=2)
+	if len(winSize) == 1:
+		if (fmethod != 'respLocked_erp_100') & (winSize > 200): #to also get the baseline data if the time window is larger than the desired baseline window
+			score_bl_tmp = np.load(data_path + 'erp_TimDim_timeBin_100_stepSize_100/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_erp_TimDim_timeBin_100_stepSize_100_score.npy')
+			score_bl = score_bl_tmp[:, :, 0:2]
 
-		del score_bl_tmp, score_bl
+			#Concatenate with original score matrix
+			score = np.concatenate((score_bl, score), axis=2)
+
+			del score_bl_tmp, score_bl
 
 	if subi == 0: #as this is invariant across different subjects, it only needs to be loaded once
 		time = np.load(data_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_time.npy') #this is the original time dimension, including pre-baseline period
 		onsetTimes = np.load(data_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_onsetTimes.npy') #corresponds to the onset of the time bins
 
-		if (fmethod != 'respLocked_erp_100') & (winSize > 200):
-			onsetTimes_bl_tmp = np.load(data_path + 'erp_TimDim_timeBin_100_stepSize_100/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_erp_TimDim_timeBin_100_stepSize_100_onsetTimes.npy')
+		if len(winSize) == 1:
+			if (fmethod != 'respLocked_erp_100') & (winSize > 200):
+				onsetTimes_bl_tmp = np.load(data_path + 'erp_TimDim_timeBin_100_stepSize_100/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_erp_TimDim_timeBin_100_stepSize_100_onsetTimes.npy')
 
-			#Concatenate with the original time vector
-			onsetTimes = np.concatenate((onsetTimes_bl_tmp[0:2], onsetTimes[1 :]), axis=0)
+				#Concatenate with the original time vector
+				onsetTimes = np.concatenate((onsetTimes_bl_tmp[0:2], onsetTimes[1 :]), axis=0)
 
-			del onsetTimes_bl_tmp
+				del onsetTimes_bl_tmp
 
-		#Sanity check: Do the onset times correspond to the number of time bins in the score?
-		if decCond is 'indItems':
-			if np.shape(onsetTimes)[0]-1 != np.shape(score)[2]:
-				print (colored('ERROR: Number of time bins and decoding dimensions do not match!', 'red'))
-		else:
-			if np.shape(onsetTimes)[0]-1 != np.shape(score)[1]:
-				print (colored('ERROR: Number of time bins and decoding dimensions do not match!', 'red'))
+			#Sanity check: Do the onset times correspond to the number of time bins in the score?
+			if decCond is 'indItems':
+				if np.shape(onsetTimes)[0]-1 != np.shape(score)[2]:
+					print (colored('ERROR: Number of time bins and decoding dimensions do not match!', 'red'))
+			else:
+				if np.shape(onsetTimes)[0]-1 != np.shape(score)[1]:
+					print (colored('ERROR: Number of time bins and decoding dimensions do not match!', 'red'))
 
 	#First, plot individual channels for each subject to get an idea
 	print('Plotting ', subject)
@@ -94,7 +111,7 @@ for subi, subject in enumerate(ListSubjects):
 		renderPDF.drawToFile(tmp, result_path + ListFilenames[0] + '/Figures/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_barPlot_Channels.pdf')
 
 	#Close figure
-	#plt.close()
+	plt.close()
 
 	'''
 	#fig_diag, ax_diag = plt.subplots(7, 7, sharex=True, sharey=True, squeeze=True, figsize=[30, 30])
@@ -133,23 +150,29 @@ for subi, subject in enumerate(ListSubjects):
 
 	#Close figure
 	plt.close()
+	'''
 
 	#Save info for matlab
-	if decCond is 'indItems':
-		avg_score_bl = np.mean(np.mean(score[:, :, 0:2], axis=2), axis=1)
-		avg_score_preItem = np.mean(np.mean(score[:, :, 2:6], axis=2), axis=1)
-		avg_score_postItem = np.mean(np.mean(score[:, :, 6:], axis=2), axis=1)
+	if len(winSize) == 1:
+		if decCond is 'indItems':
+			avg_score_bl = np.mean(np.mean(score[:, :, 0:2], axis=2), axis=1)
+			avg_score_preItem = np.mean(np.mean(score[:, :, 2:6], axis=2), axis=1)
+			avg_score_postItem = np.mean(np.mean(score[:, :, 6:], axis=2), axis=1)
 
-		sio.savemat(data_path + ListFilenames[0] + '/forMatlab/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_averageDecodingPerChannel_bl.mat', mdict={'data': avg_score_bl}) 
-		sio.savemat(data_path + ListFilenames[0] + '/forMatlab/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_averageDecodingPerChannel_preItem.mat', mdict={'data': avg_score_preItem}) 
-		sio.savemat(data_path + ListFilenames[0] + '/forMatlab/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_averageDecodingPerChannel_postItem.mat', mdict={'data': avg_score_postItem}) 
-		sio.savemat(data_path + ListFilenames[0] + '/forMatlab/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_channels.mat', mdict={'data': channel}) 
-	elif decCond is 'respButtons':
-		avg_score = np.mean(score, axis=1)
+			sio.savemat(data_path + ListFilenames[0] + '/forMatlab/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_averageDecodingPerChannel_bl.mat', mdict={'data': avg_score_bl}) 
+			sio.savemat(data_path + ListFilenames[0] + '/forMatlab/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_averageDecodingPerChannel_preItem.mat', mdict={'data': avg_score_preItem}) 
+			sio.savemat(data_path + ListFilenames[0] + '/forMatlab/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_averageDecodingPerChannel_postItem.mat', mdict={'data': avg_score_postItem}) 
+			sio.savemat(data_path + ListFilenames[0] + '/forMatlab/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_channels.mat', mdict={'data': channel}) 
+		elif decCond is 'respButtons':
+			avg_score = np.mean(score, axis=1)
 
-		sio.savemat(data_path + ListFilenames[0] + '/forMatlab/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_averageDecodingPerChannel_preResp.mat', mdict={'data': avg_score}) 
+			sio.savemat(data_path + ListFilenames[0] + '/forMatlab/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_averageDecodingPerChannel_preResp.mat', mdict={'data': avg_score}) 
+			sio.savemat(data_path + ListFilenames[0] + '/forMatlab/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_channels.mat', mdict={'data': channel}) 
+	elif len(winSize) > 1:
+		sio.savemat(data_path + ListFilenames[0] + '/forMatlab/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_scores.mat', mdict={'data': score}) 
 		sio.savemat(data_path + ListFilenames[0] + '/forMatlab/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_channels.mat', mdict={'data': channel}) 
-	
+
+	'''
 	#Plot overall average in comparison with chanxtime decoding
 	if decCond is 'indItems':
 		scores.append(np.mean(np.mean(score, axis=0), axis=0))

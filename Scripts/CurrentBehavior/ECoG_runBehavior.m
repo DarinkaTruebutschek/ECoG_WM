@@ -18,20 +18,20 @@ addpath(toolbox_path);
 
 %% Define important variables
 subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'};
-subnips = {'CD'};
+%subnips = {'CD'};
 condition = 'memory';
 
 %% Extract behavioral data from original files and save as a .mat file
 for subi = 1 : length(subnips)
     
-    res_filename_mem = [subnips{subi} '_memory_behavior.mat'];
+    res_filename_mem = [subnips{subi} '_memory_behavior_withLocs.mat'];
     res_filename_reward = [subnips{subi} '_reward_behavior.mat'];
     
-    %Check whether data have already been preprocessed, if so, skip this
-    %subject
-    if exist([res_path res_filename_mem])
-        continue
-    end
+%     %Check whether data have already been preprocessed, if so, skip this
+%     %subject
+%     if exist([res_path res_filename_mem])
+%         continue
+%     end
     
     disp(['Preprocessing behavioral data for subject: ' subnips{subi}]);
     

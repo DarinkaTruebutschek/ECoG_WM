@@ -18,8 +18,8 @@ epoch = 'cueLocked'; %cue-locked or response-locked analyses?
 
 tfa_method = 'wavelet';
 
-condition = {'load_1_correct', 'load_2_correct', 'load_4_correct'};
-contrast = {'load1corr_VS_load2corr_VS_load4corr'};
+condition = {'probe_match_correct', 'probe_mismatch_correct'};
+contrast = {'probe_match_correct_VS_probe_mismatch_correct'};
 
 blc = 0; %baseline correction or not?
 
@@ -28,7 +28,7 @@ timeWin = {[-.25, -.1], [0, 0.5], [0.5, 1.5], [1.5, 2.5], [2.5, 4.5]};
 freqWin = {[8, 12], [13, 30], [30, 70], [70, 180], ...
     [70, 80], [80, 90], [90, 100], [100, 110], [110, 120], ...
     [130, 140], [140, 150], [150, 160], [160, 170], [170, 180]};
-designType = 'within-subject_load';
+designType = 'within-subject';
 
 freqWin_analysis = [70, 180]; % this is simply used since I sometimes run the same script in more than one place
 
@@ -74,7 +74,8 @@ for contrasti = 1 : length(contrast)
         for subi = 1 : length(subnips)
         
             if strcmp(contrast{contrasti}, 'task_match_correct_VS_task_mismatch_correct') || ...
-                    strcmp(contrast{contrasti}, 'button_press_VS_no_button_press')
+                    strcmp(contrast{contrasti}, 'button_press_VS_no_button_press') || ...
+                    strcmp(contrast{contrasti}, 'probe_match_correct_VS_probe_mismatch_correct')
                 
                 if strcmp(epoch, 'cueLocked')
                     cond1 = load([res_path subnips{subi} '/' subnips{subi} '_' condition{1} '_tfa_wavelet_final.mat']);
@@ -117,11 +118,14 @@ for contrasti = 1 : length(contrast)
             %reliable group differences are, and whether certain electrodes
             %might be driving the effect
             
+            
             for timei = 1 : length(timeWin)       
                 display(['Computing cluster-based permutation for contrast: ' contrast{contrasti}, ', subject: ' subnips{subi}, ', frequency: ' num2str(freqWin{freqi}(1)), ', and time: ' num2str(timeWin{timei}(1))]);
                 
-                if strcmp(contrast{contrasti}, 'task_match_correct_VS_task_mismatch_correct')
-                    stats{contrasti}{timei} = ECoG_computeClustStat(cond1, cond2, timeWin{timei}, freqWin{freqi}, designType, subi);
+                if strcmp(contrast{contrasti}, 'task_match_correct_VS_task_mismatch_correct') || ...
+                        strcmp(contrast{contrasti}, 'probe_match_correct_VS_probe_mismatch_correct')
+                        
+                    stats{contrasti}{timei} = ECoG_computeClustStat(cond1, cond2, [], timeWin{timei}, freqWin{freqi}, designType, subi);
                 else
                     stats{contrasti}{timei} = ECoG_computeClustStat(cond1, cond2, cond3, timeWin{timei}, freqWin{freqi}, designType, subi);
                 end

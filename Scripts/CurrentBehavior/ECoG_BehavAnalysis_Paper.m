@@ -30,7 +30,6 @@ for subi = 1 : length(subnips)
     clear('data_mem');
 end
 
-
 %% Overall accuracy
 acc = [];
 chi_square_value = [];
@@ -43,7 +42,7 @@ for subi = 1 : length(subnips)
     acc(subi) = corr/(corr+incorr);
     
     %Chi-square test to assess whether subject performed better than chance
-    [chi_square_value(subi), p_value(subi)] = chi_square([corr, incorr], [(corr+incorr)/2, (corr+incorr)/2]);
+    [chi_square_value(subi), p_value(subi)] = chi_square([corr, incorr], [(corr+incorr)/2, (corr+incorr)/2], 1);
 end
 
 mean_acc = mean(acc);

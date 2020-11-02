@@ -13,15 +13,15 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #TF parameters
-fmethod = 'erp_100'
+fmethod = 'tfa_wavelet_final'
 #fmethod = 'respLocked_erp_100' #erp_100: downsampled to 100 Hz, erp: downsampled to 250 Hz
 
 ##########################################
 #Preprocessing
 blc = 0 #baseline correction or not?
-rel_blc = 0 #relative baseline correction or not?
+rel_blc = 1 #relative baseline correction or not?
 
-if fmethod is 'tfa_wavelet':
+if (fmethod is 'tfa_wavelet') | (fmethod is 'tfa_wavelet_final'):
 	bl = [-0.14, 0] #baseline window
 	trainTime = [bl[0], 4.3]
 	testTime = [bl[0], 4.3]
@@ -38,8 +38,8 @@ else:
 		trainTime = [bl[0], 4.48]
 		testTime = [bl[0], 4.48]
 	elif fmethod is 'respLocked_erp_100':
-		trainTime = [-1., 0.]
-		testTime = [-1., 0.]
+		trainTime = [-4., 0.]
+		testTime = [-4., 0.]
 
 ##########################################
 #Slice definition
@@ -50,10 +50,20 @@ if fmethod is 'erp':
 elif fmethod is 'erp_100':
 	toi = [bl[0], 4.48]
 elif fmethod is 'respLocked_erp_100':
-	toi = [-1.0, 0] #[-4.0, 0]
+	toi = [-4.0, 0] #[-4.0, 0]
+elif fmethod is 'tfa_wavelet_final':
+	toi = [bl[0], 4.3]
 
-win_size = False#0.5 #how many time points will be added as feature dimensions; in sec; if decoding is to be done independently on each time point, set to False
-step_size = 1.0#0.5 #where to begin with this
+if fmethod is 'erp_100':
+	#win_size = False
+	win_size = [[-.2, 0], [0, .5], [0.5, 1.5], [1.5, 2.5], [2.5, 4.5]]#False#0.5 #how many time points will be added as feature dimensions; in sec; if decoding is to be done independently on each time point, set to False
+	step_size = 1.0#0.5 #where to begin with this
+elif fmethod is 'respLocked_erp_100':
+	#win_size = False
+	win_size = [[-4, -3], [-3, -2], [-2, -1], [-1, -.5], [-.5, 0]] #False#0.5 #how many time points will be added as feature dimensions; in sec; if decoding is to be done independently on each time point, set to False
+	step_size = 1.0#0.5 #where to begin with this
+elif fmethod is 'tfa_wavelet_final':
+	win_size = False
 
 ##########################################
 #Inclusion parameters
@@ -61,7 +71,7 @@ acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct
 
 ##########################################
 #Decoding
-decCond = 'load' #other options: 'indItems', 'cue'
+decCond = 'indItems' #other options: 'probe', 'itemPos', load', indItems', 'cue'
 
 generalization = 1 #0 = diagonal only, 1 = full matrix
 
@@ -73,4 +83,4 @@ predict_mode = 'cross-validation' #or mean-prediction
 proba = True #determines whether or not the output will be continous or not
 
 #Score
-score_method = 'auc_multiclass'
+score_method = 'auc' #or: auc_multiclass

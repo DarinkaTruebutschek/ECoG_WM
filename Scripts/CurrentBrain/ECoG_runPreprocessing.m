@@ -12,7 +12,7 @@ ECoG_setPath;
 
 %% Define important variables
 subnips = {'MKL','EG_I','HS','MG','KR','WS','KJ_I','LJ','AS','SB','HL','AP'}; %all subjects included in analysis
-subnips = {'EG_I'};
+subnips = {'AS'};
 
 %Paths to anatomical/functional data
 if strcmp(subnips, 'MKL')
@@ -826,6 +826,27 @@ end
 
 %% Quality check: Quick look at frequency spectrum
 for sessi = 1 : length(raw_data_file)
+    cfg = [];
+    cfg.method = 'mtmfft';
+    cfg.taper = 'hanning';
+    cfg.pad = 'nextpow2';
+    
+    freq_spec{sessi}  = ft_freqanalysis(cfg, sel_data{sessi});
+
+    freq_spec{sessi}.logspctrm = log10(freq_spec{sessi}.powspctrm);
+    
+    %Plot
+    cfg = [];
+    cfg.parameter = 'logspctrm';
+    
+    ft_singleplotER(cfg,freq_spec{sessi});
+    
+    pause;
+end
+
+clear freq_spec;
+%% Quality check: Quick look at frequency spectrum (for subjects 'SB_Sept19' & 'CD')
+for sessi = 1 : length(raw_data_file)
     
     if strcmp(subnips{1}, 'SB_Sept19') || strcmp(subnips{1}, 'CD')
         if sel_data{sessi}.fsample ~= 1000;
@@ -1424,6 +1445,8 @@ elseif strcmp(subnips{1}, 'HL')
     depths = {'BAR*', 'ALR*', 'PLR*', 'MER*', 'SMR*', 'MEL*'};
 elseif strcmp(subnips{1}, 'CD')
     depths = {'CA*', 'HKL*', 'HDL*'};
+elseif strcmp(subnips{1}, 'AS')
+    depths = {};
 end
 
 %This automatically updates the chanpos in the data.elec field (so in the
@@ -1516,5 +1539,56 @@ reref.alltrig_all = data.alltrig_all;
 %Save
 save([res_path subnips{1} '/' subnips{1} '_reref.mat'], 'reref', '-v7.3');
 
+%% Quick check to see whether epoching worked by plotting ERF
+cfg = [];
+cfg.latency = [-0.2, 5.0];
 
+data_avg = ft_timelockanalysis(cfg, data);
+reref_avg = ft_timelockanalysis(cfg, reref);
 
+figure;
+plot(data_avg.time, data_avg.avg);
+figure;
+plot(reref_avg.time, reref_avg.avg);
+
+figure;
+plot(data_avg.time, mean(data_avg.avg,1), 'k-');
+figure;
+plot(reref_avg.time, mean(reref_avg.avg,1), 'k-');
+
+figure;
+plot(data_avg.time, data_avg.avg);
+figure;
+plot(reref_avg.time, reref_avg.avg);
+
+figure;
+
+hold on;
+%plot(data_avg.time, mean(data_avg.avg(1:40, :)));
+plot(reref_avg.time, mean(reref_avg.avg(1:44, :)));
+legend;
+
+%%
+dummyData_avg = data_avg;
+dummyData_avg.avg = dummy_data;
+
+dummyReref_avg = reref_avg;
+dummyReref_avg.avg = dummy_reref;
+
+figure;
+plot(data_avg.time, mean(data_avg.avg,1), 'k-');
+figure;
+plot(reref_avg.time, mean(reref_avg.avg,1), 'k-');
+
+figure;
+plot(data_avg.time, data_avg.avg);
+figure;
+plot(reref_avg.time, reref_avg.avg);
+
+figure;
+
+hold on;
+plot([0:100], mean(dummyData.avg(1:40, :)));
+plot([0:100], mean(dummyData.avg(1:40, :)));
+
+legend;

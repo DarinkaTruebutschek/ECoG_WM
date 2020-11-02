@@ -16,6 +16,7 @@ from ECoG_decoders import binaryClassif
 ##########################################
 #Define important variables
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP']
+
 #ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG']
 #ListFreqs = [[8, 12], [13, 30], [31, 70], [71, 160]]
 ListFilenames = ['erp_100']
@@ -39,22 +40,27 @@ for subi, subject in enumerate(ListSubjects):
 	test_index = []
 	score = []
 
-	if decCond is 'indItems':
+	if (decCond is 'indItems') | (decCond is 'itemPos'):
 		for labeli, _ in enumerate(range(np.shape(y_train)[1])):
 			print('Running decoding on label ', labeli)
 
 			model, predictions, cv_test, score_label = binaryClassif(X_train, y_train[:, labeli], X_test, y_test[:, labeli], generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
+			
+			time_gen.append(model) #shape:n_labels
+			y_pred.append(predictions) #shape: n_labels x n_folds, within each label: n_folds x n_testTrials x n_TestTime x n_labels
+			test_index.append(cv_test) #shape: n_labels x n_folds
+			score.append(score_label)
 	else:	
 		model, predictions, cv_test, score_label = binaryClassif(X_train, y_train, X_test, y_test, generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
 		
-	time_gen.append(model) #shape:n_labels
-	y_pred.append(predictions) #shape: n_labels x n_folds, within each label: n_folds x n_testTrials x n_TestTime x n_labels
-	test_index.append(cv_test) #shape: n_labels x n_folds
-	score.append(score_label)
+		time_gen.append(model) #shape:n_labels
+		y_pred.append(predictions) #shape: n_labels x n_folds, within each label: n_folds x n_testTrials x n_TestTime x n_labels
+		test_index.append(cv_test) #shape: n_labels x n_folds
+		score.append(score_label)
 
 	#Compute average score for all labels
 	score = np.asarray(score)
-	if decCond is 'indItems':
+	if (decCond is 'indItems') | (decCond is 'itemPos'):
 	#if score.ndim > 2:
 		average_score = np.mean(score, axis=0)
 

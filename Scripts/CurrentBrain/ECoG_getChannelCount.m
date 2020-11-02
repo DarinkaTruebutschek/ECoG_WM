@@ -22,7 +22,7 @@ for subi = 1 : length(subnips)
     
     load([res_path subnips{subi} '/' subnips{subi} '_epoched.mat']);
     allChannels(subi) = length(data_epoched.label);
-    clear('data_epcohed');
+    clear('data_epoched');
     
     load([res_path subnips{subi} '/' subnips{subi} '_reref.mat']);
     includedChannels(subi) = length(reref.label);

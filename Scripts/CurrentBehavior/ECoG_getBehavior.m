@@ -50,6 +50,7 @@ for sessi = 1 : num_sessions
                 trialinfo_mem(trialnum_mem, 12) = session{sessi}{triali}.probeStimInd; %identity of probe
                 trialinfo_mem(trialnum_mem, 13) = session{sessi}{triali}.responseResult; %response: 1 = correctly collectd match, 2 = shoulCollect false, but collected, 3 = reject match, 4 = did not collect mismatch
                 trialinfo_mem(trialnum_mem, 14) = session{sessi}{triali}.reactionTime/1000; %RT
+                trialinfo_mem(trialnum_mem, 17 : 17 + size(session{sessi}{triali}.stimAngles, 2) - 1) = session{sessi}{triali}.stimAngles; %locations of memory stimuli on screen
                 
                 %Check RT
                 if (session{sessi}{triali}.reactionTime/1000 < .01) || (session{sessi}{triali}.reactionTime/1000 > 10)
@@ -149,6 +150,10 @@ stimA_id = trialinfo_mem(:, 8); %stim ID at pos A
 stimB_id = trialinfo_mem(:, 9); %stim ID at pos B
 stimC_id = trialinfo_mem(:, 10); %stim ID at pos C
 stimD_id = trialinfo_mem(:, 11); %stim ID at pos D
+stimA_angle = trialinfo_mem(:, 17); %stim ID at pos A
+stimB_angle = trialinfo_mem(:, 18); %stim ID at pos B
+stimC_angle = trialinfo_mem(:, 19); %stim ID at pos C
+stimD_angle = trialinfo_mem(:, 20); %stim ID at pos D
 probe_id = trialinfo_mem(:, 12); %specific identity of probe
 resp = trialinfo_mem(:, 13); %0 = not collected, 1 = collected
 RT = trialinfo_mem(:, 14);
@@ -156,7 +161,7 @@ RT_included = trialinfo_mem(:, 15); %marked trials with very fast or very slow r
 timing = trialinfo_mem(:, 16); %marked trials with deviating timing
 
 data_mem =  table(session_id, trial_id, block_id, cue, probe, correctResp, load, ...
-    stimA_id, stimB_id, stimC_id, stimD_id, probe_id, resp, RT, RT_included, timing);
+    stimA_id, stimB_id, stimC_id, stimD_id,  stimA_angle, stimB_angle, stimC_angle, stimD_angle, probe_id, resp, RT, RT_included, timing);
 
 %Reward task
 session_id = trialinfo_reward(:, 1);

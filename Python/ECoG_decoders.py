@@ -67,6 +67,7 @@ def binaryClassif(data_train, label_train, data_test, label_test, generalization
 
 			#Test on X_test
 			y_pred = time_gen.predict_proba(X_test)
+			#y_pred = np.squeeze(y_pred) #trials x labels;
 			print(np.shape(y_pred))
 
 			#Concatenate all predictions and test indices to be able to later on compute accuracy for multiple labels
@@ -78,10 +79,15 @@ def binaryClassif(data_train, label_train, data_test, label_test, generalization
 				if scoring is 'auc':
 					score_fold = time_gen.score(X_test, y_test)
 				elif scoring is 'auc_multiclass': #This has to be done by hand, as it seems incompatible with the GeneralizingEstimator parallelization
+					
+					#In case of the channel decoding only
+					#score_fold = roc_auc_score(y_test, y_pred, multi_class='ovr')
+
+					#In case of the typical channel x time decoding
 					score_fold = np.zeros((np.shape(y_pred)[1], np.shape(y_pred)[2]))
 
 					for train_time in np.arange(np.shape(y_pred)[1]):
-						print('Scoring train_time: ' train_time)
+						print('Scoring train_time: ' + str(train_time))
 						for test_time in np.arange(np.shape(y_pred)[2]):
 							score_fold[train_time, test_time] = roc_auc_score(y_test, y_pred[:, train_time, test_time, :], multi_class='ovr')
 				scores.append(score_fold)

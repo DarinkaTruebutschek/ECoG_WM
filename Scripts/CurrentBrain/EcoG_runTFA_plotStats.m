@@ -16,8 +16,8 @@ epoch = 'cueLocked'; %cue-locked or response-locked analyses?
 
 tfa_method = 'wavelet';
 
-condition = {'task_match_correct', 'task_mismatch_correct'};
-contrast = {'task_match_correct_VS_task_mismatch_correct'};
+condition = {'probe_match_correct', 'probe_mismatch_correct'};
+contrast = {'probe_match_correct_VS_probe_mismatch_correct'};
 
 blc = 0; %baseline correction or not?
 
@@ -26,7 +26,9 @@ timeWin = {[-.25, -.1], [0, 0.5], [0.5, 1.5], [1.5, 2.5], [2.5, 4.5]};
 freqWin = {[8, 12], [13, 30], [30, 70], [70, 180], ...
     [70, 80], [80, 90], [90, 100], [100, 110], [110, 120], ...
     [130, 140], [140, 150], [150, 160], [160, 170], [170, 180]};
-designType = 'within-subject';
+%freqWin = {[140, 150], [150, 160], [160, 170], [170, 180]};
+freqWin = {[100, 110], [110, 120], [130, 140]};
+designType = 'within-subject_load';
 
 %% Initialize needed variables
 
@@ -37,7 +39,9 @@ for contrasti = 1 : length(contrast)
             
             %Load the stats file
             if strcmp(contrast{contrasti}, 'task_match_correct_VS_task_mismatch_correct') || ...
-                    strcmp(contrast{contrasti}, 'button_press_VS_no_button_press')
+                    strcmp(contrast{contrasti}, 'button_press_VS_no_button_press') || ...
+                    strcmp(contrast{contrasti}, 'load1corr_VS_load2corr_VS_load4corr') || ...
+                    strcmp(contrast{contrasti}, 'probe_match_correct_VS_probe_mismatch_correct')
                 if strcmp(epoch, 'cueLocked')
                     if ~strcmp(timeWin, 'all')
                         load(['/media/darinka/Data0/iEEG/Results/TFA/Stats/' subnips{subi} '_ClustStat_' contrast{contrasti} '_allTOIs_' num2str(freqWin{freqi}(1)) '_to_' num2str(freqWin{freqi}(2)) 'Hz.mat']);
