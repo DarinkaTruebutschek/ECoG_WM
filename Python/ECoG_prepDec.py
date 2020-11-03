@@ -25,16 +25,22 @@ def ECoG_prepDec(decCond, subject, foi):
 	if (fmethod is 'tfa_wavelet') | (fmethod is 'respLocked_tfa_wavelet') | (fmethod is 'tfa_wavelet_final'):
 		data = ECoG_fldtrp2mne(fname, 'freq', 'tfa') #for tfa data, this is a 4d-matrix of size n_trials, n_channels, n_freqs, n_times
 
-		#Preprocess data: Extract specific frequencies, apply baseline correction, and then average over those frequencies
-		_, foi_1 = find_nearest(data.freqs, foi[0])
-		_, foi_2 = find_nearest(data.freqs, foi[1])
+		if foi is not 'all':
+			#Preprocess data: Extract specific frequencies, apply baseline correction, and then average over those frequencies
+			_, foi_1 = find_nearest(data.freqs, foi[0])
+			_, foi_2 = find_nearest(data.freqs, foi[1])
 
-		data.crop(tmin=trainTime[0], tmax=trainTime[1], fmin=foi_1, fmax=foi_2)
+			data.crop(tmin=trainTime[0], tmax=trainTime[1], fmin=foi_1, fmax=foi_2)
+		else:
+			_, foi_1 = find_nearest(data.freqs, 8)
+			_, foi_2 = find_nearest(data.freqs, 180)
+			data.crop(tmin=trainTime[0], tmax=trainTime[1], fmin=foi_1, fmax=foi_2)
 
 		if blc:
 			data.apply_baseline(baseline=bl, mode='zscore', verbose=True)
 
-		data.data = np.mean(data.data, axis=2)
+		if foi is not 'all':
+			data.data = np.mean(data.data, axis=2)
 	elif (fmethod is 'erp') | (fmethod is 'erp_100'):
 		data = ECoG_fldtrp2mne(fname, 'data', 'erp') #for erp data, this is a 3d-matrix of sixe n_trials, n_channels, n_freqs, n_times
 
@@ -68,7 +74,10 @@ def ECoG_prepDec(decCond, subject, foi):
 	##########################################
 	#Prepare X and y specifically
 	if (fmethod is 'tfa_wavelet') | (fmethod is 'respLocked_tfa_wavelet') | (fmethod is 'tfa_wavelet_final'):
-		X_train = data.data
+		if win_size is not False:
+			X_train_tmp = data.data
+		else:
+			X_train = data.data
 	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100'):
 		if win_size is not False:
 			X_train_tmp = data.get_data() #n_trials x n_channels x n_timepoints (decoding done seperately on each time point)
@@ -113,17 +122,29 @@ def ECoG_prepDec(decCond, subject, foi):
 
 			del X_train_tmp
 		elif np.shape(win_size)[0] > 1:
-			timebins_onset = find_nearest(data.times, win_size[toi_i][0])[0] 
-			win_size_sample = np.round(data.info['sfreq'])*(np.abs(win_size[toi_i][1]-win_size[toi_i][0]))
+			if (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100'):
+				timebins_onset = find_nearest(data.times, win_size[toi_i][0])[0] 
+				win_size_sample = np.round(data.info['sfreq'])*(np.abs(win_size[toi_i][1]-win_size[toi_i][0]))
 
-			#Display which times will actually be trained on
-			#print(data.times[timebins_onset.astype(int)])
+				#Display which times will actually be trained on
+				#print(data.times[timebins_onset.astype(int)])
 
-			slices = X_train_tmp[:, :, int(timebins_onset) : int(timebins_onset+win_size_sample+1)]
-			slices = np.transpose(slices, (1, 0, 2)) #n_channels x n_trials x n_timepoints
-			X_train = slices
+				slices = X_train_tmp[:, :, int(timebins_onset) : int(timebins_onset+win_size_sample+1)]
+				slices = np.transpose(slices, (1, 0, 2)) #n_channels x n_trials x n_timepoints
+				X_train = slices
 
-			del X_train_tmp
+				del X_train_tmp
+			else: #for tfa data
+				timebins_onset = find_nearest(data.times, win_size[toi_i][0])[0] 
+				timebins_offset = find_nearest(data.times, win_size[toi_i][1])[0]
+				win_size_sample = timebins_offset - timebins_onset
+
+				#Display which times will actually be trained on
+				#print(data.times[timebins_onset.astype(int)])
+
+				slices = X_train_tmp[:, :, :, int(timebins_onset) : int(timebins_onset+win_size_sample+1)] #trials x channels x frequencies x timepoints
+				slices = np.transpose(slices, (1, 0, 3, 2)) #n_channels x n_trials x n_timepoints x n_frequencies
+				X_train = slices
 
 		#Take relative baseline if need be (i.e., subtract the mean within each time bin seperately for each trial and channel)
 		if rel_blc & (np.shape(win_size)[0] == 1):
@@ -138,10 +159,16 @@ def ECoG_prepDec(decCond, subject, foi):
 				for t, timepoint in enumerate(np.arange(np.shape(X_train)[2])):
 					X_train[:, :, t, :] = X_train[:, :, t, :] - my_mean
 		elif rel_blc & (np.shape(win_size)[0] > 1):
-			my_mean = np.mean(X_train, axis=2)
+			if (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100'):
+				my_mean = np.mean(X_train, axis=2)
 
-			for t, timepoint in enumerate(np.arange(np.shape(X_train)[2])):
-				X_train[:, :, t] = X_train[:, :, t] - my_mean
+				for t, timepoint in enumerate(np.arange(np.shape(X_train)[2])):
+					X_train[:, :, t] = X_train[:, :, t] - my_mean
+			else:
+				my_mean = np.mean(X_train, axis=2)
+
+				for t, timepoint in enumerate(np.arange(np.shape(X_train)[2])):
+					X_train[:, :, t, :] = X_train[:, :, t, :] - my_mean
 
 	if decCond is 'indItems':
 		y_train = []

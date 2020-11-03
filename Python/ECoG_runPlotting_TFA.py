@@ -23,8 +23,8 @@ from ECoG_base_stats import myStats
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP']
 #ListFreqs = [[8, 12], [13, 30], [30, 70], [70, 180]]
 #ListFilenames = ['alpha_final', 'beta_final', 'lowGamma_final', 'highGamma_final']
-ListFreqs = [[70, 180]]
-ListFilenames = ['highGamma_final']
+ListFreqs = [[30, 70]]
+ListFilenames = ['lowGamma_final']
 
 if generalization:
 	gen_filename = 'timeGen'

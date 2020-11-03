@@ -39,7 +39,7 @@ for subi, subject in enumerate(ListSubjects):
 		test_index = []
 		score = []
 
-		if decCond is 'indItems':
+		if (decCond is 'indItems') | (decCond is 'itemPos'):
 			for labeli, _ in enumerate(range(np.shape(y_train)[1])):
 				print('Running decoding on label ', labeli)
 
@@ -52,14 +52,14 @@ for subi, subject in enumerate(ListSubjects):
 		else:
 			model, predictions, cv_test, score_label = binaryClassif(X_train, y_train, X_test, y_test, generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
 
-		time_gen.append(model)
-		y_pred.append(predictions) #shape: n_labels x n_folds, within each label: n_folds x n_testTrials x n_trainTime x n_TestTime x n_labels
-		test_index.append(cv_test) #shape: n_labels x n_folds
-		score.append(score_label)
+			time_gen.append(model)
+			y_pred.append(predictions) #shape: n_labels x n_folds, within each label: n_folds x n_testTrials x n_trainTime x n_TestTime x n_labels
+			test_index.append(cv_test) #shape: n_labels x n_folds
+			score.append(score_label)
 
 		#Compute average score for all labels
 		score = np.asarray(score)
-		if decCond is 'indItems':
+		if (decCond is 'indItems') | (decCond is 'itemPos'):
 			average_score = np.mean(score, axis=0)
 
 		#Save all data
@@ -72,7 +72,7 @@ for subi, subject in enumerate(ListSubjects):
 		np.save(result_path + ListFilenames[freqi] + '/' + subject + '_WavDec_' + decCond + '_' + gen_filename + '_' + ListFilenames[freqi] + '_acc' + str(acc) + '_test_index.npy', test_index, allow_pickle=True)
 		np.save(result_path + ListFilenames[freqi] + '/' + subject + '_WavDec_' + decCond + '_' + gen_filename + '_' + ListFilenames[freqi] + '_acc' + str(acc) + '_score.npy', score, allow_pickle=True)
 
-		if decCond is 'indItems':
+		if (decCond is 'indItems') | (decCond is 'itemPos'):
 			np.save(result_path + ListFilenames[freqi] + '/' + subject + '_WavDec_' + decCond + '_' + gen_filename + '_' + ListFilenames[freqi] + '_acc' + str(acc) + '_average_score.npy', average_score, allow_pickle=True)
 
 
