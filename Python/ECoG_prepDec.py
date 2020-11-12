@@ -16,8 +16,8 @@ from base import find_nearest, loadtablefrommat
 from ECoG_decod_cfg import *
 from ECoG_fldtrp2mne import ECoG_fldtrp2mne
 
-#def ECoG_prepDec(decCond, subject, foi, toi_i):
-def ECoG_prepDec(decCond, subject, foi):
+def ECoG_prepDec(decCond, subject, foi, toi_i):
+#def ECoG_prepDec(decCond, subject, foi):
 
 	##########################################
 	#Load data (X)
@@ -232,6 +232,6 @@ def ECoG_prepDec(decCond, subject, foi):
 	print('Training on:', np.shape(X_train), np.shape(y_train))
 	print('Testing on:', np.shape(X_test), np.shape(y_test))
 	
-	return X_train, y_train, X_test, y_test, data.times
+	#return X_train, y_train, X_test, y_test, data.times
 
-	#return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset 
+	return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset 

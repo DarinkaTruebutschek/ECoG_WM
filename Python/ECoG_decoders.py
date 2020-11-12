@@ -81,15 +81,25 @@ def binaryClassif(data_train, label_train, data_test, label_test, generalization
 				elif scoring is 'auc_multiclass': #This has to be done by hand, as it seems incompatible with the GeneralizingEstimator parallelization
 					
 					#In case of the channel decoding only
-					#score_fold = roc_auc_score(y_test, y_pred, multi_class='ovr')
+					#score_fold = roc_auc_score(y_test, np.squeeze(y_pred), multi_class='ovr')
 
 					#In case of the typical channel x time decoding
-					score_fold = np.zeros((np.shape(y_pred)[1], np.shape(y_pred)[2]))
+					#score_fold = np.zeros((np.shape(y_pred)[1], np.shape(y_pred)[2]))
 
-					for train_time in np.arange(np.shape(y_pred)[1]):
-						print('Scoring train_time: ' + str(train_time))
-						for test_time in np.arange(np.shape(y_pred)[2]):
-							score_fold[train_time, test_time] = roc_auc_score(y_test, y_pred[:, train_time, test_time, :], multi_class='ovr')
+					#for train_time in np.arange(np.shape(y_pred)[1]):
+						#print('Scoring train_time: ' + str(train_time))
+						#for test_time in np.arange(np.shape(y_pred)[2]):
+							#score_fold[train_time, test_time] = roc_auc_score(y_test, y_pred[:, train_time, test_time, :], multi_class='ovr')
+
+					#In case of the channel decoding for TF data
+					score_fold = np.zeros((np.shape(y_pred)[1]))
+
+					for freqi in np.arange(np.shape(y_pred)[1]):
+						print('Scoring frequency: ' + str(freqi))
+
+						score_fold[freqi] = roc_auc_score(y_test, np.squeeze(y_pred[:, freqi, :]), multi_class='ovr')
+
+
 				scores.append(score_fold)
 
 		if scoring is not None:

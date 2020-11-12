@@ -49,9 +49,7 @@ for subi, subject in enumerate(ListSubjects):
 				for labeli, _ in enumerate(range(np.shape(y_train)[1])):
 					print('Running decoding on label ', labeli)
 
-					X_train_tmp = X_train[chani, :, :]
-					X_test_tmp = X_test[chani, :, :]
-					model, predictions, cv_test, score_label = binaryClassif(X_train_tmp[:, :, np.newaxis], y_train[:, labeli], X_test_tmp[:, :, np.newaxis], y_test[:, labeli], generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
+					model, predictions, cv_test, score_label = binaryClassif(X_train[chani, :, :, :], y_train[:, labeli], X_test[chani, :, :, :], y_test[:, labeli], generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
 
 					#if (np.mod(.2, win_size) != 0): #without baseline to facilitate code
 				 		#model, predictions, cv_test, score_label = binaryClassif(X_train[chani, :, :, 1:], y_train[:, labeli], X_test[chani, :, :, 1:], y_test[:, labeli], generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
@@ -108,20 +106,20 @@ for subi, subject in enumerate(ListSubjects):
 		#Compute average score for all labels
 		score = np.asarray(score)
 		if (decCond is 'indItems') | (decCond is 'itemPos'):
-			average_score = np.mean(score, axis=0)
+			average_score = np.mean(score, axis=2)
 
 		#Save all data
-		if os.path.isdir(result_path + ListFilenames[freqi]) is False:
-			os.makedirs(result_path + ListFilenames[freqi])
+		if os.path.isdir(result_path + ListFilenames[0]) is False:
+			os.makedirs(result_path + ListFilenames[0])
 
-		np.save(result_path + ListFilenames[freqi] + '/' + subject + '_WavDec_' + decCond + '_' + gen_filename + '_' + ListFilenames[freqi] + '_acc' + str(acc) + '_time.npy', time, allow_pickle=True)
-		np.save(result_path + ListFilenames[freqi] + '/' + subject + '_WavDec_' + decCond + '_' + gen_filename + '_' + ListFilenames[freqi] + '_acc' + str(acc) + '_time_gen.npy', time_gen, allow_pickle=True)
-		np.save(result_path + ListFilenames[freqi] + '/' + subject + '_WavDec_' + decCond + '_' + gen_filename + '_' + ListFilenames[freqi] + '_acc' + str(acc) + '_y_pred.npy', y_pred, allow_pickle=True)
-		np.save(result_path + ListFilenames[freqi] + '/' + subject + '_WavDec_' + decCond + '_' + gen_filename + '_' + ListFilenames[freqi] + '_acc' + str(acc) + '_test_index.npy', test_index, allow_pickle=True)
-		np.save(result_path + ListFilenames[freqi] + '/' + subject + '_WavDec_' + decCond + '_' + gen_filename + '_' + ListFilenames[freqi] + '_acc' + str(acc) + '_score.npy', score, allow_pickle=True)
+		np.save(result_path + ListFilenames[0] + '/' + subject + '_WavDec_timDim' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_time.npy', time, allow_pickle=True)
+		np.save(result_path + ListFilenames[0] + '/' + subject + '_WavDec_timDim' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_time_gen.npy', time_gen, allow_pickle=True)
+		np.save(result_path + ListFilenames[0] + '/' + subject + '_WavDec_timDim' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_y_pred.npy', y_pred, allow_pickle=True)
+		np.save(result_path + ListFilenames[0] + '/' + subject + '_WavDec_timDim' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_test_index.npy', test_index, allow_pickle=True)
+		np.save(result_path + ListFilenames[0] + '/' + subject + '_WavDec_timDim' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_score.npy', score, allow_pickle=True)
 
 		if (decCond is 'indItems') | (decCond is 'itemPos'):
-			np.save(result_path + ListFilenames[freqi] + '/' + subject + '_WavDec_' + decCond + '_' + gen_filename + '_' + ListFilenames[freqi] + '_acc' + str(acc) + '_average_score.npy', average_score, allow_pickle=True)
+			np.save(result_path + ListFilenames[0] + '/' + subject + '_WavDec_timDim' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_average_score.npy', average_score, allow_pickle=True)
 
 
 

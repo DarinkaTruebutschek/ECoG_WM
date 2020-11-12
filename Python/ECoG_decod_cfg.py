@@ -13,8 +13,8 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #TF parameters
-fmethod = 'respLocked_tfa_wavelet'
-#fmethod = 'respLocked_erp_100' #erp_100: downsampled to 100 Hz, erp: downsampled to 250 Hz
+fmethod = 'tfa_wavelet_final'
+#fmethod = 'erp_100' #erp_100: downsampled to 100 Hz, erp: downsampled to 250 Hz
 
 ##########################################
 #Preprocessing
@@ -67,7 +67,8 @@ elif fmethod is 'tfa_wavelet_final':
 	win_size = [[-0.14, 0], [0, .5], [0.5, 1.5], [1.5, 2.5], [2.5, 4.3]] #False#0.5 #how many time points will be added as feature dimensions; in sec; if decoding is to be done independently on each time point, set to False
 	step_size = 1.0#0.5 #where to begin with this
 elif fmethod is 'respLocked_tfa_wavelet':
-	win_size = False
+	#win_size = False
+	win_size = [[-3.5, -3], [-3, -2], [-2, -1], [-1, -.5], [-.5, -0.35]]
 	step_size = 1
 
 ##########################################
@@ -76,9 +77,9 @@ acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct
 
 ##########################################
 #Decoding
-decCond = 'probe' #other options: 'probe', 'itemPos', load', indItems', 'cue'
+decCond = 'indItems' #other options: 'probe', 'itemPos', load', indItems', 'cue'
 
-generalization = 1 #0 = diagonal only, 1 = full matrix
+generalization = 0 #0 = diagonal only, 1 = full matrix
 
 #CV
 n_folds = 5

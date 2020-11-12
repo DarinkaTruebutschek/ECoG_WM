@@ -18,13 +18,13 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #TF parameters
-fmethod = 'erp_100'
+fmethod = 'tfa_wavelet_final'
 
 ##########################################
 #Preprocessing
-if fmethod is 'tfa_wavelet':
+if (fmethod is 'tfa_wavelet_final') | (fmethod is 'respLocked_tfa_wavelet'):
 	bl = [-.14, 0]
-elif (fmethod is 'erp') | (fmethod is 'erp_100'):
+elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'tfa_wavelet_final'):
 	bl = [-.2, 0]
 
 blc = 0 #baseline correction or not?
@@ -35,11 +35,11 @@ acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct
 
 ##########################################
 #Decoding
-decCond = 'itemPos' # 'itemPos', indItems', 'cue', 'load'
+decCond = 'load' # 'itemPos', indItems', 'cue', 'load'
 
-generalization = 1 #0 = diagonal only, 1 = full matrix
+generalization = 0 #0 = diagonal only, 1 = full matrix
 
-if fmethod is 'tfa_wavelet':
+if fmethod is 'tfa_wavelet_final':
 	trainTime = [bl[0], 4.3]
 	testTime = [bl[0], 4.3]
 elif fmethod is 'erp':
@@ -51,6 +51,9 @@ elif fmethod is 'erp_100':
 elif fmethod is 'respLocked_erp_100':
 	trainTime = [-4.0, 0.]
 	testTime = [-4.0, 0.]
+elif fmethod is 'respLocked_tfa_wavelet':
+	trainTime = [-3.5, -0.35]
+	testTime = [-3.5, -0.35]
 
 #CV
 n_folds = 5

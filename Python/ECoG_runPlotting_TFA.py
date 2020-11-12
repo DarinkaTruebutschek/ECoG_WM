@@ -23,8 +23,8 @@ from ECoG_base_stats import myStats
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP']
 #ListFreqs = [[8, 12], [13, 30], [30, 70], [70, 180]]
 #ListFilenames = ['alpha_final', 'beta_final', 'lowGamma_final', 'highGamma_final']
-ListFreqs = [[30, 70]]
-ListFilenames = ['lowGamma_final']
+ListFreqs = [[70, 180]]
+ListFilenames = ['highGamma_final']
 
 if generalization:
 	gen_filename = 'timeGen'
@@ -53,7 +53,7 @@ for freqi, freq in enumerate(ListFreqs):
 		time = np.load(data_path + ListFilenames[freqi] + '/' + subject + '_WavDec_' + decCond + '_' + gen_filename + '_' + ListFilenames[freqi] + '_acc' + str(acc) + '_time.npy')
 
 		#Include only relevant period of the trial (i.e., baseline + epoch)
-		if ListFilenames[freqi] != 'respLocked_erp_100':
+		if (ListFilenames[freqi] != 'respLocked_erp_100') & (fmethod != 'respLocked_tfa_wavelet'):
 			begin_t = find_nearest(time, bl[0])
 		else:
 			begin_t = find_nearest(time, trainTime[0])
@@ -74,6 +74,15 @@ for freqi, freq in enumerate(ListFreqs):
 			pretty_decod(np.diagonal(score), times=time[begin_t[0] :], color=line_color[0], sig=None, chance=chance, ax=ax_diag, thickness=line_thickness)
 
 		#Add relevant info
+		if fmethod != 'respLocked_tfa_wavelet':
+			ax_diag.axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
+
+			ax_diag.set_xticks(np.arange(0., 4.3, .5)), 
+			ax_diag.set_xticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+		else:
+			ax_diag.set_xticks(np.arange(-3.5, -.35, .5)), 
+			ax_diag.set_xticklabels(['-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+
 		ax_diag.axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
 
 		ax_diag.set_xticks(np.arange(0., 4.3, .5)), 
@@ -97,7 +106,7 @@ for freqi, freq in enumerate(ListFreqs):
 				xlabel='Test times (in s)', ylabel='Train times (in s)', sfreq=sfreq, diagonal='dimgrey', test_times=None, classLines=None, classColors=None, contourPlot=None, steps=None)
 
 			#Add relevant info
-			if ListFilenames[freqi] != 'respLocked_erp_100':
+			if fmethod != 'respLocked_tfa_wavelet':
 				ax_gen.axvline(1.500, color='k') #indicates item onset
 				ax_gen.axhline(1.500, color='k') #indicates item onset
 
@@ -107,11 +116,11 @@ for freqi, freq in enumerate(ListFreqs):
 				ax_gen.set_yticks(np.arange(0., 4.3, .5)), 
 				ax_gen.set_yticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
 			else:
-				ax_gen.set_xticks(np.arange(-4.0, 0, .5)), 
-				ax_gen.set_xticklabels(['-4.0', '-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'R'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
+				ax_gen.set_xticks(np.arange(-3.5, -.35, .5)), 
+				ax_gen.set_xticklabels(['-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
 
-				ax_gen.set_yticks(np.arange(-4.0, 0., .5)), 
-				ax_gen.set_yticklabels(['-4.0', '-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'R'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
+				ax_gen.set_yticks(np.arange(-3.5, -.35, .5)), 
+				ax_gen.set_yticklabels(['-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
 
 			#Save
 			plt.savefig(result_path + ListFilenames[freqi] + '/Figures/' + subject + '_WavDec_' + decCond + '_' + gen_filename + '_' + ListFilenames[freqi] + '_acc' + str(acc) + '_gat.svg',
@@ -173,10 +182,14 @@ for freqi, freq in enumerate(ListFreqs):
 		pretty_decod(np.asarray([np.diag(sc) for sc in scores]), times=time[begin_t[0] :], color=line_color[0], sig=sig_diag, chance=chance, fill=True, ax=ax_group, thickness=line_thickness)
 
 	#Add relevant info
-	ax_group.axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
+	if fmethod != 'respLocked_tfa_wavelet':
+		ax_diag.axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
 
-	ax_group.set_xticks(np.arange(0., 4.3, .5)), 
-	ax_group.set_xticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+		ax_diag.set_xticks(np.arange(0., 4.3, .5)), 
+		ax_diag.set_xticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+	else:
+		ax_diag.set_xticks(np.arange(-3.5, -.35, .5)), 
+		ax_diag.set_xticklabels(['-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 
 	ax_group.set_title('Average ' + ListFilenames[freqi], fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
 
@@ -191,8 +204,8 @@ for freqi, freq in enumerate(ListFreqs):
 
 		scores_m = np.mean(scores, axis=0)
 
-		#if (maskSig) & (np.shape(sig==False) != np.shape(scores_m)):
-		if (maskSig):
+		if (maskSig) & (np.shape(sig==False) != np.shape(scores_m)):
+		#if (maskSig):
 			#Mask array with significance < stats_alpha
 			scores_m[~sig] = -300 #decoding score is bounded between 0/1
 			scores_m = np.ma.masked_where(scores_m == -300, scores_m)
@@ -212,7 +225,7 @@ for freqi, freq in enumerate(ListFreqs):
 				xlabel='Test times (in s)', ylabel='Train times (in s)', sfreq=sfreq, diagonal='dimgrey', test_times=None, classLines=None, classColors=None, contourPlot=True, steps=contour_steps)
 
 		#Add relevant info
-		if ListFilenames[freqi] != 'respLocked_erp_100':
+		if fmethod != 'respLocked_tfa_wavelet':
 			ax_group_gen.axvline(1.500, color='k') #indicates item onset
 			ax_group_gen.axhline(1.500, color='k') #indicates item onset
 
@@ -222,11 +235,11 @@ for freqi, freq in enumerate(ListFreqs):
 			ax_group_gen.set_yticks(np.arange(0., 4.3, .5)), 
 			ax_group_gen.set_yticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
 		else:
-			ax_group_gen.set_xticks(np.arange(-4.0, 0, .5)), 
-			ax_group_gen.set_xticklabels(['-4.0', '-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'R'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
+			ax_group_gen.set_xticks(np.arange(-3.5, -.35, .5)), 
+			ax_group_gen.set_xticklabels(['-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
 
-			ax_group_gen.set_yticks(np.arange(-4.0, 0, .5)), 
-			ax_group_gen.set_yticklabels(['-4.0', '-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'R'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
+			ax_group_gen.set_yticks(np.arange(-3.5, -.35, .5)), 
+			ax_group_gen.set_yticklabels(['-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5'], fontname=font_name_gen, fontsize=font_size_gen, fontweight=font_weight_gen) #set x_tick labels
 
 
 		#Save
