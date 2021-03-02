@@ -15,10 +15,10 @@ subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'
 
 %% Loop over subjects 
 for subi = 1 : length(subnips)
-    load([behavior_path subnips{subi} '_memory_behavior_combined.mat']);
+    load([behavior_path subnips{subi} '_memory_behavior_combined_forProbes.mat']);
     
     table_struct = struct(data_mem);
     table_columns = table_struct.varDim.labels;
     
-    save([behavior_path subnips{subi} '_memory_behavior_forPython_final.mat'], 'table_struct', 'table_columns');
+    save([behavior_path subnips{subi} '_memory_behavior_forPython_Probe_final.mat'], 'table_struct', 'table_columns');
 end

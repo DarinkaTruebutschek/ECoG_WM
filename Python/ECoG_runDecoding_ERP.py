@@ -16,10 +16,11 @@ from ECoG_decoders import binaryClassif
 ##########################################
 #Define important variables
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP']
+#ListSubjects = ['HS']
 
 #ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG']
 #ListFreqs = [[8, 12], [13, 30], [31, 70], [71, 160]]
-ListFilenames = ['erp_100']
+ListFilenames = ['probeLocked_erp_100_longEpoch']
 
 if generalization:
 	gen_filename = 'timeGen'
@@ -40,9 +41,11 @@ for subi, subject in enumerate(ListSubjects):
 	test_index = []
 	score = []
 
-	if (decCond is 'indItems') | (decCond is 'itemPos'):
+	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue0_testCue1') | (decCond is 'indItems_trainCue1_testCue0'):
 		for labeli, _ in enumerate(range(np.shape(y_train)[1])):
 			print('Running decoding on label ', labeli)
+			print(np.sum(y_train[:, labeli]))
+			print(np.sum(y_test[:, labeli]))
 
 			model, predictions, cv_test, score_label = binaryClassif(X_train, y_train[:, labeli], X_test, y_test[:, labeli], generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
 			
@@ -60,7 +63,7 @@ for subi, subject in enumerate(ListSubjects):
 
 	#Compute average score for all labels
 	score = np.asarray(score)
-	if (decCond is 'indItems') | (decCond is 'itemPos'):
+	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue1_testCue0'):
 	#if score.ndim > 2:
 		average_score = np.mean(score, axis=0)
 
@@ -74,7 +77,7 @@ for subi, subject in enumerate(ListSubjects):
 	np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_test_index.npy', test_index, allow_pickle=True)
 	np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_score.npy', score, allow_pickle=True)
 
-	if decCond is 'indItems':
+	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue1_testCue0'):
 	#if score.ndim > 2:
 		np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_average_score.npy', average_score, allow_pickle=True)
 

@@ -5,6 +5,7 @@
 
 import numpy as np
 import pandas as pd
+import scipy.stats as scipy
 
 from scipy.io import loadmat
 from scipy.ndimage.filters import generic_filter as gf
@@ -80,3 +81,28 @@ def my_smooth(data, window):
         kernel = np.ones((2 * window + 1, 2 * window + 1))
         data = gf(data, np.mean, footprint=kernel)
     return data
+
+##########################################
+def findTimeClust(data):
+
+    "Identifies continuous clusters and returns the onsets/offsets."
+
+    data = np.array(data)
+    data_deriv = np.round(np.diff(data), 2)
+
+    #Identify transition points in data
+    tmp = np.unique(np.round(data_deriv, 2))
+
+    if len(tmp) == 1: #i.e., the data is entirely continous without any gaps/transitions
+        onsets = data[0]
+        offsets = data[-1]
+    else:
+        transitions = np.where(data_deriv > scipy.mode(data_deriv).mode[0])
+
+        onsets = data[transitions[0]+1]
+        onsets = np.insert(onsets, 0, data[0])
+
+        offsets = data[transitions]
+        offsets = np.append(offsets, data[-1])
+
+    return onsets, offsets

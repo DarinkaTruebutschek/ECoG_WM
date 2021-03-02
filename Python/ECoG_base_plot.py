@@ -170,7 +170,7 @@ def plot_eb(x, y, yerr, ax=None, alpha=0.3, color=None, line_args=dict(),
     elif len(yerr) == 2:
         ymin, ymax = yerr
     ax.plot(x, y,  color=color, **line_args)
-    ax.fill_between(x, ymax, ymin, alpha=alpha, color=color, **err_args)
+    ax.fill_between(x, ymax, ymin, alpha=alpha, facecolor=color, **err_args)
     return ax
 
 

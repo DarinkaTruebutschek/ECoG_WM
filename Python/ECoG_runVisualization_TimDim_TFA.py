@@ -60,10 +60,10 @@ for subi, subject in enumerate(ListSubjects):
 	#Load all of the data 
 	if (decCond is not 'itemPos') & (decCond is not 'indItems'):
 		score = np.load(data_path + ListFilenames[0] + '/' + subject + '_WavDec_timDim' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_score.npy') #shape: channels x labels x timebins OR timebins x channels x 1 (if no sliding window was used )
-	elif decCond is 'itemPos':
+	#elif decCond is 'itemPos':
 		#score = np.load(data_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_average_score.npy') #shape: channels x labels x timebins OR timebins x channels x 1 (if no sliding window was used )
-		score = np.load(data_path + ListFilenames[0] + '/' + subject + '_WavDec_timDim' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_score.npy') #shape: channels x labels x timebins OR timebins x channels x frequencies
-		score = np.mean(score, axis=2)
+		#score = np.load(data_path + ListFilenames[0] + '/' + subject + '_WavDec_timDim' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_score.npy') #shape: channels x labels x timebins OR timebins x channels x frequencies
+		#score = np.mean(score, axis=2)
 	else:
 		score = np.load(data_path + ListFilenames[0] + '/' + subject + '_WavDec_timDim' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_average_score.npy')
 

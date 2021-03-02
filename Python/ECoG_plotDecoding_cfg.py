@@ -35,7 +35,7 @@ acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct
 
 ##########################################
 #Decoding
-decCond = 'load' # 'itemPos', indItems', 'cue', 'load'
+decCond = 'indItems' # 'itemPos', indItems', 'cue', 'load'
 
 generalization = 0 #0 = diagonal only, 1 = full matrix
 

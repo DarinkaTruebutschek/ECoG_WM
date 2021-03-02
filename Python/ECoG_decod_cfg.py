@@ -13,7 +13,7 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #TF parameters
-fmethod = 'tfa_wavelet_final'
+fmethod = 'probeLocked_erp_100_longEpoch'
 #fmethod = 'erp_100' #erp_100: downsampled to 100 Hz, erp: downsampled to 250 Hz
 
 ##########################################
@@ -40,6 +40,13 @@ else:
 	elif fmethod is 'respLocked_erp_100':
 		trainTime = [-4., 0.]
 		testTime = [-4., 0.]
+	elif fmethod is 'probeLocked_erp_100':
+		trainTime = [-4.5, .15]
+		testTime = [-4.5, .15]
+	elif fmethod is 'probeLocked_erp_100_longEpoch':
+		trainTime = [-4.5, .5]
+		testTime = [-4.5, .5]
+
 
 ##########################################
 #Slice definition
@@ -51,17 +58,23 @@ elif fmethod is 'erp_100':
 	toi = [bl[0], 4.48]
 elif fmethod is 'respLocked_erp_100':
 	toi = [-4.0, 0] #[-4.0, 0]
+elif fmethod is 'probeLocked_erp_100':
+	toi = [-4.5, .15]
 elif fmethod is 'tfa_wavelet_final':
 	toi = [bl[0], 4.3]
 
 if fmethod is 'erp_100':
-	#win_size = False
-	win_size = [[-.2, 0], [0, .5], [0.5, 1.5], [1.5, 2.5], [2.5, 4.5]]#False#0.5 #how many time points will be added as feature dimensions; in sec; if decoding is to be done independently on each time point, set to False
+	win_size = False
+	#win_size = [[-.2, 0], [0, .5], [0.5, 1.5], [1.5, 2.5], [2.5, 4.5]]#False#0.5 #how many time points will be added as feature dimensions; in sec; if decoding is to be done independently on each time point, set to False
 	step_size = 1.0#0.5 #where to begin with this
 elif fmethod is 'respLocked_erp_100':
-	#win_size = False
-	win_size = [[-4, -3], [-3, -2], [-2, -1], [-1, -.5], [-.5, 0]] #False#0.5 #how many time points will be added as feature dimensions; in sec; if decoding is to be done independently on each time point, set to False
+	win_size = False
+	#win_size = [[-4, -3], [-3, -2], [-2, -1], [-1, -.5], [-.5, 0]] #False#0.5 #how many time points will be added as feature dimensions; in sec; if decoding is to be done independently on each time point, set to False
 	step_size = 1.0#0.5 #where to begin with this
+elif fmethod is 'probeLocked_erp_100':
+	win_size = False
+elif fmethod is 'probeLocked_erp_100_longEpoch':
+	win_size = False
 elif fmethod is 'tfa_wavelet_final':
 	#win_size = False
 	win_size = [[-0.14, 0], [0, .5], [0.5, 1.5], [1.5, 2.5], [2.5, 4.3]] #False#0.5 #how many time points will be added as feature dimensions; in sec; if decoding is to be done independently on each time point, set to False
@@ -77,16 +90,16 @@ acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct
 
 ##########################################
 #Decoding
-decCond = 'indItems' #other options: 'probe', 'itemPos', load', indItems', 'cue'
+decCond = 'cue' #other options: 'probe', 'itemPos', load', indItems', 'cue', indItems_trainCue0_testCue1
 
-generalization = 0 #0 = diagonal only, 1 = full matrix
+generalization = 1 #0 = diagonal only, 1 = full matrix
 
 #CV
 n_folds = 5
-predict_mode = 'cross-validation' #or mean-prediction
+predict_mode = 'cross-validation' #or cross-validation or mean-prediction
 
 #Specific to SVM
 proba = True #determines whether or not the output will be continous or not
 
 #Score
-score_method = 'auc' #or: auc_multiclass
+score_method = 'auc' #or: auc_multiclass (for decoding load & probeID)

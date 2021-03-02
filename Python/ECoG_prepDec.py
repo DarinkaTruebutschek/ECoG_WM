@@ -16,8 +16,8 @@ from base import find_nearest, loadtablefrommat
 from ECoG_decod_cfg import *
 from ECoG_fldtrp2mne import ECoG_fldtrp2mne
 
-def ECoG_prepDec(decCond, subject, foi, toi_i):
-#def ECoG_prepDec(decCond, subject, foi):
+#def ECoG_prepDec(decCond, subject, foi, toi_i):
+def ECoG_prepDec(decCond, subject, foi):
 
 	##########################################
 	#Load data (X)
@@ -50,6 +50,9 @@ def ECoG_prepDec(decCond, subject, foi, toi_i):
 	elif (fmethod is 'respLocked_erp_100'):
 		data = ECoG_fldtrp2mne(fname, 'data_respLocked', 'erp') #for erp data, this is a 3d-matrix of sixe n_trials, n_channels, n_freqs, n_times
 		data.crop(tmin=trainTime[0], tmax=trainTime[1])
+	elif (fmethod is 'probeLocked_erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch'):
+		data = ECoG_fldtrp2mne(fname, 'data_probeLocked', 'erp')
+		data.crop(tmin=trainTime[0], tmax=trainTime[1])
 
 		#Preprocess data: Apply baseline correction 
 		if blc:
@@ -57,17 +60,24 @@ def ECoG_prepDec(decCond, subject, foi, toi_i):
 
 	##########################################
 	#Load labels (y)
-	fname = behavior_path + subject + '_memory_behavior_forPython_final.mat'
+	if fmethod is not 'probeLocked_erp_100_longEpoch':
+		fname = behavior_path + subject + '_memory_behavior_forPython_final.mat'
+	else:
+		fname = behavior_path + subject + '_memory_behavior_forPython_Probe_final.mat'
+
 	trialInfo = loadtablefrommat(fname, 'table_struct', 'table_columns')
 
 	#Select only that subset of data also used in the ECoG analyses
-	trialInfo = trialInfo[trialInfo.EEG_included != 0]
+	if fmethod is 'probeLocked_erp_100_longEpoch':
+		trialInfo = trialInfo[trialInfo.trials_included_probe != 0]
+	else:
+		trialInfo = trialInfo[trialInfo.EEG_included != 0]
 
 	#Sanity check: Do X and y have the same dimensions?
 	if (fmethod is 'tfa_wavelet') | (fmethod is 'tfa_wavelet_final'):
 		if np.shape(data.data)[0] != np.shape(trialInfo)[0]:
 			print('X and y do not have the same dimensions')
-	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100'):
+	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100') | (fmethod is 'probeLocked_erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch'):
 		if np.shape(data.get_data())[0] != np.shape(trialInfo)[0]:
 			print('X and y do not have the same dimensions')
 
@@ -78,7 +88,7 @@ def ECoG_prepDec(decCond, subject, foi, toi_i):
 			X_train_tmp = data.data
 		else:
 			X_train = data.data
-	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100'):
+	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100') | (fmethod is 'probeLocked_erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch'):
 		if win_size is not False:
 			X_train_tmp = data.get_data() #n_trials x n_channels x n_timepoints (decoding done seperately on each time point)
 		else:
@@ -170,7 +180,7 @@ def ECoG_prepDec(decCond, subject, foi, toi_i):
 				for t, timepoint in enumerate(np.arange(np.shape(X_train)[2])):
 					X_train[:, :, t, :] = X_train[:, :, t, :] - my_mean
 
-	if decCond is 'indItems':
+	if (decCond is 'indItems') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1'):
 		y_train = []
 		for _, row_i in enumerate(range(len(trialInfo))):
 			tmp = trialInfo.values[row_i, 7:11]
@@ -180,6 +190,19 @@ def ECoG_prepDec(decCond, subject, foi, toi_i):
 		del tmp	
 
 		y_train = MultiLabelBinarizer().fit_transform(y_train)
+	elif (decCond is 'indItems_trainCue0_testCue1') | (decCond is 'indItems_trainCue1_testCue0'):
+		y_train = []
+		y_test = []
+		for _, row_i in enumerate(range(len(trialInfo))):
+			tmp = trialInfo.values[row_i, 7:11]
+			tmp = tmp[~np.isnan(tmp)]
+			y_train.append(tmp)
+			y_test.append(tmp)
+
+		del tmp	
+
+		y_train = MultiLabelBinarizer().fit_transform(y_train)
+		y_test = MultiLabelBinarizer().fit_transform(y_test)
 	elif decCond is 'itemPos':
 		y_train = []
 		for _, row_i in enumerate(range(len(trialInfo))):
@@ -199,14 +222,26 @@ def ECoG_prepDec(decCond, subject, foi, toi_i):
 		y_train[y_train == 4] = 2
 	elif decCond is 'probe':
 		y_train = trialInfo.values[:, 4] 
+	elif decCond is 'probeID':
+		y_train = trialInfo.values[:, 11]
 	elif decCond is 'buttonPress':
 		y_train = trialInfo.values[:, 12]
 		y_train[y_train == 2] = 1 #1/2 = trigger pulled
 		y_train[(y_train == 3) | (y_train == 4)] = 0 #3/4 = trigger not pulled
 
 	#Select only those trials, in which the subject responded correctly & throw out any additional nan entries
-	if acc:
+	if acc & (decCond is not 'indItems_trainCue0_testCue0' and decCond is not 'indItems_trainCue1_testCue1' and decCond is not 'indItems_trainCue0_testCue1' and decCond is not 'indItems_trainCue1_testCue0'):
 		sel = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3))))
+	elif acc & (decCond is 'indItems_trainCue0_testCue0'):
+		sel = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 0)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 0))))
+	elif acc & (decCond is 'indItems_trainCue1_testCue1'):
+		sel = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 1))))
+	elif acc & (decCond is 'indItems_trainCue0_testCue1'):
+		sel_train = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 0)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 0))))
+		sel_test = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 1))))	
+	elif acc & (decCond is 'indItems_trainCue1_testCue0'):
+		sel_train = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 1))))
+		sel_test = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 0)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 0))))	
 	else:
 		sel = np.where(~np.isnan(trialInfo.block_id))
 
@@ -220,18 +255,34 @@ def ECoG_prepDec(decCond, subject, foi, toi_i):
 			X_train = X_train[:, np.squeeze(sel), :]
 			X_train = np.squeeze(X_train)
 			y_train = y_train[np.squeeze(sel)]
-	elif win_size is False:
+	elif (win_size is False) and (decCond is not 'indItems_trainCue0_testCue1') and (decCond is not 'indItems_trainCue1_testCue0'):
 		X_train = X_train[sel]
 		y_train = np.squeeze(y_train)[sel]
+	elif (win_size is False) and (decCond is 'indItems_trainCue0_testCue1'):
+		X_test = np.copy(X_train)
+
+		X_train = X_train[sel_train]
+		y_train = np.squeeze(y_train)[sel_train]
+
+		X_test = X_test[sel_test]
+		y_test = np.squeeze(y_test)[sel_test]
+	elif (win_size is False) and (decCond is 'indItems_trainCue1_testCue0'):
+		X_test = np.copy(X_train)
+
+		X_train = X_train[sel_train]
+		y_train = np.squeeze(y_train)[sel_train]
+
+		X_test = X_test[sel_test]
+		y_test = np.squeeze(y_test)[sel_test]
 
 	#Define train and test sets
-	if predict_mode == 'cross-validation':
+	if (predict_mode == 'cross-validation') and (decCond is not 'indItems_trainCue0_testCue1') and (decCond is not 'indItems_trainCue1_testCue0'):
 		X_test = np.copy(X_train)
 		y_test = np.copy(y_train)
 
 	print('Training on:', np.shape(X_train), np.shape(y_train))
 	print('Testing on:', np.shape(X_test), np.shape(y_test))
 	
-	#return X_train, y_train, X_test, y_test, data.times
+	return X_train, y_train, X_test, y_test, data.times
 
-	return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset 
+	#return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset 

@@ -14,7 +14,7 @@ from ECoG_plotDecoding_cfg import font_name, font_size, font_weight, font_name_g
 def pretty_gat(scores, times=None, chance=0, ax=None, sig=None, cmap='RdBu_r',
                clim=None, colorbar=True, xlabel='Test Times',
                ylabel='Train Times', sfreq=250, diagonal=None,
-               test_times=None, classLines=None, classColors=None, contourPlot=None, steps=None):
+               test_times=None, classLines=None, classColors=None, contourPlot=None, steps=None, markOnset=True):
     
     #Check if array is masked or not
     if ma.is_masked(scores):
@@ -68,9 +68,10 @@ def pretty_gat(scores, times=None, chance=0, ax=None, sig=None, cmap='RdBu_r',
 
         xx, yy = np.meshgrid(test_times, times, copy=False, indexing='xy')
         ax.contour(xx, yy, sig, colors= 'k', linestyles='solid', linewidths = 0.25)
-		
-    ax.axhline(0, color='k')
-    ax.axvline(0, color='k')
+
+    if markOnset:
+        ax.axhline(0, color='k')
+        ax.axvline(0, color='k')
     
     #Add additional lines for classifiers if needed
     if classLines is not None:
@@ -104,7 +105,7 @@ def pretty_gat(scores, times=None, chance=0, ax=None, sig=None, cmap='RdBu_r',
     ax.set_xlim(min(test_times), max(test_times))
     ax.set_ylim(min(times), max(times))
     pretty_plot(ax)
-    return ax
+    return ax, im
 
 def pretty_decod(scores, times=None, chance=0, ax=None, sig=None, width=3.,
                  color='k', fill=False, ylabel='AUC', xlabel='Time (s)', sfreq=250, alpha=.75, scat=False, line=False, lim=None, thickness=4,
@@ -123,11 +124,11 @@ def pretty_decod(scores, times=None, chance=0, ax=None, sig=None, width=3.,
     if scores.ndim == 2 and scores.shape[0] > 1:
         scores_m = np.mean(scores, axis=0)
         sem = scores.std(0) / np.sqrt(len(scores))
-        plot_sem(times, scores_m, sem, color=color, ax=ax, line_args = {'linewidth': thickness})
+        plot_sem(times, scores_m, sem, color=color, ax=ax, line_args = {'linewidth': thickness}, err_args = {'edgecolor': 'none'})
     else:
         scores_m = np.squeeze(scores)
         sem = np.zeros_like(scores_m)
-        plot_sem(times, scores_m, sem, color=color, ax=ax, line_args = {'linewidth': thickness})
+        plot_sem(times, scores_m, sem, color=color, ax=ax, line_args = {'linewidth': thickness}, err_args = {'edgecolor': 'none'})
 
     #Plot significance
     if sig is not None:

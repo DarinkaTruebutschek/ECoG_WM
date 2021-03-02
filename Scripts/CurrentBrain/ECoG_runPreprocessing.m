@@ -12,7 +12,7 @@ ECoG_setPath;
 
 %% Define important variables
 subnips = {'MKL','EG_I','HS','MG','KR','WS','KJ_I','LJ','AS','SB','HL','AP'}; %all subjects included in analysis
-subnips = {'AS'};
+subnips = {'MV'};
 
 %Paths to anatomical/functional data
 if strcmp(subnips, 'MKL')
@@ -85,7 +85,7 @@ elseif strcmp(subnips, 'AP')
 elseif strcmp(subnips, 'MV')
     pre_mri_file = [mri_path subnips{1} '/SE000005_t1_mpr_sag_p2_iso0_8_320_3D_20190131155911_6.nii.gz'];
     post_ct_file = [ct_path subnips{1} '/SE000002_01_CCT_20191120095628_3_Tilt_1.nii.gz'];
-    raw_data_file{1} = [dat_path subnips{1} '/MV_Oxford_22-11-2019 Data.cdt']; %to be used in preprocessing of functional data
+    raw_data_file{1} = [dat_path subnips{1} '/Dataset1.mat']; %to be used in preprocessing of functional data
 elseif strcmp(subnips, 'CD')
     pre_mri_file = [mri_path subnips{1} '/SE000005_t1_mpr_sag_p2_iso0_8_320_3D_20181010080252_6.nii.gz'];
     %post_ct_file = [ct_path subnips{1} '/SE000002_01_CCT_20190716115939_3_Tilt_1.nii.gz'];
@@ -545,7 +545,7 @@ table = generate_electable(e_pos, 'xldir', xldir, 'fsdir', fsdir, 'elec_nat', el
 %% Load in data
 for sessi = 1 : length(raw_data_file)
     
-    if ~strcmp(subnips{1}, 'CD') 
+    if ~strcmp(subnips{1}, 'CD') && ~strcmp(subnips{1}, 'MV')
         disp(num2str(sessi));
 
         cfg = [];
@@ -586,6 +586,42 @@ for sessi = 1 : length(raw_data_file)
         temp_data.cfg.trl = [1 nSamples 0];
         
         clear data;
+        
+        data{sessi} = temp_data;
+        
+        clear temp_data;
+    elseif strcmp(subnips{1}, 'MV')
+        %Load in another subject just to be able to get data structure
+        %right
+        cfg = [];
+        cfg.dataset = [dat_path 'LJ/OA8887R9.EDF'];
+        cfg.continous = 'yes';
+        temp_data = ft_preprocessing(cfg);
+        
+        %Create current structure
+        temp_data.hdr.Fs = SampleRate;
+        temp_data.hdr.nChans = length(Channels);
+        temp_data.hdr.label = {Channels.Label}';
+        temp_data.hdr.nSamples = size(EEGData, 2);
+        temp_data.hdr.nSamplesPre = 0;
+        temp_data.hdr.nTrials = 1;
+        temp_data.hdr.chanunit(length(Channels)+1 : end) = [];
+        temp_data.hdr.chantype(length(Channels)+1 : end) = [];
+        
+        temp_data.label = temp_data.hdr.label;
+        temp_data.time{1} = [0 : 1/temp_data.hdr.Fs : (temp_data.hdr.nSamples*(1/temp_data.hdr.Fs))];
+        temp_data.time{1}(end) = [];
+        temp_data.trial{1} = EEGData;
+        temp_data.fsample = temp_data.hdr.Fs;
+        temp_data.sampleinfo = [1 temp_data.hdr.nSamples];
+        
+        temp_data.cfg.dataset =  '/media/darinka/Data0/iEEG/Results/RawData/MV/Dataset1.mat';
+        temp_data.cfg.channel = temp_data.hdr.label;
+        temp_data.cfg.datafile = '/media/darinka/Data0/iEEG/Results/RawData/MV/Dataset1.mat';
+        temp_data.cfg.headerfile = '/media/darinka/Data0/iEEG/Results/RawData/MV/Dataset1.mat';
+        temp_data.cfg.trl = [1 temp_data.hdr.nSamples 0];
+        
+        clear EEGData;
         
         data{sessi} = temp_data;
         
@@ -652,7 +688,24 @@ for sessi = 1 : length(raw_data_file)
         plot(trigsamp{sessi}, trigval{sessi});
     else
         
-        if strcmp(subnips{1}, 'MV') || strcmp(subnips{1}, 'SB_Sept19')
+        if strcmp(subnips{1}, 'MV')
+            realTrigs = [1, 2, 3, 4, 5, 7, 8, 10, 11, 12, ...
+                20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39];
+            tmp{sessi} = ismember([TriggersInEEG.Code], realTrigs);
+            trigval{sessi} = [TriggersInEEG(tmp{sessi}).Code];
+            trigsamp{sessi} = [TriggersInEEG(tmp{sessi}).Sample];
+            %realTrigs = {1, 2, 3, 4, 5, 7, 8, 10, 11, 12, ...
+                %20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39};
+            %realTrigs = cellfun(@num2str, realTrigs, 'un', 0);
+            
+            %tmp{sessi} = ismember(annotations, realTrigs);
+            %trigval{sessi} = annotations(tmp{sessi});
+            %trigval{sessi} = cellfun(@str2num, trigval{sessi});
+            
+            %trigsamp{sessi} = [TriggersInEEG(tmp{sessi}).Sample];
+            
+            
+        elseif strcmp(subnips{1}, 'SB_Sept19')
             realTrigs = {1, 2, 3, 4, 5, 7, 8, 10, 11, 12, ...
             20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39};
             realTrigs = cellfun(@num2str, realTrigs, 'un', 0);
@@ -750,8 +803,8 @@ if strcmp(subnips, 'MKL')
     data_mem.RT(1:80) = durations{1}(1:80, 6) ./ data{1}.fsample; 
 end
     
-save([res_path subnips{1} '/' subnips{1} '_alltrig.mat'], 'alltrig', 'alltimes');
-save([behavior_path subnips{1} '_memory_behavior.mat'], 'data_mem');
+%save([res_path subnips{1} '/' subnips{1} '_alltrig.mat'], 'alltrig', 'alltimes');
+%save([behavior_path subnips{1} '_memory_behavior.mat'], 'data_mem');
 %% Create trial structure so that each epoch will be aligned to cue onset 
 %As of now, this will necessarily lead to epochs of different lengths, as
 %the endsample will correspond to RT.
@@ -848,7 +901,7 @@ clear freq_spec;
 %% Quality check: Quick look at frequency spectrum (for subjects 'SB_Sept19' & 'CD')
 for sessi = 1 : length(raw_data_file)
     
-    if strcmp(subnips{1}, 'SB_Sept19') || strcmp(subnips{1}, 'CD')
+    if strcmp(subnips{1}, 'SB_Sept19') || strcmp(subnips{1}, 'CD') || strcmp(subnips{1}, 'MV')
         if sel_data{sessi}.fsample ~= 1000;
             %Downsample first
             cfg = [];
@@ -951,12 +1004,12 @@ for sessi = 1 : length(raw_data_file)
         cfg.bpfreq = [0.2 240];
     elseif strcmp(subnips{1}, 'HL')
         cfg.bpfreq = [0.2 98];
-    %elseif strcmp(subnips{1}, 'CD') 
-%         if ~isfile([res_path subnips{1} '/' subnips{1} '_filtered.mat'])
-%             cfg.bpfreq = [0.2 998];
-%         else
-%             cfg.bpfreq = [0.2 240]; %run this a second time as there seemed to be huge artifact left
-%         end
+    elseif strcmp(subnips{1}, 'CD')
+        if ~isfile([res_path subnips{1} '/' subnips{1} '_filtered.mat'])
+            cfg.bpfreq = [0.2 998];
+        else
+            cfg.bpfreq = [0.2 240]; %run this a second time as there seemed to be huge artifact left
+        end
     end
     cfg.bsfilter = 'yes';
     cfg.bsfiltord = 3;
@@ -994,7 +1047,7 @@ end
 % end
 save([res_path subnips{1} '/' subnips{1} '_filtered.mat'], 'data_filtered', '-v7.3');
 %% Append sessions
-if ~strcmp(subnips{1}, 'MG') && ~strcmp(subnips{1}, 'KR') && ~strcmp(subnips{1}, 'KJ_I') && ~strcmp(subnips{1}, 'LJ') && ~strcmp(subnips{1}, 'AS') && ~strcmp(subnips{1}, 'HL') && ~strcmp(subnips{1}, 'CD')
+if ~strcmp(subnips{1}, 'MG') && ~strcmp(subnips{1}, 'KR') && ~strcmp(subnips{1}, 'KJ_I') && ~strcmp(subnips{1}, 'LJ') && ~strcmp(subnips{1}, 'AS') && ~strcmp(subnips{1}, 'HL') && ~strcmp(subnips{1}, 'CD') && ~strcmp(subnips{1}, 'MV')
     data_combined = rmfield(data_filtered{1}, {'hdr', 'cfg', 'trial'});
     data_combined.trial = {[data_filtered{1}.trial{1}, data_filtered{2}.trial{1}]};
     data_combined.time = {[data_filtered{1}.time{1}, (data_filtered{2}.time{1} + max(data_filtered{1}.time{1}) + 1/data_filtered{1}.fsample)]};
@@ -1040,13 +1093,19 @@ elseif strcmp(subnips{1}, 'KR') || strcmp(subnips{1}, 'LJ') || strcmp(subnips{1}
 %     else
 %         trl_combined(:, 3) = -2250;
     end
-elseif strcmp(subnips{1}, 'CD') %data was downsampled before
+elseif strcmp(subnips{1}, 'CD') || strcmp(subnips{1}, 'MV') %data was downsampled before
     tmp_combined = trl{1};
     
     tmp_combined = tmp_combined ./5;
     
     trl_combined(:, 1) = round(tmp_combined(:, 1) - tmp_combined(1, 1)+1);
     trl_combined(:, 2) = round(tmp_combined(:, 2) - tmp_combined(1, 1)+1);
+    trl_combined(:, 3) = -450;
+    
+    data_combined = rmfield(data_filtered{1}, {'hdr', 'cfg', 'trial'});
+    data_combined.trial = {[data_filtered{1}.trial{1}]};
+    data_combined.time = {[data_filtered{1}.time{1}]};
+    data_combined.sampleinfo = size(data_combined.time{1});
 end
 
 save([res_path subnips{1} '/' subnips{1} '_combined.mat'], 'data_combined', 'trl_combined', '-v7.3');
@@ -1085,12 +1144,12 @@ plot(data_avg.time, mean(data_avg.avg,1), 'k-');
 figure;
 plot(data_avg.time, data_avg.avg);
 
-% for triali = 1 : 400
-%     figure;
-%     plot(data_epoched.time{triali}, data_epoched.trial{triali});
-%     
-%     pause;
-% end
+for triali = 1 : 400
+    figure;
+    plot(data_epoched.time{triali}, data_epoched.trial{triali});
+    
+    pause;
+end
 
 clear ('data_avg');
 
@@ -1137,7 +1196,7 @@ cfg = [];
 cfg.trl = 'yes';
 cfg.viewmode = 'vertical';
 
-cfg_pre = ft_databrowser(cfg, data);
+cfg_pre = ft_databrowser(cfg, data_tmp);
 
 %% Exclude potential ground/reference electrodes and obviously bad channels
 if strcmp(subnips{1}, 'MKL')
@@ -1194,6 +1253,9 @@ elseif strcmp(subnips{1}, 'AP')
     selchan = ft_channelselection(bad_channels, data.label);
 elseif strcmp(subnips{1}, 'CD')
     bad_channels = {'all', '-CA1', '-CA2', '-HDL1', '-HKL1', '-HKL2', '-HKL3'};
+    selchan = ft_channelselection(bad_channels, data.label);
+elseif strcmp(subnips{1}, 'MV')
+    bad_channels = {'all', '-sampleindex'};
     selchan = ft_channelselection(bad_channels, data.label);
 end
 
