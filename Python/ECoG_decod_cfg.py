@@ -13,7 +13,7 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #TF parameters
-fmethod = 'probeLocked_erp_100_longEpoch'
+fmethod = 'tfa_wavelet_final'
 #fmethod = 'erp_100' #erp_100: downsampled to 100 Hz, erp: downsampled to 250 Hz
 
 ##########################################
@@ -60,6 +60,8 @@ elif fmethod is 'respLocked_erp_100':
 	toi = [-4.0, 0] #[-4.0, 0]
 elif fmethod is 'probeLocked_erp_100':
 	toi = [-4.5, .15]
+elif fmethod is 'probeLocked_erp_100_longEpoch':
+	toi = [-4.5, .5]
 elif fmethod is 'tfa_wavelet_final':
 	toi = [bl[0], 4.3]
 
@@ -92,7 +94,10 @@ acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct
 #Decoding
 decCond = 'cue' #other options: 'probe', 'itemPos', load', indItems', 'cue', indItems_trainCue0_testCue1
 
-generalization = 1 #0 = diagonal only, 1 = full matrix
+if fmethod is not 'tfa_wavelet_final':
+	generalization = 1 #0 = diagonal only, 1 = full matrix
+else:
+	generalization = 0
 
 #CV
 n_folds = 5
@@ -102,4 +107,4 @@ predict_mode = 'cross-validation' #or cross-validation or mean-prediction
 proba = True #determines whether or not the output will be continous or not
 
 #Score
-score_method = 'auc' #or: auc_multiclass (for decoding load & probeID)
+score_method = 'auc_multiclass' #or: auc_multiclass (for decoding load & probeID)

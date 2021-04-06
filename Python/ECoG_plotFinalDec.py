@@ -25,7 +25,7 @@ from ECoG_base_stats import myStats
 ##########################################
 #Define important variables
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP']
-ListFilenames = 'probeLocked_erp_100_longEpoch'
+ListFilenames = 'respLocked_erp_100'
 
 if generalization:
 	gen_filename = 'timeGen'
@@ -53,7 +53,7 @@ for condi, cond in enumerate(decCond):
 		time = np.load(data_path + ListFilenames + '/' + subject + '_BroadbandERP_' + cond + '_' + gen_filename + '_' + ListFilenames + '_acc' + str(acc) + '_time.npy')
 
 		#Include only relevant period of the trial (i.e., baseline + epoch)
-		if (ListFilenames != 'respLocked_erp_100') & (fmethod != 'respLocked_tfa_wavelet') & (ListFilenames != 'probeLocked_erp_100'):
+		if (ListFilenames != 'respLocked_erp_100') & (fmethod != 'respLocked_tfa_wavelet') & (ListFilenames != 'probeLocked_erp_100_longEpoch'):
 			begin_t = find_nearest(time, bl[0])
 		else:
 			begin_t = find_nearest(time, trainTime[0])
@@ -161,7 +161,7 @@ for condi, cond in enumerate(decCond):
 	#Add event markers
 	if fmethod is 'erp_100':
 		ax_group[condi].axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
-	elif fmethod is 'probeLocked_erp_100':
+	elif fmethod is 'probeLocked_erp_100_longEpoch':
 		ax_group[condi].axvline(0, color='dimgray', zorder=-3) #indicates probe onset
 		ax_group[condi].axvline(-3.0, color='dimgray', zorder=-3) #indicates item onset
 		ax_group[condi].axvline(-4.5, color='dimgray', zorder=-3) #indicates cue onset
@@ -189,18 +189,20 @@ for condi, cond in enumerate(decCond):
 			ax_group[condi].set_xticks(np.arange(-3.5, -.35, .5)), 
 			ax_group[condi].set_xticklabels(['-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 			ax_group[condi].set_xlabel('Time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
-	elif fmethod is 'probeLocked_erp_100':
+	elif fmethod is 'probeLocked_erp_100_longEpoch':
 		if condi < len(decCond)-1:
-			ax_group[condi].set_xticks(np.arange(-4.5, -.25, .5)), 
-			ax_group[condi].set_xticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+			ax_group[condi].set_xticks(np.arange(-4.5, .5, .5)), 
+			ax_group[condi].set_xticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 			ax_group[condi].set_xlabel('')
 		else:
-			ax_group[condi].set_xticks(np.arange(-4.5, -.25, .5)), 
-			ax_group[condi].set_xticklabels(['Cue', '-4.0', '-3.5', 'Item', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'Probe'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+			ax_group[condi].set_xticks(np.arange(-4.5, .5, .5)), 
+			ax_group[condi].set_xticklabels(['Cue', '-4.0', '-3.5', 'Item', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'Probe', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 			ax_group[condi].set_xlabel('Time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
 
 	#Titles
 	ax_group[condi].set_title(figTitles[condi], fontname=font_name, fontsize=font_size+2, fontweight='bold')
+
+	fig_group.tight_layout()
 
 #Save
 if fmethod is 'erp_100':
@@ -213,7 +215,7 @@ elif fmethod is 'respLocked_erp_100':
 		format = 'svg', dpi = 300, bbox_inches = 'tight')
 	tmp = svg2rlg(result_path + ListFilenames + '/Figures/Group_BroadbandERP_RespLocked_' + gen_filename + '_' + ListFilenames + '_decodingTimecourse.svg')
 	renderPDF.drawToFile(tmp, result_path + ListFilenames + '/Figures/Group_BroadbandERP_RespLocked_' + gen_filename + '_' + ListFilenames + '_decodingTimecourse.pdf')
-elif fmethod is 'probeLocked_erp_100':
+elif fmethod is 'probeLocked_erp_100_longEpoch':
 	plt.savefig(result_path + ListFilenames + '/Figures/Group_BroadbandERP_ProbeLocked_' + gen_filename + '_' + ListFilenames + '_decodingTimecourse.svg',
 		format = 'svg', dpi = 300, bbox_inches = 'tight')
 	tmp = svg2rlg(result_path + ListFilenames + '/Figures/Group_BroadbandERP_ProbeLocked_' + gen_filename + '_' + ListFilenames + '_decodingTimecourse.svg')
@@ -240,26 +242,35 @@ for condi, cond in enumerate(decCond):
 	if (fmethod is 'erp_100'):
 		_, im = pretty_gat(scores_m, times=time[begin_t[0] :], ax=ax_group[condi], cmap = map_color[condi], chance=chance, clim =[chance, np.nanmax(scores_m)], sig=None, colorbar=None, 
 						xlabel='Test times (in s)', ylabel='Train times (in s)', sfreq=sfreq, diagonal=None, test_times=time[begin_t[0] :], classLines=None, classColors=None, contourPlot=None, steps=None)
-	elif (fmethod is 'respLocked_erp_100') | (fmethod is 'probeLocked_erp_100'):
+	elif (fmethod is 'respLocked_erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch'):
 		_, im = pretty_gat(scores_m, times=time[begin_t[0] :], ax=ax_group[condi], cmap = map_color[condi], chance=chance, clim =[chance, np.nanmax(scores_m)], sig=None, colorbar=None, 
 						xlabel='Test times (in s)', ylabel='Train times (in s)', sfreq=sfreq, diagonal=None, test_times=time[begin_t[0] :], classLines=None, classColors=None, contourPlot=None, steps=None, 
 						markOnset=False)
 
 	#Colorbar
 	#axins = inset_axes(ax_group[condi], width=.5, height=.5, loc = 'lower right')
-	shiftX = .003
-	shiftY = .099
-	cb = pretty_colorbar(im, ax=ax_group[condi], ticks=[np.nanmax(scores_m)],
-            ticklabels=['%.2f' % np.nanmax(scores_m)], shrink=.1, aspect=10, pad=0)
-	cb_pos = cb.ax.get_position()
-	cb.ax.set_yticklabels(['%.2f' % np.nanmax(scores_m)], fontname=font_name, fontsize=font_size, fontweight=font_weight)
-	cb.ax.set_position([cb_pos.x0-shiftX, cb_pos.y0-shiftY, cb_pos.width, cb_pos.height])
+	shiftX = 0#.003
+	shiftY = 0 #.099
+
+	
+	if len(np.unique(sig)) == 2:
+		cb = pretty_colorbar(im, ax=ax_group[condi], ticks=[np.nanmax(scores_m)],
+        	ticklabels=['%.2f' % np.nanmax(scores_m)], shrink=.1, aspect=10, pad=0)
+		cb_pos = cb.ax.get_position()
+		cb.ax.set_yticklabels(['%.2f' % np.nanmax(scores_m)], fontname=font_name, fontsize=font_size, fontweight=font_weight)
+	elif len(np.unique(sig)) == 1:
+		cb = pretty_colorbar(im, ax=ax_group[condi], ticks=[.1],
+        	ticklabels=['0.57'], shrink=.1, aspect=10, pad=0)
+		cb_pos = cb.ax.get_position()
+		cb.ax.set_yticklabels(['0.57'], fontname=font_name, fontsize=font_size, fontweight=font_weight, color='white')
+	cb.ax.set_position([cb_pos.x0--shiftX, cb_pos.y0--shiftY, cb_pos.width, cb_pos.height])
+	
 
 	#Add event markers
 	if fmethod is 'erp_100':
 		ax_group[condi].axhline(1.500, color='dimgray', zorder=-3) #indicates item onset
 		ax_group[condi].axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
-	elif fmethod is 'probeLocked_erp_100':
+	elif fmethod is 'probeLocked_erp_100_longEpoch':
 		ax_group[condi].axvline(0, color='dimgray', zorder=-3) #indicates probe onset
 		ax_group[condi].axhline(0, color='dimgray', zorder=-3) #indicates probe onset
 		ax_group[condi].axvline(-3.0, color='dimgray', zorder=-3) #indicates item onset
@@ -272,7 +283,7 @@ for condi, cond in enumerate(decCond):
 		if condi == 0:
 			ax_group[condi].set_ylabel('Train time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
 			ax_group[condi].set_yticks(np.arange(0., 4.3, .5)), 
-			ax_group[condi].set_yticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+			ax_group[condi].set_yticklabels(['Cue', ' ', ' ', 'Item', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 		else:
 			ax_group[condi].set_ylabel('')
 			ax_group[condi].set_yticks(np.arange(0., 4.3, .5)), 
@@ -280,12 +291,12 @@ for condi, cond in enumerate(decCond):
 
 		ax_group[condi].set_xlabel('Test time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
 		ax_group[condi].set_xticks(np.arange(0., 4.3, .5)), 
-		ax_group[condi].set_xticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+		ax_group[condi].set_xticklabels(['Cue', ' ', ' ', 'Item', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 	elif fmethod is 'respLocked_erp_100':
 		if condi == 0:
 			ax_group[condi].set_ylabel('Train time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
 			ax_group[condi].set_yticks(np.arange(-3.5, 0, .5)), 
-			ax_group[condi].set_yticklabels(['-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'R'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+			ax_group[condi].set_yticklabels(['-3.5', ' ', ' ', ' ', ' ', ' ', '-0.5', 'R'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 		else:
 			ax_group[condi].set_ylabel('')
 			ax_group[condi].set_yticks(np.arange(-3.5, 0, .5)), 
@@ -293,32 +304,36 @@ for condi, cond in enumerate(decCond):
 
 		ax_group[condi].set_xlabel('Test time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
 		ax_group[condi].set_xticks(np.arange(-3.5, 0, .5)), 
-		ax_group[condi].set_xticklabels(['-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'R'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+		ax_group[condi].set_xticklabels(['-3.5', ' ', ' ', ' ', ' ', ' ', '-0.5', 'R'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 	
-	elif fmethod is 'probeLocked_erp_100':
+	elif fmethod is 'probeLocked_erp_100_longEpoch':
 		if condi == 0:
 			ax_group[condi].set_ylabel('Train time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
-			ax_group[condi].set_yticks(np.arange(-4.5, -.25, .5)), 
-			ax_group[condi].set_xticklabels(['Cue', '-4.0', '-3.5', 'Item', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'Probe'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+			ax_group[condi].set_yticks(np.arange(-4.5, .5, .5)), 
+			ax_group[condi].set_yticklabels(['Cue', ' ', ' ', 'Item', ' ', ' ', ' ', ' ', ' ', 'Probe'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 		else:
-			ax_group[condi].set_ylabel('Train time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
-			ax_group[condi].set_yticks(np.arange(-4.5, -.25, .5)), 
+			ax_group[condi].set_ylabel('')
+			ax_group[condi].set_yticks(np.arange(-4.5, .5, .5)), 
 			ax_group[condi].set_yticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 		
 		ax_group[condi].set_xlabel('Test time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
-		ax_group[condi].set_xticks(np.arange(-4.5, .25, .5)), 
-		ax_group[condi].set_xticklabels(['Cue', '-4.0', '-3.5', 'Item', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'Probe'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+		ax_group[condi].set_xticks(np.arange(-4.5, .5, .5)), 
+		ax_group[condi].set_xticklabels(['Cue', ' ', ' ', 'Item', ' ', ' ', ' ', ' ', ' ', 'Probe'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 	
 	#Titles
 	ax_group[condi].set_title(figTitles[condi], fontname=font_name, fontsize=font_size+2, fontweight='bold')
 
 #Shift positions
+'''
 if fmethod is 'respLocked_erp_100':
 	ax_group[0].set_position([0.125, 0.3206194642857143, 0.09410714285714283, 0.3487610714285714])
 	ax_group[1].set_position([0.2578571428571429, 0.3206194642857143, 0.09410714285714283, 0.3487610714285714])
 	ax_group[2].set_position([0.39071428571428574, 0.3206194642857143, 0.5235714285714286, 0.3206194642857141])
 	ax_group[3].set_position([0.5235714285714286, 0.3206194642857141, 0.5235714285714286, 0.3206194642857141])
 	ax_group[4].set_position([0.6564285714285715, 0.3206194642857141, 0.5235714285714286, 0.3206194642857141])
+	'''
+
+#fig_group.tight_layout()
 
 
 #Save
@@ -336,7 +351,7 @@ elif fmethod is 'respLocked_erp_100':
 		format = 'tiff', dpi = 300, bbox_inches = 'tight')
 	tmp = svg2rlg(result_path + ListFilenames + '/Figures/Group_BroadbandERP_RespLocked_' + gen_filename + '_' + ListFilenames + '_gat.svg')
 	renderPDF.drawToFile(tmp, result_path + ListFilenames + '/Figures/Group_BroadbandERP_RespLocked_' + gen_filename + '_' + ListFilenames + '_gat.pdf')
-elif fmethod is 'probeLocked_erp_100':
+elif fmethod is 'probeLocked_erp_100_longEpoch':
 	plt.savefig(result_path + ListFilenames + '/Figures/Group_BroadbandERP_ProbeLocked_' + gen_filename + '_' + ListFilenames + '_gat.svg',
 		format = 'svg', dpi = 300, bbox_inches = 'tight')
 	plt.savefig(result_path + ListFilenames + '/Figures/Group_BroadbandERP_ProbeLocked_' + gen_filename + '_' + ListFilenames + '_gat.tiff',

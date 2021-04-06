@@ -20,7 +20,7 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #Necessary parameters
-fmethod = 'probeLocked_erp_100_longEpoch'
+fmethod = 'respLocked_erp_100'
 
 ##########################################
 #Preprocessing
@@ -37,8 +37,10 @@ acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct
 
 ##########################################
 #Decoding
-decCond = ['cue', 'cue'] # 'itemPos', indItems', 'cue', 'load'
-figTitles = ['Task', 'Probe ID']
+#decCond = ['cue', 'itemPos', 'indItems', 'load', 'probeID', 'probe', 'buttonPress'] # 'itemPos', indItems', 'cue', 'load'
+decCond = ['cue', 'itemPos', 'indItems', 'load', 'probeID', 'probe', 'buttonPress']
+figTitles = ['Task', 'Item position', 'Item identity', 'Item load', 'Probe identity', 'Probe category', 'Motor response']
+#figTitles = ['Task', 'Item Position', 'Item identity', 'Item load',  'Probe identity', 'Probe category', 'Motor response']
 
 generalization = 1 #0 = diagonal only, 1 = full matrix
 
@@ -55,8 +57,8 @@ elif fmethod is 'respLocked_erp_100':
 	trainTime = [-4.0, 0.]
 	testTime = [-4.0, 0.]
 elif fmethod is ('probeLocked_erp_100_longEpoch'):
-	trainTime = [-4.5, .15]
-	testTime = [-4.0, .15]
+	trainTime = [-4.5, .5]
+	testTime = [-4.5, .5]
 elif fmethod is 'respLocked_tfa_wavelet':
 	trainTime = [-3.5, -0.35]
 	testTime = [-3.5, -0.35]
@@ -92,12 +94,12 @@ line_thickness = 2
  #(23/255, 190/255, 207/255), (31/255, 120/255, 180/255), (106/255, 61/255, 154/255))
 
 if decCond[0] is 'cue':
-	line_color = ((0.8901960784313725, 0.10196078431372549, 0.10980392156862745), (1.0, 0.4980392156862745, 0.0), (60/255, 179/255, 113/255), 
- 		(23/255, 190/255, 207/255), (31/255, 120/255, 180/255), (106/255, 61/255, 154/255))
+	line_color = ((0.8901960784313725, 0.10196078431372549, 0.10980392156862745), (1.0, 0.4980392156862745, 0.0), (253/255, 208/255, 23/255), 
+		(60/255, 179/255, 113/255), (23/255, 190/255, 207/255), (31/255, 120/255, 180/255), (106/255, 61/255, 154/255))
 	map_color = [sns.light_palette((0.8901960784313725, 0.10196078431372549, 0.10980392156862745), as_cmap=True), 
-		sns.light_palette((1.0, 0.4980392156862745, 0.0), as_cmap=True), sns.light_palette((60/255, 179/255, 113/255), as_cmap=True),
-		sns.light_palette((23/255, 190/255, 207/255), as_cmap=True), sns.light_palette((31/255, 120/255, 180/255), as_cmap=True), 
-		sns.light_palette((106/255, 61/255, 154/255), as_cmap=True)]
+		sns.light_palette((1.0, 0.4980392156862745, 0.0), as_cmap=True), sns.light_palette((253/255, 208/255, 23/255), as_cmap=True),
+		sns.light_palette((60/255, 179/255, 113/255), as_cmap=True), sns.light_palette((23/255, 190/255, 207/255), as_cmap=True), 
+		sns.light_palette((31/255, 120/255, 180/255), as_cmap=True), sns.light_palette((106/255, 61/255, 154/255), as_cmap=True)]
 else:
 	tmp = sns.light_palette("seagreen", as_cmap=True)
 	line_color = (tmp[0], tmp[1], tmp[2], tmp[3])
@@ -110,9 +112,9 @@ contour_steps = np.linspace(chance+.01, .6, 10)
 
 #Font properties
 font_name = 'Arial'
-font_size = 8
+font_size = 9
 font_weight = 'normal'
 
 font_name_gen = 'Arial'
-font_size_gen = 12
+font_size_gen = 13
 font_weight_gen = 'normal'

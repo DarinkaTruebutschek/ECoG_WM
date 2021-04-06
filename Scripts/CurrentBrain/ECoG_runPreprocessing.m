@@ -1196,7 +1196,7 @@ cfg = [];
 cfg.trl = 'yes';
 cfg.viewmode = 'vertical';
 
-cfg_pre = ft_databrowser(cfg, data_tmp);
+cfg_pre = ft_databrowser(cfg, data);
 
 %% Exclude potential ground/reference electrodes and obviously bad channels
 if strcmp(subnips{1}, 'MKL')

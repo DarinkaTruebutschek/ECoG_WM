@@ -16,11 +16,7 @@ from ECoG_decoders import binaryClassif
 ##########################################
 #Define important variables
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP']
-#ListSubjects = ['HS']
-
-#ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG']
-#ListFreqs = [[8, 12], [13, 30], [31, 70], [71, 160]]
-ListFilenames = ['erp_100']
+ListFilenames = ['tfa_wavelet_final']
 
 if generalization:
 	gen_filename = 'timeGen'
