@@ -25,13 +25,13 @@ def ECoG_prepDec(decCond, subject, foi):
 	if (fmethod is 'tfa_wavelet') | (fmethod is 'respLocked_tfa_wavelet') | (fmethod is 'tfa_wavelet_final'):
 		data = ECoG_fldtrp2mne(fname, 'freq', 'tfa') #for tfa data, this is a 4d-matrix of size n_trials, n_channels, n_freqs, n_times
 
-		if foi is not 'all':
+		if foi is not 'all' and foi is not 'specPat':
 			#Preprocess data: Extract specific frequencies, apply baseline correction, and then average over those frequencies
 			_, foi_1 = find_nearest(data.freqs, foi[0])
 			_, foi_2 = find_nearest(data.freqs, foi[1])
 
 			data.crop(tmin=trainTime[0], tmax=trainTime[1], fmin=foi_1, fmax=foi_2)
-		else:
+		elif foi is 'all' or foi is 'specPat':
 			_, foi_1 = find_nearest(data.freqs, 8)
 			_, foi_2 = find_nearest(data.freqs, 180)
 			data.crop(tmin=trainTime[0], tmax=trainTime[1], fmin=foi_1, fmax=foi_2)
@@ -39,8 +39,13 @@ def ECoG_prepDec(decCond, subject, foi):
 		if blc:
 			data.apply_baseline(baseline=bl, mode='zscore', verbose=True)
 
-		if foi is not 'all':
+		if foi is not 'all' and foi is not 'specPat' and foi:
 			data.data = np.mean(data.data, axis=2)
+	elif fmethod is 'chanxfreq_tfa_wavelet_final':
+		data = ECoG_fldtrp2mne(fname, 'freq', 'chanxfreq_tfa')
+
+		if blc:
+			data.apply_baseline(baseline=bl, mode='zscore', verbose=True)
 	elif (fmethod is 'erp') | (fmethod is 'erp_100'):
 		data = ECoG_fldtrp2mne(fname, 'data', 'erp') #for erp data, this is a 3d-matrix of sixe n_trials, n_channels, n_freqs, n_times
 
@@ -77,7 +82,7 @@ def ECoG_prepDec(decCond, subject, foi):
 	if (fmethod is 'tfa_wavelet') | (fmethod is 'tfa_wavelet_final'):
 		if np.shape(data.data)[0] != np.shape(trialInfo)[0]:
 			print('X and y do not have the same dimensions')
-	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100') | (fmethod is 'probeLocked_erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch'):
+	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100') | (fmethod is 'probeLocked_erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'chanxfreq_tfa_wavelet_final'):
 		if np.shape(data.get_data())[0] != np.shape(trialInfo)[0]:
 			print('X and y do not have the same dimensions')
 
@@ -88,7 +93,7 @@ def ECoG_prepDec(decCond, subject, foi):
 			X_train_tmp = data.data
 		else:
 			X_train = data.data
-	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100') | (fmethod is 'probeLocked_erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch'):
+	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100') | (fmethod is 'probeLocked_erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'chanxfreq_tfa_wavelet_final'):
 		if win_size is not False:
 			X_train_tmp = data.get_data() #n_trials x n_channels x n_timepoints (decoding done seperately on each time point)
 		else:

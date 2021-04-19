@@ -20,11 +20,11 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #Necessary parameters
-fmethod = 'respLocked_erp_100'
+fmethod = 'tfa_wavelet_final' #'chanxfreq_tfa_wavelet_final'
 
 ##########################################
 #Preprocessing
-if (fmethod is 'tfa_wavelet_final') | (fmethod is 'respLocked_tfa_wavelet'):
+if (fmethod is 'tfa_wavelet_final') | (fmethod is 'respLocked_tfa_wavelet') | (fmethod is 'chanxfreq_tfa_wavelet_final'):
 	bl = [-.14, 0]
 elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'tfa_wavelet_final') | (fmethod is 'probeLocked_erp_100_longEpoch'):
 	bl = [-.2, 0]
@@ -38,13 +38,17 @@ acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct
 ##########################################
 #Decoding
 #decCond = ['cue', 'itemPos', 'indItems', 'load', 'probeID', 'probe', 'buttonPress'] # 'itemPos', indItems', 'cue', 'load'
+#decCond = ['cue', 'itemPos', 'indItems', 'load', 'probeID', 'probe', 'buttonPress']
+#figTitles = ['Task', 'Item position', 'Item identity', 'Item load', 'Probe identity', 'Probe category', 'Motor response']
 decCond = ['cue', 'itemPos', 'indItems', 'load', 'probeID', 'probe', 'buttonPress']
-figTitles = ['Task', 'Item position', 'Item identity', 'Item load', 'Probe identity', 'Probe category', 'Motor response']
-#figTitles = ['Task', 'Item Position', 'Item identity', 'Item load',  'Probe identity', 'Probe category', 'Motor response']
+figTitles = ['Task', 'Item position',  'Item identity', 'Item load', 'Probe identity', 'Probe category', 'Motor response']
 
-generalization = 1 #0 = diagonal only, 1 = full matrix
+if (fmethod is not 'tfa_wavelet_final') & (fmethod is not 'chanxfreq_tfa_wavelet_final'):
+	generalization = 1 #0 = diagonal only, 1 = full matrix
+else:
+	generalization = 0
 
-if fmethod is 'tfa_wavelet_final':
+if (fmethod is 'tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final'):
 	trainTime = [bl[0], 4.3]
 	testTime = [bl[0], 4.3]
 elif fmethod is 'erp':
@@ -86,7 +90,10 @@ tail = 0 #0 = 2-sided, 1 = 1-sided
 #Figure
 #Data properties
 sfreq = 100
-smoothWindow = 10#4 #Will the data (but not the stats be smoothed?)
+if (fmethod is not 'tfa_wavelet_final') & (fmethod is 'chanxfreq_tfa_wavelet_final'):
+	smoothWindow = 10 #Will the data (but not the stats be smoothed?)
+else:
+	smoothWindow = 3
 
 #Figure properties
 line_thickness = 2

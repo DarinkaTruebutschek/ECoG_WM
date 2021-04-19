@@ -13,7 +13,7 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #TF parameters
-fmethod = 'tfa_wavelet_final'
+fmethod = 'erp_100'
 #fmethod = 'erp_100' #erp_100: downsampled to 100 Hz, erp: downsampled to 250 Hz
 
 ##########################################
@@ -21,7 +21,7 @@ fmethod = 'tfa_wavelet_final'
 blc = 0 #baseline correction or not?
 rel_blc = 1 #relative baseline correction or not?
 
-if (fmethod is 'tfa_wavelet') | (fmethod is 'tfa_wavelet_final'):
+if (fmethod is 'tfa_wavelet') | (fmethod is 'tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final'):
 	bl = [-0.14, 0] #baseline window
 	trainTime = [bl[0], 4.3]
 	testTime = [bl[0], 4.3]
@@ -62,7 +62,7 @@ elif fmethod is 'probeLocked_erp_100':
 	toi = [-4.5, .15]
 elif fmethod is 'probeLocked_erp_100_longEpoch':
 	toi = [-4.5, .5]
-elif fmethod is 'tfa_wavelet_final':
+elif (fmethod is 'tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final'):
 	toi = [bl[0], 4.3]
 
 if fmethod is 'erp_100':
@@ -77,10 +77,10 @@ elif fmethod is 'probeLocked_erp_100':
 	win_size = False
 elif fmethod is 'probeLocked_erp_100_longEpoch':
 	win_size = False
-elif fmethod is 'tfa_wavelet_final':
-	#win_size = False
-	win_size = [[-0.14, 0], [0, .5], [0.5, 1.5], [1.5, 2.5], [2.5, 4.3]] #False#0.5 #how many time points will be added as feature dimensions; in sec; if decoding is to be done independently on each time point, set to False
-	step_size = 1.0#0.5 #where to begin with this
+elif (fmethod is 'tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final'):
+	win_size = False
+	#win_size = [[-0.14, 0], [0, .5], [0.5, 1.5], [1.5, 2.5], [2.5, 4.3]] #False#0.5 #how many time points will be added as feature dimensions; in sec; if decoding is to be done independently on each time point, set to False
+	#step_size = 1.0#0.5 #where to begin with this
 elif fmethod is 'respLocked_tfa_wavelet':
 	#win_size = False
 	win_size = [[-3.5, -3], [-3, -2], [-2, -1], [-1, -.5], [-.5, -0.35]]
@@ -92,9 +92,9 @@ acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct
 
 ##########################################
 #Decoding
-decCond = 'cue' #other options: 'probe', 'itemPos', load', indItems', 'cue', indItems_trainCue0_testCue1
+decCond = 'indItems_trainCue0_testCue0' #other options: 'probe', 'itemPos', load', indItems', 'cue', indItems_trainCue0_testCue1
 
-if fmethod is not 'tfa_wavelet_final':
+if (fmethod is not 'tfa_wavelet_final') & (fmethod is not 'chanxfreq_tfa_wavelet_final'):
 	generalization = 1 #0 = diagonal only, 1 = full matrix
 else:
 	generalization = 0
@@ -107,4 +107,4 @@ predict_mode = 'cross-validation' #or cross-validation or mean-prediction
 proba = True #determines whether or not the output will be continous or not
 
 #Score
-score_method = 'auc_multiclass' #or: auc_multiclass (for decoding load & probeID)
+score_method = 'auc' #or: auc_multiclass (for decoding load & probeID)
