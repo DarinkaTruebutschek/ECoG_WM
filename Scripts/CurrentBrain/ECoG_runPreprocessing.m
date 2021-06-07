@@ -12,7 +12,7 @@ ECoG_setPath;
 
 %% Define important variables
 subnips = {'MKL','EG_I','HS','MG','KR','WS','KJ_I','LJ','AS','SB','HL','AP'}; %all subjects included in analysis
-subnips = {'MV'};
+subnips = {'AS'};
 
 %Paths to anatomical/functional data
 if strcmp(subnips, 'MKL')
@@ -101,6 +101,11 @@ elseif strcmp(subnips, 'SB_Sept19')
     %post_ct_file = [ct_path subnips{1} '/SE000002_01_CCT_20190911082529_3_Tilt_1.nii.gz']; 
     post_ct_file = [ct_path subnips{1} '/rawCT_fused_acpcMRI.nii.gz']; %raw CT fused with acpc MRI
     raw_data_file{1} = [dat_path subnips{1} '/SB_Oxford_16092019 Data.cdt']; %to be used in preprocessing of functional data
+elseif strcmp(subnips, 'DS')
+    %pre_mri_file = [mri_path subnips{1} '/SE000009_t1_mpr_sag_p2_iso0_8_320_20180924120240_10.nii.gz'];
+    %post_ct_file = [ct_path subnips{1} '/SE000002_01_CCT_20190911082529_3_Tilt_1.nii.gz']; 
+    %post_ct_file = [ct_path subnips{1} '/rawCT_fused_acpcMRI.nii.gz']; %raw CT fused with acpc MRI
+    raw_data_file{1} = [dat_path subnips{1} '/DS_Oxford_07-04-2021.mat']; %to be used in preprocessing of functional data
 end
 %% %% Anatomical preprocessing %% %%
 
@@ -545,7 +550,7 @@ table = generate_electable(e_pos, 'xldir', xldir, 'fsdir', fsdir, 'elec_nat', el
 %% Load in data
 for sessi = 1 : length(raw_data_file)
     
-    if ~strcmp(subnips{1}, 'CD') && ~strcmp(subnips{1}, 'MV')
+    if ~strcmp(subnips{1}, 'CD') && ~strcmp(subnips{1}, 'MV') && ~strcmp(subnips{1}, 'DS')
         disp(num2str(sessi));
 
         cfg = [];
@@ -553,6 +558,43 @@ for sessi = 1 : length(raw_data_file)
 
         cfg.continuous = 'yes';
         data{sessi} = ft_preprocessing(cfg);
+    elseif strcmp(subnips{1}, 'DS')
+        %Load in another subject just to be able to get data structure
+        %right
+        cfg = [];
+        cfg.dataset = [dat_path 'LJ/OA8887R9.EDF'];
+        cfg.continous = 'yes';
+        temp_data = ft_preprocessing(cfg);
+        
+        %Create current structure
+        temp_data.hdr.Fs = SampleRate;
+        temp_data.hdr.nChans = length(Channels);
+        temp_data.hdr.label = {Channels.Label}';
+        temp_data.hdr.nSamples = size(EEGData, 2);
+        temp_data.hdr.nSamplesPre = 0;
+        temp_data.hdr.nTrials = 1;
+        temp_data.hdr.chanunit(length(Channels)+1 : end) = [];
+        temp_data.hdr.chantype(length(Channels)+1 : end) = [];
+        
+        temp_data.label = temp_data.hdr.label;
+        temp_data.time{1} = [0 : 1/temp_data.hdr.Fs : (temp_data.hdr.nSamples*(1/temp_data.hdr.Fs))];
+        temp_data.time{1}(end) = [];
+        temp_data.trial{1} = EEGData;
+        temp_data.fsample = temp_data.hdr.Fs;
+        temp_data.sampleinfo = [1 temp_data.hdr.nSamples];
+        
+        temp_data.cfg.dataset =  '/media/darinka/Data0/iEEG/Results/RawData/DS/DS_Oxford_07-04-2021.mat';
+        temp_data.cfg.channel = temp_data.hdr.label;
+        temp_data.cfg.datafile =  '/media/darinka/Data0/iEEG/Results/RawData/DS/DS_Oxford_07-04-2021.mat';
+        temp_data.cfg.headerfile =  '/media/darinka/Data0/iEEG/Results/RawData/DS/DS_Oxford_07-04-2021.mat';
+        temp_data.cfg.trl = [1 temp_data.hdr.nSamples 0];
+        
+        clear EEGData;
+        
+        data{sessi} = temp_data;
+        
+        clear('tmp_data');
+
     elseif strcmp(subnips{1}, 'CD')
         %Load in another subject just to be able to get data structure
         %right
@@ -868,6 +910,8 @@ elseif strcmp(subnips{1}, 'CD')
     channels = {'CA*', 'HKL*', 'HDL*'};
 elseif strcmp(subnips{1}, 'SB_Sept19')
     channels = {'LAL*', 'CAL*', 'LPL*', 'HKL*', 'TPR*', 'TAR*'};
+elseif strcmp(subnips{1}, 'DS')
+    channels = {'LFH*', 'LFGS*', 'LPH*', 'LFG*', 'LPG*', 'LFS*', 'LFA*'};
 end
 
 cfg = [];

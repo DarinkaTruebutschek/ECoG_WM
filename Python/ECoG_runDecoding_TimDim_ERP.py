@@ -17,7 +17,10 @@ from ECoG_decoders import binaryClassif
 ##########################################
 #Define important variables
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP']
-ListFilenames = ['erp_100_TimDim_allTimeBins_meanSubtraction']
+ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'WS', 'KR', 'AS', 'AP', 'SB']
+
+#ListSubjects = ['EG_I']
+ListFilenames = ['respLocked_erp_100_TimDim_timeBin-100ms_nomeanSubtraction']
 
 if generalization:
 	gen_filename = 'timeGen'
@@ -96,23 +99,39 @@ for subi, subject in enumerate(ListSubjects):
 				test_index = np.transpose(np.reshape(test_index, (labeli+1, chani+1, n_folds)), (1, 0, 2)) #channels x labels x folds
 				score = np.transpose(np.reshape(score, (labeli+1, chani+1, np.shape(trainTimes_onsets)[0]-1)), (1, 0, 2)) #channels x labels x folds
 	else:
-		if (decCond is not 'indItems') & (decCond is not 'itemPos'):
-			if subject is not 'LJ': #in this subject, the test sets for each split of the cv had exactly the same number of trials, so the dimensions of y_pred and test_index were different
-				y_pred  = np.reshape(y_pred, (len(win_size), len(chans), n_folds))
-				test_index = np.reshape(test_index, (len(win_size), len(chans), n_folds))
-				score = np.reshape(score, (len(win_size), len(chans), 1))
+		if fmethod is not 'probeLocked_erp_100_longEpoch':
+			if (decCond is not 'indItems') & (decCond is not 'itemPos'):
+				if (subject is not 'LJ'): #in this subject, the test sets for each split of the cv had exactly the same number of trials, so the dimensions of y_pred and test_index were different
+					y_pred  = np.reshape(y_pred, (len(win_size), len(chans), n_folds))
+					test_index = np.reshape(test_index, (len(win_size), len(chans), n_folds))
+					score = np.reshape(score, (len(win_size), len(chans), 1))
+				else:
+					score = np.reshape(score, (len(win_size), len(chans), 1))
 			else:
-				score = np.reshape(score, (len(win_size), len(chans), 1))
-		else:
-			if subject is not 'LJ':
-				#y_pred = np.reshape(y_pred, (labeli+1, len(win_size), len(chans), n_folds))
-				#test_index = np.reshape(test_index, (labeli+1, len(win_size), len(chans), n_folds))
-				#score = np.reshape(score, (labeli+1, len(win_size), len(chans), 1))
-				y_pred = np.reshape(y_pred, (len(win_size), len(chans), labeli+1, n_folds))
-				test_index = np.reshape(test_index, (len(win_size), len(chans), labeli+1, n_folds))
-				score = np.reshape(score, (len(win_size), len(chans), labeli+1, 1))
-			else:
-				score = np.reshape(score, (len(win_size), len(chans), labeli+1, 1))
+				if subject is not 'LJ':
+					#y_pred = np.reshape(y_pred, (labeli+1, len(win_size), len(chans), n_folds))
+					#test_index = np.reshape(test_index, (labeli+1, len(win_size), len(chans), n_folds))
+					#score = np.reshape(score, (labeli+1, len(win_size), len(chans), 1))
+					y_pred = np.reshape(y_pred, (len(win_size), len(chans), labeli+1, n_folds))
+					test_index = np.reshape(test_index, (len(win_size), len(chans), labeli+1, n_folds))
+					score = np.reshape(score, (len(win_size), len(chans), labeli+1, 1))
+				else:
+					score = np.reshape(score, (len(win_size), len(chans), labeli+1, 1))
+		elif (fmethod is 'probeLocked_erp_100_longEpoch'):
+				if subject is 'SB':
+					if (decCond is 'cue') | (decCond is 'load') | (decCond is 'probeID') | (decCond is 'probe') | (decCond is 'cue'):
+						score = np.reshape(score, (len(win_size), len(chans), 1))
+					elif(decCond is 'itemPos') | (decCond is 'indItems'):
+						score = np.reshape(score, (len(win_size), len(chans), labeli+1, 1))
+				else:
+					if (decCond is not 'indItems') & (decCond is not 'itemPos'):
+						y_pred  = np.reshape(y_pred, (len(win_size), len(chans), n_folds))
+						test_index = np.reshape(test_index, (len(win_size), len(chans), n_folds))
+						score = np.reshape(score, (len(win_size), len(chans), 1))
+					else:
+						y_pred = np.reshape(y_pred, (len(win_size), len(chans), labeli+1, n_folds))
+						test_index = np.reshape(test_index, (len(win_size), len(chans), labeli+1, n_folds))
+						score = np.reshape(score, (len(win_size), len(chans), labeli+1, 1))
 
 	#Compute average score for all labels
 	#if (decCond is 'indItems'):
@@ -126,17 +145,17 @@ for subi, subject in enumerate(ListSubjects):
 	if os.path.isdir(result_path + ListFilenames[0]) is False:
 		os.makedirs(result_path + ListFilenames[0])
 
-	np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_time.npy', time, allow_pickle=True)
-	np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_onsetTimes.npy', trainTimes_onsets, allow_pickle=True)
-	np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_channels.npy', chans, allow_pickle=True)
-	np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_time_gen.npy', time_gen, allow_pickle=True)
-	np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_y_pred.npy', y_pred, allow_pickle=True)
-	np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_test_index.npy', test_index, allow_pickle=True)
-	np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_score.npy', score, allow_pickle=True)
+	np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_time.npy', time, allow_pickle=True)
+	np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_onsetTimes.npy', trainTimes_onsets, allow_pickle=True)
+	np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_channels.npy', chans, allow_pickle=True)
+	np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_time_gen.npy', time_gen, allow_pickle=True)
+	np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_y_pred.npy', y_pred, allow_pickle=True)
+	np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_test_index.npy', test_index, allow_pickle=True)
+	np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_score.npy', score, allow_pickle=True)
 
 	if (decCond is 'indItems') | (decCond is 'itemPos'):
 	#if score.ndim > 2:
-		np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_average_score.npy', average_score, allow_pickle=True)
+		np.save(result_path + ListFilenames[0] + '/' + subject + '_erp_timDim_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_average_score.npy', average_score, allow_pickle=True)
 
 
 

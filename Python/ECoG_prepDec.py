@@ -16,8 +16,8 @@ from base import find_nearest, loadtablefrommat
 from ECoG_decod_cfg import *
 from ECoG_fldtrp2mne import ECoG_fldtrp2mne
 
-#def ECoG_prepDec(decCond, subject, foi, toi_i):
-def ECoG_prepDec(decCond, subject, foi):
+def ECoG_prepDec(decCond, subject, foi, toi_i):
+#def ECoG_prepDec(decCond, subject, foi):
 
 	##########################################
 	#Load data (X)
@@ -90,7 +90,7 @@ def ECoG_prepDec(decCond, subject, foi):
 	#Prepare X and y specifically
 	if (fmethod is 'tfa_wavelet') | (fmethod is 'respLocked_tfa_wavelet') | (fmethod is 'tfa_wavelet_final'):
 		if win_size is not False:
-			X_train_tmp = data.data
+			X_train_tmp = data.data #trials x channels x time
 		else:
 			X_train = data.data
 	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100') | (fmethod is 'probeLocked_erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'chanxfreq_tfa_wavelet_final'):
@@ -137,14 +137,14 @@ def ECoG_prepDec(decCond, subject, foi):
 
 			del X_train_tmp
 		elif np.shape(win_size)[0] > 1:
-			if (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100'):
+			if (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'respLocked_erp_100'):
 				timebins_onset = find_nearest(data.times, win_size[toi_i][0])[0] 
 				win_size_sample = np.round(data.info['sfreq'])*(np.abs(win_size[toi_i][1]-win_size[toi_i][0]))
 
 				#Display which times will actually be trained on
 				#print(data.times[timebins_onset.astype(int)])
 
-				slices = X_train_tmp[:, :, int(timebins_onset) : int(timebins_onset+win_size_sample+1)]
+				slices = X_train_tmp[:, :, int(timebins_onset) : int(timebins_onset+win_size_sample+0)]
 				slices = np.transpose(slices, (1, 0, 2)) #n_channels x n_trials x n_timepoints
 				X_train = slices
 
@@ -185,7 +185,7 @@ def ECoG_prepDec(decCond, subject, foi):
 				for t, timepoint in enumerate(np.arange(np.shape(X_train)[2])):
 					X_train[:, :, t, :] = X_train[:, :, t, :] - my_mean
 
-	if (decCond is 'indItems') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1'):
+	if (decCond is 'indItems') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_load1'):
 		y_train = []
 		for _, row_i in enumerate(range(len(trialInfo))):
 			tmp = trialInfo.values[row_i, 7:11]
@@ -235,7 +235,7 @@ def ECoG_prepDec(decCond, subject, foi):
 		y_train[(y_train == 3) | (y_train == 4)] = 0 #3/4 = trigger not pulled
 
 	#Select only those trials, in which the subject responded correctly & throw out any additional nan entries
-	if acc & (decCond is not 'indItems_trainCue0_testCue0' and decCond is not 'indItems_trainCue1_testCue1' and decCond is not 'indItems_trainCue0_testCue1' and decCond is not 'indItems_trainCue1_testCue0'):
+	if acc & (decCond is not 'indItems_trainCue0_testCue0' and decCond is not 'indItems_trainCue1_testCue1' and decCond is not 'indItems_trainCue0_testCue1' and decCond is not 'indItems_trainCue1_testCue0' and decCond is not 'indItems_load1'):
 		sel = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3))))
 	elif acc & (decCond is 'indItems_trainCue0_testCue0'):
 		sel = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 0)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 0))))
@@ -246,7 +246,9 @@ def ECoG_prepDec(decCond, subject, foi):
 		sel_test = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 1))))	
 	elif acc & (decCond is 'indItems_trainCue1_testCue0'):
 		sel_train = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 1))))
-		sel_test = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 0)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 0))))	
+		sel_test = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 0)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 0))))
+	elif acc & (decCond is 'indItems_load1'):
+		sel = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.load == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.load == 1))))
 	else:
 		sel = np.where(~np.isnan(trialInfo.block_id))
 
@@ -288,6 +290,6 @@ def ECoG_prepDec(decCond, subject, foi):
 	print('Training on:', np.shape(X_train), np.shape(y_train))
 	print('Testing on:', np.shape(X_test), np.shape(y_test))
 	
-	return X_train, y_train, X_test, y_test, data.times
+	#return X_train, y_train, X_test, y_test, data.times
 
-	#return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset 
+	return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset 

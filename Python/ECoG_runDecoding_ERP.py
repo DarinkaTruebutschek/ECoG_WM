@@ -41,7 +41,7 @@ for subi, subject in enumerate(ListSubjects):
 	test_index = []
 	score = []
 
-	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue0_testCue1') | (decCond is 'indItems_trainCue1_testCue0'):
+	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue0_testCue1') | (decCond is 'indItems_trainCue1_testCue0') | (decCond is 'indItems_load1'):
 		for labeli, _ in enumerate(range(np.shape(y_train)[1])):
 			print('Running decoding on label ', labeli)
 			print(np.sum(y_train[:, labeli]))
@@ -63,7 +63,7 @@ for subi, subject in enumerate(ListSubjects):
 
 	#Compute average score for all labels
 	score = np.asarray(score)
-	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue1_testCue0'):
+	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue1_testCue0') | (decCond is 'indItems_load1'):
 	#if score.ndim > 2:
 		average_score = np.mean(score, axis=0)
 
@@ -77,7 +77,7 @@ for subi, subject in enumerate(ListSubjects):
 	np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_test_index.npy', test_index, allow_pickle=True)
 	np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_score.npy', score, allow_pickle=True)
 
-	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue1_testCue0'):
+	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue1_testCue0') | (decCond is 'indItems_load1'):
 	#if score.ndim > 2:
 		np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_average_score.npy', average_score, allow_pickle=True)
 

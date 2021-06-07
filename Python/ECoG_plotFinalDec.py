@@ -25,7 +25,7 @@ from ECoG_base_stats import myStats
 ##########################################
 #Define important variables
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP']
-ListFilenames = 'chanxfreq_spectralPattern'
+ListFilenames = 'respLocked_erp_100_TimDim_timeBin-100ms_nomeanSubtraction'#'erp_100_TimDim_timeBin-100ms_nomeanSubtraction'
 
 if generalization:
 	gen_filename = 'timeGen'
@@ -42,43 +42,79 @@ for condi, cond in enumerate(decCond):
 
 		#Load all of the data 
 		if (cond is not 'indItems') & (cond is not 'itemPos') & (cond is not 'indItems_trainCue0_testCue0') & (cond is not 'indItems_trainCue1_testCue1') & (cond is not 'indItems_trainCue0_testCue1') & (cond is not 'indItems_trainCue1_testCue0'):
-			score = np.squeeze(np.load(data_path + ListFilenames + '/' + subject + '_BroadbandERP_' + cond + '_' + gen_filename + '_' + ListFilenames + '_acc' + str(acc) + '_score.npy'))
+			if fdecoding is not 'perChannel':
+				score = np.squeeze(np.load(data_path + ListFilenames + '/' + subject + '_BroadbandERP_' + cond + '_' + gen_filename + '_' + ListFilenames + '_acc' + str(acc) + '_score.npy'))
+			else:
+				score = np.squeeze(np.load(data_path + ListFilenames + '/' + subject + '_erp_timDim_' + cond + '_diag_' + ListFilenames + '_acc' + str(acc) + '_score.npy'))
+				score = np.mean(score, axis=1)
 			#y_pred = np.load(data_path + ListFilenames + '/' + subject + '_BroadbandERP_' + cond + '_' + gen_filename + '_' + ListFilenames + '_acc' + str(acc) + '_y_pred.npy', allow_pickle=True)
 		elif (cond is 'indItems') | (cond is 'indItems_trainCue0_testCue0') | (cond is 'indItems_trainCue1_testCue1') | (cond is 'indItems_trainCue1_testCue0'):
-			score = np.squeeze(np.load(data_path + ListFilenames + '/' + subject + '_BroadbandERP_' + cond + '_' + gen_filename + '_' + ListFilenames + '_acc' + str(acc) + '_average_score.npy'))
+			if fdecoding is not 'perChannel':
+				score = np.squeeze(np.load(data_path + ListFilenames + '/' + subject + '_BroadbandERP_' + cond + '_' + gen_filename + '_' + ListFilenames + '_acc' + str(acc) + '_average_score.npy'))
+			else:
+				if (cond is 'indItems') & (fmethod is 'erp_100'):
+					score = np.squeeze(np.load(data_path + ListFilenames + '/' + subject + '_erp_timDim_' + cond + '_diag_' + ListFilenames + '_acc' + str(acc) + '_average_score.npy'))
+					score = np.mean(score, axis=1)
+				elif (cond is 'indItems') & (fmethod is not 'erp_100'):
+					score = np.squeeze(np.load(data_path + ListFilenames + '/' + subject + '_erp_timDim_' + cond + '_diag_' + ListFilenames + '_acc' + str(acc) + '_average_score.npy'))
+					score = np.mean(score, axis=1)
 		elif (cond is 'itemPos') | (cond is 'indItems_trainCue0_testCue1'):
-			score = np.mean(np.load(data_path + ListFilenames + '/' + subject + '_BroadbandERP_' + cond + '_' + gen_filename + '_' + ListFilenames + '_acc' + str(acc) + '_score.npy'), axis=0)
-			score = np.squeeze(score)	#score_old = np.squeeze(np.load(data_path + ListFilenames[0] + '/orig_' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_score.npy'))
-		
-		time = np.load(data_path + ListFilenames + '/' + subject + '_BroadbandERP_' + cond + '_' + gen_filename + '_' + ListFilenames + '_acc' + str(acc) + '_time.npy')
+			if fdecoding is not 'perChannel':
+				score = np.mean(np.load(data_path + ListFilenames + '/' + subject + '_BroadbandERP_' + cond + '_' + gen_filename + '_' + ListFilenames + '_acc' + str(acc) + '_score.npy'), axis=0)
+				score = np.squeeze(score)	#score_old = np.squeeze(np.load(data_path + ListFilenames[0] + '/orig_' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_score.npy'))
+			else:
+				score = np.squeeze(np.load(data_path + ListFilenames + '/' + subject + '_erp_timDim_' + cond + '_diag_' + ListFilenames + '_acc' + str(acc) + '_average_score.npy'))
+				score = np.mean(score, axis=1)
+
+		if fdecoding is not 'perChannel':
+			time = np.load(data_path + ListFilenames + '/' + subject + '_BroadbandERP_' + cond + '_' + gen_filename + '_' + ListFilenames + '_acc' + str(acc) + '_time.npy')
+		else:
+			if fmethod is 'erp_100':
+				time = np.arange(-.2, 4.5, .1)
+			elif fmethod is 'probeLocked_erp_100_longEpoch':
+				time =  np.arange(-4.5, .5, .1)
+			elif fmethod is 'respLocked_erp_100':
+				time = np.arange(-4.0, .0, .1)
 
 		#Include only relevant period of the trial (i.e., baseline + epoch)
-		if (ListFilenames != 'respLocked_erp_100') & (fmethod != 'respLocked_tfa_wavelet') & (ListFilenames != 'probeLocked_erp_100_longEpoch'):
-			begin_t = find_nearest(time, bl[0])
-		else:
-			begin_t = find_nearest(time, trainTime[0])
+		if fdecoding is not 'perChannel':
+			if (ListFilenames != 'respLocked_erp_100') & (fmethod != 'respLocked_tfa_wavelet') & (ListFilenames != 'probeLocked_erp_100_longEpoch'):
+				begin_t = find_nearest(time, bl[0])
+			else:
+				begin_t = find_nearest(time, trainTime[0])
 
-		if gen_filename is 'diag':
-			score = score[:, begin_t[0] :]
-		else:
-			score = score[begin_t[0] :, begin_t[0] :]
+			if gen_filename is 'diag':
+				score = score[:, begin_t[0] :]
+			else:
+				score = score[begin_t[0] :, begin_t[0] :]
+
+		#print(np.shape(score))
 
 		scores.append(score)
 		np.asarray(scores)
 
 #Reshape
-scores = np.reshape(scores, (len(decCond), len(ListSubjects), np.shape(score)[0], np.shape(score)[1]))
+if fdecoding is not 'perChannel':
+	scores = np.reshape(scores, (len(decCond), len(ListSubjects), np.shape(score)[0], np.shape(score)[1]))
+else:
+	scores = np.reshape(scores, (len(decCond), len(ListSubjects), np.shape(score)[0]))
+
 ##########################################
 #Compute stats if wanted
 p_values_diag = []
 p_values = []
 
 if stats is 'permutation': 
-	for condi, cond in enumerate(decCond):
-		if gen_filename is 'diag':
-			p_values_diag = myStats(np.array(scores)[condi, :, :, None] - chance, tail=tail, permutations=n_permutations)
-			sig_diag = p_values_diag < stat_alpha
-		else:
+	if gen_filename is 'diag':
+		for condi, cond in enumerate(decCond):
+			p_value_diag = myStats(np.array(scores)[condi, :, :, None] - chance, tail=tail, permutations=n_permutations)
+			#sig_diag = p_values_diag < stat_alpha
+
+			p_values_diag.append(p_value_diag)
+
+		np.savez(result_path + ListFilenames + '/Stats/Group_BroadbandERP_' + cond + '_' + gen_filename + '_' + ListFilenames + '_stats.npz', p_values_diag)
+	else:
+		for condi, cond in enumerate(decCond):
 			tmp = [np.diag(sc) for sc in scores[condi]]
 			p_value = myStats(np.array(scores[condi]) - chance, tail=tail, permutations=n_permutations)
 			p_value_diag = myStats(np.array(tmp)[:, :, None] - chance, tail=1, permutations=n_permutations)
@@ -91,7 +127,7 @@ if stats is 'permutation':
 
 			del tmp
 
-		np.savez(result_path + ListFilenames + '/Stats/Group_BroadbandERP_' + cond + '_' + gen_filename + '_' + ListFilenames + '_stats.npz', p_value, p_value_diag)
+		np.savez(result_path + ListFilenames + '/Stats/Group_BroadbandERP_' + cond + '_' + gen_filename + '_' + ListFilenames + '_stats.npz', p_value, p_values_diag)
 elif stats is 'permutation_load':
 	for condi, cond in enumerate(decCond):
 		tmp = np.load(result_path + ListFilenames + '/Stats/Group_BroadbandERP_' + cond + '_' + gen_filename + '_' + ListFilenames + '_stats.npz')
@@ -106,11 +142,16 @@ elif stats is 'permutation_load':
 scores_smooth = np.empty_like(scores)
 if smoothWindow > 0:
 	for condi, cond in enumerate(decCond):
-		scores_smooth[condi] = [my_smooth(sc, smoothWindow) for sc in scores[condi]]	
+		scores_smooth[condi] = [my_smooth(sc, smoothWindow) for sc in scores[condi]]
+else:
+	scores_smooth = scores	
 
 ##########################################
 #Plot all conditions seperately as subplot & retrieve the necessary info for the stats
-time_short = time[begin_t[0] :]
+if fdecoding is not 'perChannel':
+	time_short = time[begin_t[0] :]
+else:
+	time_short = time
 
 sig_times = []
 peaks = []
@@ -118,8 +159,25 @@ peaks_time = []
 peaks_sem = []
 peaks_sig = []
 
-fig_group, ax_group = plt.subplots(len(decCond), 1, sharey=False, figsize=[5, 10])
+if (decCond[0] is 'cue') | (fdecoding is 'perChannel'):
+	fig_group, ax_group = plt.subplots(len(decCond), 1, sharey=False, figsize=[5, 10])
+else:
+	fig_group, ax_group = plt.subplots(2, 2, sharey=False, figsize=[8, 4])
+
 for condi, cond in enumerate(decCond):
+	if (decCond[0] is not 'cue') & (fdecoding is not 'perChannel'):
+		if condi == 0:
+			ax_tmp1 = 0
+			ax_tmp2 = 0
+		elif condi == 1:
+			ax_tmp1 = 0
+			ax_tmp2 = 1
+		elif condi == 2:
+			ax_tmp1 = 1
+			ax_tmp2 = 0
+		elif condi == 3:
+			ax_tmp1 = 1
+			ax_tmp2 = 1
 
 	#Get stats
 	#Significant time windows & clusters
@@ -155,52 +213,85 @@ for condi, cond in enumerate(decCond):
 		del(onset_time, offset_time)
 
 	#Plot
-	pretty_decod(np.asarray([np.diag(sc) for sc in scores_smooth[condi]]), times=time[begin_t[0] :], ax=ax_group[condi], color=line_color[condi], sig=p_values_diag[condi] < stat_alpha, chance=chance,
-	alpha=1, fill=True, thickness=0)
+	if (decCond[0] == 'cue') & (fdecoding is not 'perChannel'):
+		pretty_decod(np.asarray([np.diag(sc) for sc in scores_smooth[condi]]), times=time[begin_t[0] :], ax=ax_group[condi], color=line_color[condi], sig=p_values_diag[condi] < stat_alpha, chance=chance,
+			alpha=1, fill=True, thickness=0)
+	elif (fdecoding is 'perChannel'):
+		pretty_decod(np.asarray(scores_smooth[condi]), times=time, ax=ax_group[condi], color=line_color[condi], sig=p_values_diag[condi]<stat_alpha, chance=chance,
+			alpha=1, fill=True, thickness=0)
+	else:
+		pretty_decod(np.asarray([np.diag(sc) for sc in scores_smooth[condi]]), times=time[begin_t[0] :], ax=ax_group[ax_tmp1, ax_tmp2], color=line_color[condi], sig=p_values_diag[condi] < stat_alpha, chance=chance,
+			alpha=1, fill=True, thickness=0)
 
 	#Add event markers
 	if fmethod is 'erp_100':
-		ax_group[condi].axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
+		if (decCond[0] == 'cue') | (fdecoding is 'perChannel'):
+			ax_group[condi].axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
+		else:
+			ax_group[ax_tmp1, ax_tmp2].axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
+
 	elif fmethod is 'probeLocked_erp_100_longEpoch':
 		ax_group[condi].axvline(0, color='dimgray', zorder=-3) #indicates probe onset
 		ax_group[condi].axvline(-3.0, color='dimgray', zorder=-3) #indicates item onset
 		ax_group[condi].axvline(-4.5, color='dimgray', zorder=-3) #indicates cue onset
 
-	if condi == 0:
-		ax_group[condi].set_ylabel('AUC', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
+	if (decCond[0] == 'cue') | (fdecoding is 'perChannel'):
+		if condi == 0:
+			ax_group[condi].set_ylabel('AUC', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
+		else:
+			ax_group[condi].set_ylabel('')
 	else:
-		ax_group[condi].set_ylabel('')
+		if (condi == 0) | (condi == 2):
+			ax_group[ax_tmp1, ax_tmp2].set_ylabel('AUC', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
+		else:
+			ax_group[ax_tmp1, ax_tmp2].set_ylabel('')
 
-	if fmethod is 'erp_100':	
-		if condi < len(decCond)-1:
-			ax_group[condi].set_xticks(np.arange(0., 4.3, .5)), 
-			ax_group[condi].set_xticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
-			ax_group[condi].set_xlabel('')
-		else:
-			ax_group[condi].set_xticks(np.arange(0., 4.3, .5)), 
-			ax_group[condi].set_xticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
-			ax_group[condi].set_xlabel('Time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
-	elif fmethod is 'respLocked_erp_100':
-		if condi < len(decCond)-1:
-			ax_group[condi].set_xticks(np.arange(-3.5, -.35, .5)), 
-			ax_group[condi].set_xticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
-			ax_group[condi].set_xlabel('')
-		else:
-			ax_group[condi].set_xticks(np.arange(-3.5, -.35, .5)), 
-			ax_group[condi].set_xticklabels(['-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
-			ax_group[condi].set_xlabel('Time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
-	elif fmethod is 'probeLocked_erp_100_longEpoch':
-		if condi < len(decCond)-1:
-			ax_group[condi].set_xticks(np.arange(-4.5, .5, .5)), 
-			ax_group[condi].set_xticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
-			ax_group[condi].set_xlabel('')
-		else:
-			ax_group[condi].set_xticks(np.arange(-4.5, .5, .5)), 
-			ax_group[condi].set_xticklabels(['Cue', '-4.0', '-3.5', 'Item', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'Probe', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
-			ax_group[condi].set_xlabel('Time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
+	if (decCond[0] == 'cue') | (fdecoding is 'perChannel'):
+		if fmethod is 'erp_100':	
+			if condi < len(decCond)-1:
+				ax_group[condi].set_xticks(np.arange(0., 4.3, .5)), 
+				ax_group[condi].set_xticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+				ax_group[condi].set_xlabel('')
+			else:
+				ax_group[condi].set_xticks(np.arange(0., 4.3, .5)), 
+				ax_group[condi].set_xticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+				ax_group[condi].set_xlabel('Time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
+		elif fmethod is 'respLocked_erp_100':
+			if condi < len(decCond)-1:
+				ax_group[condi].set_xticks(np.arange(-3.5, -.35, .5)), 
+				ax_group[condi].set_xticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+				ax_group[condi].set_xlabel('')
+			else:
+				ax_group[condi].set_xticks(np.arange(-3.5, -.35, .5)), 
+				ax_group[condi].set_xticklabels(['-3.5', '-3.0', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+				ax_group[condi].set_xlabel('Time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
+		elif fmethod is 'probeLocked_erp_100_longEpoch':
+			if condi < len(decCond)-1:
+				ax_group[condi].set_xticks(np.arange(-4.5, .5, .5)), 
+				ax_group[condi].set_xticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+				ax_group[condi].set_xlabel('')
+			else:
+				ax_group[condi].set_xticks(np.arange(-4.5, .5, .5)), 
+				ax_group[condi].set_xticklabels(['Cue', '-4.0', '-3.5', 'Item', '-2.5', '-2.0', '-1.5', '-1.0', '-0.5', 'Probe', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+				ax_group[condi].set_xlabel('Time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
+	else:
+		if fmethod is 'erp_100':	
+			if (condi == 0) | (condi == 1):
+				ax_group[ax_tmp1, ax_tmp2].set_xticks(np.arange(0., 4.3, .5)), 
+				ax_group[ax_tmp1, ax_tmp2].set_xticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+				ax_group[ax_tmp1, ax_tmp2].set_xlabel('')
+			else:
+				ax_group[ax_tmp1, ax_tmp2].set_xticks(np.arange(0., 4.3, .5)), 
+				ax_group[ax_tmp1, ax_tmp2].set_xticklabels(['Cue', '0.5', '1.0', 'Item', '2.0', '2.5', '3.0', '3.5', '4.0'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+				ax_group[ax_tmp1, ax_tmp2].set_xlabel('Time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
+
 
 	#Titles
-	ax_group[condi].set_title(figTitles[condi], fontname=font_name, fontsize=font_size+2, fontweight='bold')
+	if (decCond[0] == 'cue') | (fdecoding is 'perChannel'):
+		ax_group[condi].set_title(figTitles[condi], fontname=font_name, fontsize=font_size+2, fontweight='bold')
+	else:
+		if (condi == 0) | (condi == 1):
+			ax_group[ax_tmp1, ax_tmp2].set_title(figTitles[condi], fontname=font_name, fontsize=font_size+2, fontweight='bold')
 
 	fig_group.tight_layout()
 
@@ -225,9 +316,26 @@ plt.show()
 
 ##########################################
 #Plot all conditions seperately as subplot & retrieve the necessary info for the stats
-fig_group, ax_group = plt.subplots(1, len(decCond), sharey=False, figsize=[20, 5])
+if decCond[0] == 'cue':
+	fig_group, ax_group = plt.subplots(1, len(decCond), sharey=False, figsize=[20, 5])
+else:
+	fig_group, ax_group = plt.subplots(2, 2, sharey=False, figsize=[8, 4])
 
 for condi, cond in enumerate(decCond):
+
+	if decCond[0] is not 'cue':
+		if condi == 0:
+			ax_tmp1 = 0
+			ax_tmp2 = 0
+		elif condi == 1:
+			ax_tmp1 = 0
+			ax_tmp2 = 1
+		elif condi == 2:
+			ax_tmp1 = 1
+			ax_tmp2 = 0
+		elif condi == 3:
+			ax_tmp1 = 1
+			ax_tmp2 = 1
 
 	scores_m = np.mean(scores_smooth[condi], axis=0)
 	sig = p_values[condi] < stat_alpha
@@ -240,8 +348,12 @@ for condi, cond in enumerate(decCond):
 		scores_m[scores_m <= chance] = np.nan
 
 	if (fmethod is 'erp_100'):
-		_, im = pretty_gat(scores_m, times=time[begin_t[0] :], ax=ax_group[condi], cmap = map_color[condi], chance=chance, clim =[chance, np.nanmax(scores_m)], sig=None, colorbar=None, 
-						xlabel='Test times (in s)', ylabel='Train times (in s)', sfreq=sfreq, diagonal=None, test_times=time[begin_t[0] :], classLines=None, classColors=None, contourPlot=None, steps=None)
+		if decCond[0] == 'cue':
+			_, im = pretty_gat(scores_m, times=time[begin_t[0] :], ax=ax_group[condi], cmap = map_color[condi], chance=chance, clim =[chance, np.nanmax(scores_m)], sig=None, colorbar=None, 
+							xlabel='Test times (in s)', ylabel='Train times (in s)', sfreq=sfreq, diagonal=None, test_times=time[begin_t[0] :], classLines=None, classColors=None, contourPlot=None, steps=None)
+		else:
+			_, im = pretty_gat(scores_m, times=time[begin_t[0] :], ax=ax_group[ax_tmp1, ax_tmp2], cmap = map_color[condi], chance=chance, clim =[chance, np.nanmax(scores_m)], sig=None, colorbar=None, 
+							xlabel='Test times (in s)', ylabel='Train times (in s)', sfreq=sfreq, diagonal=None, test_times=time[begin_t[0] :], classLines=None, classColors=None, contourPlot=None, steps=None)
 	elif (fmethod is 'respLocked_erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch'):
 		_, im = pretty_gat(scores_m, times=time[begin_t[0] :], ax=ax_group[condi], cmap = map_color[condi], chance=chance, clim =[chance, np.nanmax(scores_m)], sig=None, colorbar=None, 
 						xlabel='Test times (in s)', ylabel='Train times (in s)', sfreq=sfreq, diagonal=None, test_times=time[begin_t[0] :], classLines=None, classColors=None, contourPlot=None, steps=None, 
@@ -251,16 +363,23 @@ for condi, cond in enumerate(decCond):
 	#axins = inset_axes(ax_group[condi], width=.5, height=.5, loc = 'lower right')
 	shiftX = 0#.003
 	shiftY = 0 #.099
-
 	
 	if len(np.unique(sig)) == 2:
-		cb = pretty_colorbar(im, ax=ax_group[condi], ticks=[np.nanmax(scores_m)],
-        	ticklabels=['%.2f' % np.nanmax(scores_m)], shrink=.1, aspect=10, pad=0)
+		if decCond[0] == 'cue':
+			cb = pretty_colorbar(im, ax=ax_group[condi], ticks=[np.nanmax(scores_m)],
+        		ticklabels=['%.2f' % np.nanmax(scores_m)], shrink=.1, aspect=10, pad=0)
+		else:
+			cb = pretty_colorbar(im, ax=ax_group[ax_tmp1, ax_tmp2], ticks=[np.nanmax(scores_m)],
+        		ticklabels=['%.2f' % np.nanmax(scores_m)], shrink=.1, aspect=10, pad=0)
 		cb_pos = cb.ax.get_position()
 		cb.ax.set_yticklabels(['%.2f' % np.nanmax(scores_m)], fontname=font_name, fontsize=font_size, fontweight=font_weight)
 	elif len(np.unique(sig)) == 1:
-		cb = pretty_colorbar(im, ax=ax_group[condi], ticks=[.1],
-        	ticklabels=['0.57'], shrink=.1, aspect=10, pad=0)
+		if decCond[0] == 'cue':
+			cb = pretty_colorbar(im, ax=ax_group[condi], ticks=[.1],
+        		ticklabels=['0.57'], shrink=.1, aspect=10, pad=0)
+		else:
+			cb = pretty_colorbar(im, ax=ax_group[ax_tmp1, ax_tmp2], ticks=[.1],
+        		ticklabels=['0.57'], shrink=.1, aspect=10, pad=0)
 		cb_pos = cb.ax.get_position()
 		cb.ax.set_yticklabels(['0.57'], fontname=font_name, fontsize=font_size, fontweight=font_weight, color='white')
 	cb.ax.set_position([cb_pos.x0--shiftX, cb_pos.y0--shiftY, cb_pos.width, cb_pos.height])
@@ -268,8 +387,12 @@ for condi, cond in enumerate(decCond):
 
 	#Add event markers
 	if fmethod is 'erp_100':
-		ax_group[condi].axhline(1.500, color='dimgray', zorder=-3) #indicates item onset
-		ax_group[condi].axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
+		if decCond[0] == 'cue':
+			ax_group[condi].axhline(1.500, color='dimgray', zorder=-3) #indicates item onset
+			ax_group[condi].axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
+		else:
+			ax_group[ax_tmp1, ax_tmp2].axhline(1.500, color='dimgray', zorder=-3) #indicates item onset
+			ax_group[ax_tmp1, ax_tmp2].axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
 	elif fmethod is 'probeLocked_erp_100_longEpoch':
 		ax_group[condi].axvline(0, color='dimgray', zorder=-3) #indicates probe onset
 		ax_group[condi].axhline(0, color='dimgray', zorder=-3) #indicates probe onset
@@ -279,49 +402,72 @@ for condi, cond in enumerate(decCond):
 		ax_group[condi].axhline(-4.5, color='dimgray', zorder=-3) #indicates cue onset
 
 
-	if fmethod is 'erp_100':
-		if condi == 0:
-			ax_group[condi].set_ylabel('Train time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
-			ax_group[condi].set_yticks(np.arange(0., 4.3, .5)), 
-			ax_group[condi].set_yticklabels(['Cue', ' ', ' ', 'Item', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
-		else:
-			ax_group[condi].set_ylabel('')
-			ax_group[condi].set_yticks(np.arange(0., 4.3, .5)), 
-			ax_group[condi].set_yticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+	if decCond[0] == 'cue':
+		if fmethod is 'erp_100':
+			if condi == 0:
+				ax_group[condi].set_ylabel('Train time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
+				ax_group[condi].set_yticks(np.arange(0., 4.3, .5)), 
+				ax_group[condi].set_yticklabels(['Cue', ' ', ' ', 'Item', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+			else:
+				ax_group[condi].set_ylabel('')
+				ax_group[condi].set_yticks(np.arange(0., 4.3, .5)), 
+				ax_group[condi].set_yticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 
-		ax_group[condi].set_xlabel('Test time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
-		ax_group[condi].set_xticks(np.arange(0., 4.3, .5)), 
-		ax_group[condi].set_xticklabels(['Cue', ' ', ' ', 'Item', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
-	elif fmethod is 'respLocked_erp_100':
-		if condi == 0:
-			ax_group[condi].set_ylabel('Train time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
-			ax_group[condi].set_yticks(np.arange(-3.5, 0, .5)), 
-			ax_group[condi].set_yticklabels(['-3.5', ' ', ' ', ' ', ' ', ' ', '-0.5', 'R'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
-		else:
-			ax_group[condi].set_ylabel('')
-			ax_group[condi].set_yticks(np.arange(-3.5, 0, .5)), 
-			ax_group[condi].set_yticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+			ax_group[condi].set_xlabel('Test time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
+			ax_group[condi].set_xticks(np.arange(0., 4.3, .5)), 
+			ax_group[condi].set_xticklabels(['Cue', ' ', ' ', 'Item', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+		elif fmethod is 'respLocked_erp_100':
+			if condi == 0:
+				ax_group[condi].set_ylabel('Train time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
+				ax_group[condi].set_yticks(np.arange(-3.5, 0, .5)), 
+				ax_group[condi].set_yticklabels(['-3.5', ' ', ' ', ' ', ' ', ' ', '-0.5', 'R'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+			else:
+				ax_group[condi].set_ylabel('')
+				ax_group[condi].set_yticks(np.arange(-3.5, 0, .5)), 
+				ax_group[condi].set_yticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 
-		ax_group[condi].set_xlabel('Test time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
-		ax_group[condi].set_xticks(np.arange(-3.5, 0, .5)), 
-		ax_group[condi].set_xticklabels(['-3.5', ' ', ' ', ' ', ' ', ' ', '-0.5', 'R'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+			ax_group[condi].set_xlabel('Test time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
+			ax_group[condi].set_xticks(np.arange(-3.5, 0, .5)), 
+			ax_group[condi].set_xticklabels(['-3.5', ' ', ' ', ' ', ' ', ' ', '-0.5', 'R'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 	
-	elif fmethod is 'probeLocked_erp_100_longEpoch':
-		if condi == 0:
-			ax_group[condi].set_ylabel('Train time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
-			ax_group[condi].set_yticks(np.arange(-4.5, .5, .5)), 
-			ax_group[condi].set_yticklabels(['Cue', ' ', ' ', 'Item', ' ', ' ', ' ', ' ', ' ', 'Probe'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
-		else:
-			ax_group[condi].set_ylabel('')
-			ax_group[condi].set_yticks(np.arange(-4.5, .5, .5)), 
-			ax_group[condi].set_yticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+		elif fmethod is 'probeLocked_erp_100_longEpoch':
+			if condi == 0:
+				ax_group[condi].set_ylabel('Train time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
+				ax_group[condi].set_yticks(np.arange(-4.5, .5, .5)), 
+				ax_group[condi].set_yticklabels(['Cue', ' ', ' ', 'Item', ' ', ' ', ' ', ' ', ' ', 'Probe'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+			else:
+				ax_group[condi].set_ylabel('')
+				ax_group[condi].set_yticks(np.arange(-4.5, .5, .5)), 
+				ax_group[condi].set_yticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
 		
-		ax_group[condi].set_xlabel('Test time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
-		ax_group[condi].set_xticks(np.arange(-4.5, .5, .5)), 
-		ax_group[condi].set_xticklabels(['Cue', ' ', ' ', 'Item', ' ', ' ', ' ', ' ', ' ', 'Probe'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+			ax_group[condi].set_xlabel('Test time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
+			ax_group[condi].set_xticks(np.arange(-4.5, .5, .5)), 
+			ax_group[condi].set_xticklabels(['Cue', ' ', ' ', 'Item', ' ', ' ', ' ', ' ', ' ', 'Probe'], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+	else:
+		if fmethod is 'erp_100':
+			if (condi == 0) | (condi == 2):
+				ax_group[ax_tmp1, ax_tmp2].set_ylabel('Train time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
+				ax_group[ax_tmp1, ax_tmp2].set_yticks(np.arange(0., 4.3, .5)), 
+				ax_group[ax_tmp1, ax_tmp2].set_yticklabels(['Cue', ' ', ' ', 'Item', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+			else:
+				ax_group[ax_tmp1, ax_tmp2].set_ylabel('')
+				ax_group[ax_tmp1, ax_tmp2].set_yticks(np.arange(0., 4.3, .5)), 
+				ax_group[ax_tmp1, ax_tmp2].set_yticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+
+			if (condi == 2) | (condi == 3):
+				ax_group[ax_tmp1, ax_tmp2].set_xlabel('Test time (in s)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
+				ax_group[ax_tmp1, ax_tmp2].set_xticks(np.arange(0., 4.3, .5)), 
+				ax_group[ax_tmp1, ax_tmp2].set_xticklabels(['Cue', ' ', ' ', 'Item', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
+			else:
+				ax_group[ax_tmp1, ax_tmp2].set_xticks(np.arange(0., 4.3, .5)), 
+				ax_group[ax_tmp1, ax_tmp2].set_xticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick 
 	
 	#Titles
-	ax_group[condi].set_title(figTitles[condi], fontname=font_name, fontsize=font_size+2, fontweight='bold')
+	if decCond[0] == 'cue':
+		ax_group[condi].set_title(figTitles[condi], fontname=font_name, fontsize=font_size+2, fontweight='bold')
+	else:
+		if (condi == 0) | (condi == 1):
+			ax_group[ax_tmp1, ax_tmp2].set_title(figTitles[condi], fontname=font_name, fontsize=font_size+2, fontweight='bold')
 
 #Shift positions
 '''
