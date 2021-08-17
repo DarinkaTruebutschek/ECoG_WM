@@ -12,7 +12,7 @@ ECoG_setPath;
 
 %% Define important variables
 subnips = {'MKL','EG_I','HS','MG','KR','WS','KJ_I','LJ','AS','SB','HL','AP'}; %all subjects included in analysis
-subnips = {'AS'};
+subnips = {'MV'};
 
 %Paths to anatomical/functional data
 if strcmp(subnips, 'MKL')

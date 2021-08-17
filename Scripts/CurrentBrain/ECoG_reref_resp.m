@@ -12,7 +12,7 @@ clc;
 ECoG_setPath;
 
 %% Define important variables
-sf = 1000;
+sf = 100;
 
 if sf == 250
     tmin = -4.0;
@@ -33,7 +33,7 @@ end
 
 %% Define important variables
 %subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'HL'}; %subject KR has a different sampling frequency, to be checked carefully
-subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'CD', 'HL'};
+subnips = {'HS', 'KJ_I', 'LJ', 'MG', 'WS', 'KR', 'AS', 'AP'};
 %subnips = {'CD'};
 
 %% Load data
@@ -42,7 +42,8 @@ for subi = 1 : length(subnips)
     display(['Preparing subject: ' subnips{subi}]);
     
     %Load initial data
-    load([res_path subnips{subi} '/' subnips{subi} '_reref.mat']);
+    load([res_path subnips{subi} '/' subnips{subi} '_temporal_reref.mat']);
+    reref = reref_anat;
     
     %Re-adjust time-axis (& re-epoch)
     cfg = [];
@@ -99,7 +100,7 @@ for subi = 1 : length(subnips)
     
     tmp = ft_selectdata(cfg, data_respLocked);
     
-    if sf ~= 1000
+   if sf ~= 1000
         %Extract ERPs: Filter
         cfg = [];
         cfg.lpfilter = 30; %lowpass data at 30 Hz
@@ -115,7 +116,7 @@ for subi = 1 : length(subnips)
         data_respLocked = ft_resampledata(cfg, tmp2);
     else
         data_respLocked = tmp;
-    end
+   end
     
     %Add necessary info to data file
     data_respLocked.elec_mni_frv = reref.elec_mni_frv;
@@ -125,24 +126,24 @@ for subi = 1 : length(subnips)
     data_respLocked.trialInfo_all = trialInfo_all;
     %data.trialInfo_all = reref.trialInfo_all;
 
-    if sf ~= 1000
+    %if sf ~= 1000
         %Timelock
-        cfg = [];
-        cfg.latency = [tmin, tmax];
+        %cfg = [];
+        %cfg.latency = [tmin, tmax];
     
-        erp{subi} = ft_timelockanalysis(cfg, data_respLocked);
+        %erp{subi} = ft_timelockanalysis(cfg, data_respLocked);
     
         %Plot individual subjects' erps
-        figure;
-        plot(time, squeeze(mean(erp{subi}.avg)));
+        %figure;
+        %plot(time, squeeze(mean(erp{subi}.avg)));
     
         %Save
-        save([res_path subnips{subi} '/' subnips{subi} '_respLocked_erp_100.mat'], 'data_respLocked', '-v7.3');
-        pause;
-    else 
+        %save([res_path subnips{subi} '/' subnips{subi} '_frontal_respLocked_erp_100.mat'], 'data_respLocked', '-v7.3');
+        %pause;
+    %else 
         %Save
-        save([res_path subnips{subi} '/' subnips{subi} '_respLocked_erp_1000.mat'], 'data_respLocked', '-v7.3');
-    end
+        save([res_path subnips{subi} '/' subnips{subi} '_temporal_respLocked_erp_100.mat'], 'data_respLocked', '-v7.3');
+    %end
     
     clear ('reref', 'tmp', 'tmp1', 'tmp2', 'data_respLocked', 'erp');
 end

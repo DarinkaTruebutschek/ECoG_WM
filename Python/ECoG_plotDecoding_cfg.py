@@ -18,7 +18,7 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #TF parameters
-fmethod = 'tfa_wavelet_final'
+fmethod = 'erp_100'
 
 ##########################################
 #Preprocessing
@@ -35,7 +35,7 @@ acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct
 
 ##########################################
 #Decoding
-decCond = 'indItems' # 'itemPos', indItems', 'cue', 'load'
+decCond = 'buttonPress' # 'itemPos', indItems', 'cue', 'load'
 
 generalization = 0 #0 = diagonal only, 1 = full matrix
 
@@ -51,6 +51,9 @@ elif fmethod is 'erp_100':
 elif fmethod is 'respLocked_erp_100':
 	trainTime = [-4.0, 0.]
 	testTime = [-4.0, 0.]
+elif fmethod is 'probeLocked_erp_100_longEpoch':
+	trainTime = [-4.5, .5]
+	testTime = [-4.5, .5]
 elif fmethod is 'respLocked_tfa_wavelet':
 	trainTime = [-3.5, -0.35]
 	testTime = [-3.5, -0.35]

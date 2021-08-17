@@ -15,8 +15,8 @@ set(h,'Position',[spos(1) spos(2) ppos(3) ppos(4)])
 set(h,'Units',su)
 
 if ~isempty(filename)
-    %print(h, '-r600', '-dpdf', filename);
-    print(h, '-r600', '-dtiff', filename);
+    print(h, '-r600', '-dpdf', filename);
+    %print(h, '-r600', '-dtiff', filename);
 end
 
 end

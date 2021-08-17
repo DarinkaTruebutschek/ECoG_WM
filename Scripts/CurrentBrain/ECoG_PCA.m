@@ -29,7 +29,8 @@ end
 
 %% Define important variables
 %subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'HL'}; %subject KR has a different sampling frequency, to be checked carefully
-subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'CD'};
+subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'};
+subnips = {'HS', 'KJ_I', 'LJ', 'MG', 'WS', 'KR', 'AS', 'AP'};
 %subnips = {'CD'};
 
 %% Load data
@@ -38,7 +39,8 @@ for subi = 1 : length(subnips)
     display(['Preparing subject: ' subnips{subi}]);
     
     %Load initial data
-    load([res_path subnips{subi} '/' subnips{subi} '_reref.mat']);
+    load([res_path subnips{subi} '/' subnips{subi} '_temporal_reref.mat']);
+    reref = reref_anat;
     
     %Determine beginning sample of each trial and shift time axis to common
     %denominator
@@ -46,7 +48,7 @@ for subi = 1 : length(subnips)
         begin_t(triali) = reref.time{triali}(1);
     end
     
-    if numel(unique(begin_t))
+    if numel(unique(begin_t))>1
        display('ATTENTION! Adjusting time axis to facilitate following analyses');
             
        my_difference = begin_t - (-.45); 
@@ -107,10 +109,10 @@ for subi = 1 : length(subnips)
     plot(time, squeeze(mean(erp{subi}.avg)));
     
     %Save
-    save([res_path subnips{subi} '/' subnips{subi} '_erp_100.mat'], 'data', '-v7.3');
+    save([res_path subnips{subi} '/' subnips{subi} '_temporal_erp_100.mat'], 'data', '-v7.3');
     %pause;
     
     clear ('tmp', 'tmp1', 'tmp2', 'data');
 end
 
-%% Plot average erp (for anatomically-defined subsets of channels)
+

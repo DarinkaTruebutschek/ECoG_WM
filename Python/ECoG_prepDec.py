@@ -16,13 +16,22 @@ from base import find_nearest, loadtablefrommat
 from ECoG_decod_cfg import *
 from ECoG_fldtrp2mne import ECoG_fldtrp2mne
 
-def ECoG_prepDec(decCond, subject, foi, toi_i):
-#def ECoG_prepDec(decCond, subject, foi):
+#def ECoG_prepDec(decCond, subject, foi, toi_i):
+def ECoG_prepDec(decCond, subject, foi):
 
 	##########################################
+	from ECoG_decod_cfg import fmethod
+
+	if fmethod is 'erp_100_spatialPatterns':
+		fmethod = 'erp_100'
+	elif fmethod is 'respLocked_erp_100_spatialPatterns':
+		fmethod =  'respLocked_erp_100'
+	elif fmethod is 'probeLocked_erp_100_longEpoch_spatialPatterns':
+		fmethod = 'probeLocked_erp_100_longEpoch'
+
 	#Load data (X)
 	fname = data_path + subject + '/' +  subject + '_' + fmethod + '.mat'
-	if (fmethod is 'tfa_wavelet') | (fmethod is 'respLocked_tfa_wavelet') | (fmethod is 'tfa_wavelet_final'):
+	if (fmethod is 'tfa_wavelet') | (fmethod is 'respLocked_tfa_wavelet') | (fmethod is 'tfa_wavelet_final_corrected'):
 		data = ECoG_fldtrp2mne(fname, 'freq', 'tfa') #for tfa data, this is a 4d-matrix of size n_trials, n_channels, n_freqs, n_times
 
 		if foi is not 'all' and foi is not 'specPat':
@@ -41,21 +50,21 @@ def ECoG_prepDec(decCond, subject, foi, toi_i):
 
 		if foi is not 'all' and foi is not 'specPat' and foi:
 			data.data = np.mean(data.data, axis=2)
-	elif fmethod is 'chanxfreq_tfa_wavelet_final':
+	elif (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected'):
 		data = ECoG_fldtrp2mne(fname, 'freq', 'chanxfreq_tfa')
 
 		if blc:
 			data.apply_baseline(baseline=bl, mode='zscore', verbose=True)
-	elif (fmethod is 'erp') | (fmethod is 'erp_100'):
+	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'frontal_erp_100') | (fmethod is 'temporal_erp_100'):
 		data = ECoG_fldtrp2mne(fname, 'data', 'erp') #for erp data, this is a 3d-matrix of sixe n_trials, n_channels, n_freqs, n_times
 
 		#Preprocess data: Apply baseline correction 
 		if blc:
 			data.apply_baseline(baseline=bl, verbose=True)
-	elif (fmethod is 'respLocked_erp_100'):
+	elif (fmethod is 'respLocked_erp_100') | (fmethod is 'frontal_respLocked_erp_100') | (fmethod is 'temporal_respLocked_erp_100'):
 		data = ECoG_fldtrp2mne(fname, 'data_respLocked', 'erp') #for erp data, this is a 3d-matrix of sixe n_trials, n_channels, n_freqs, n_times
 		data.crop(tmin=trainTime[0], tmax=trainTime[1])
-	elif (fmethod is 'probeLocked_erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch'):
+	elif (fmethod is 'probeLocked_erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch'):
 		data = ECoG_fldtrp2mne(fname, 'data_probeLocked', 'erp')
 		data.crop(tmin=trainTime[0], tmax=trainTime[1])
 
@@ -65,7 +74,7 @@ def ECoG_prepDec(decCond, subject, foi, toi_i):
 
 	##########################################
 	#Load labels (y)
-	if fmethod is not 'probeLocked_erp_100_longEpoch':
+	if (fmethod is not 'probeLocked_erp_100_longEpoch') & (fmethod is not 'frontal_probeLocked_erp_100_longEpoch') & (fmethod is not 'temporal_probeLocked_erp_100_longEpoch'):
 		fname = behavior_path + subject + '_memory_behavior_forPython_final.mat'
 	else:
 		fname = behavior_path + subject + '_memory_behavior_forPython_Probe_final.mat'
@@ -73,27 +82,33 @@ def ECoG_prepDec(decCond, subject, foi, toi_i):
 	trialInfo = loadtablefrommat(fname, 'table_struct', 'table_columns')
 
 	#Select only that subset of data also used in the ECoG analyses
-	if fmethod is 'probeLocked_erp_100_longEpoch':
+	if (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch'):
 		trialInfo = trialInfo[trialInfo.trials_included_probe != 0]
 	else:
 		trialInfo = trialInfo[trialInfo.EEG_included != 0]
 
 	#Sanity check: Do X and y have the same dimensions?
-	if (fmethod is 'tfa_wavelet') | (fmethod is 'tfa_wavelet_final'):
+	if (fmethod is 'tfa_wavelet') | (fmethod is 'tfa_wavelet_final_corrected'):
 		if np.shape(data.data)[0] != np.shape(trialInfo)[0]:
 			print('X and y do not have the same dimensions')
-	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100') | (fmethod is 'probeLocked_erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'chanxfreq_tfa_wavelet_final'):
+	elif ((fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100') | (fmethod is 'probeLocked_erp_100') | 
+		(fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'frontal_erp_100') | 
+		(fmethod is 'frontal_respLocked_erp_100') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected') |
+		(fmethod is 'temporal_erp_100') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch')):
 		if np.shape(data.get_data())[0] != np.shape(trialInfo)[0]:
 			print('X and y do not have the same dimensions')
 
 	##########################################
 	#Prepare X and y specifically
-	if (fmethod is 'tfa_wavelet') | (fmethod is 'respLocked_tfa_wavelet') | (fmethod is 'tfa_wavelet_final'):
+	if (fmethod is 'tfa_wavelet') | (fmethod is 'respLocked_tfa_wavelet') | (fmethod is 'tfa_wavelet_final_corrected'):
 		if win_size is not False:
 			X_train_tmp = data.data #trials x channels x time
 		else:
 			X_train = data.data
-	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100') | (fmethod is 'probeLocked_erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'chanxfreq_tfa_wavelet_final'):
+	elif ((fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100') | (fmethod is 'probeLocked_erp_100') |
+		 (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'frontal_erp_100') |
+		 (fmethod is 'frontal_respLocked_erp_100') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected') |
+		 (fmethod is 'temporal_erp_100') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch')):
 		if win_size is not False:
 			X_train_tmp = data.get_data() #n_trials x n_channels x n_timepoints (decoding done seperately on each time point)
 		else:
@@ -114,7 +129,7 @@ def ECoG_prepDec(decCond, subject, foi, toi_i):
 				timebins_onset = np.arange(find_nearest(data.times, bl[1])[0], np.shape(data.times)[0], step_size_sample)
 				timebins_onset = np.hstack((first_onset, timebins_onset))
 			else:
-				if fmethod != 'respLocked_erp_100':
+				if (fmethod != 'respLocked_erp_100') & (fmethod != 'frontal_respLocked_erp_100') & (fmethod != 'temporal_respLocked_erp_100'):
 					timebins_onset = np.arange(find_nearest(data.times, bl[0])[0], np.shape(data.times)[0], step_size_sample) #vector corresponding to the onset times of the timebins (in samples)
 				else:
 					timebins_onset = np.arange(find_nearest(data.times, np.min(data.times))[0], np.shape(data.times)[0], step_size_sample)
@@ -127,7 +142,7 @@ def ECoG_prepDec(decCond, subject, foi, toi_i):
 			for toi_i, toi in enumerate(timebins_onset):
 				if int(toi+win_size_sample+1) <= np.shape(data.times)[0]:
 					#print(toi_i, toi)
-					if (fmethod != 'respLocked_erp_100') & (np.mod(.2, win_size) != 0) & (toi_i == 0):
+					if (fmethod != 'respLocked_erp_100') & (fmethod != 'frontal_respLocked_erp_100') & (fmethod != 'temporal_respLocked_erp_100') & (np.mod(.2, win_size) != 0) & (toi_i == 0):
 						slices = np.full((np.shape(X_train_tmp)[0], np.shape(X_train_tmp)[1], int(win_size_sample+1)), np.nan)
 						slices[:, :, toi_i : int(np.diff((timebins_onset[0], timebins_onset[1]))+1)] = X_train_tmp[:, :, int(toi) : int(timebins_onset[1])+1] #first time bin encompasses baseline period
 					else:
@@ -137,7 +152,9 @@ def ECoG_prepDec(decCond, subject, foi, toi_i):
 
 			del X_train_tmp
 		elif np.shape(win_size)[0] > 1:
-			if (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'respLocked_erp_100'):
+			if ((fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'respLocked_erp_100') | 
+				(fmethod is 'frontal_erp_100') | (fmethod is 'frontal_respLocked_erp_100') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') |
+				(fmethod is 'temporal_erp_100') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch')):
 				timebins_onset = find_nearest(data.times, win_size[toi_i][0])[0] 
 				win_size_sample = np.round(data.info['sfreq'])*(np.abs(win_size[toi_i][1]-win_size[toi_i][0]))
 
@@ -163,7 +180,7 @@ def ECoG_prepDec(decCond, subject, foi, toi_i):
 
 		#Take relative baseline if need be (i.e., subtract the mean within each time bin seperately for each trial and channel)
 		if rel_blc & (np.shape(win_size)[0] == 1):
-			if fmethod != 'respLocked_erp_100':
+			if (fmethod != 'respLocked_erp_100') & (fmethod != 'frontal_respLocked_erp_100') & (fmethod != 'temporal_respLocked_erp_100'):
 				my_mean = np.mean(X_train, axis=2)
 
 				for t, timepoint in enumerate(np.arange(np.shape(X_train)[2])):
@@ -174,7 +191,9 @@ def ECoG_prepDec(decCond, subject, foi, toi_i):
 				for t, timepoint in enumerate(np.arange(np.shape(X_train)[2])):
 					X_train[:, :, t, :] = X_train[:, :, t, :] - my_mean
 		elif rel_blc & (np.shape(win_size)[0] > 1):
-			if (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100'):
+			if ((fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100') | (fmethod is 'frontal_erp_100') | 
+				(fmethod is 'frontal_respLocked_erp_100') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') |
+				(fmethod is 'temporal_erp_100') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch')):
 				my_mean = np.mean(X_train, axis=2)
 
 				for t, timepoint in enumerate(np.arange(np.shape(X_train)[2])):
@@ -290,6 +309,6 @@ def ECoG_prepDec(decCond, subject, foi, toi_i):
 	print('Training on:', np.shape(X_train), np.shape(y_train))
 	print('Testing on:', np.shape(X_test), np.shape(y_test))
 	
-	#return X_train, y_train, X_test, y_test, data.times
+	return X_train, y_train, X_test, y_test, data.times
 
-	return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset 
+	#return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset 

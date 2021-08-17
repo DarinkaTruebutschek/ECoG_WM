@@ -26,14 +26,14 @@ from ECoG_base_stats import myStats
 ##########################################
 #Define important variables
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP']
-ListFilenames = 'erp_100_TimDim_timeBin-100ms_nomeanSubtraction'#'erp_100_TimDim_timeBin-100ms_nomeanSubtraction'
+ListFilenames = 'erp_100_TimDim_timeBin-100ms_meanSubtraction'#'erp_100_TimDim_timeBin-100ms_nomeanSubtraction'
 
 if generalization:
 	gen_filename = 'timeGen'
 else:
 	gen_filename = 'diag'
 
-decCond = ['itemPos']
+#decCond = ['itemPos']
 
 ##########################################
 #Loop over conditions and subjects

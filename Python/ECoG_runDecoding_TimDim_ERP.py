@@ -20,7 +20,7 @@ ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS',
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'WS', 'KR', 'AS', 'AP', 'SB']
 
 #ListSubjects = ['EG_I']
-ListFilenames = ['respLocked_erp_100_TimDim_timeBin-100ms_nomeanSubtraction']
+ListFilenames = ['erp_100_TimDim_timeBin-100ms_meanSubtraction']
 
 if generalization:
 	gen_filename = 'timeGen'
@@ -119,7 +119,7 @@ for subi, subject in enumerate(ListSubjects):
 					score = np.reshape(score, (len(win_size), len(chans), labeli+1, 1))
 		elif (fmethod is 'probeLocked_erp_100_longEpoch'):
 				if subject is 'SB':
-					if (decCond is 'cue') | (decCond is 'load') | (decCond is 'probeID') | (decCond is 'probe') | (decCond is 'cue'):
+					if (decCond is 'cue') | (decCond is 'load') | (decCond is 'probeID') | (decCond is 'probe') | (decCond is 'buttonPress'):
 						score = np.reshape(score, (len(win_size), len(chans), 1))
 					elif(decCond is 'itemPos') | (decCond is 'indItems'):
 						score = np.reshape(score, (len(win_size), len(chans), labeli+1, 1))

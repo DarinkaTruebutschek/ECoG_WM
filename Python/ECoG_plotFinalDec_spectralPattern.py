@@ -25,7 +25,7 @@ from ECoG_base_stats import myStats
 ##########################################
 #Define important variables
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP']
-ListFilenames = 'tfa_wavelet_final'
+ListFilenames = 'tfa_wavelet_final_corrected'
 
 if generalization:
 	gen_filename = 'timeGen'
@@ -52,7 +52,7 @@ for condi, cond in enumerate(decCond):
 		
 		time = np.load(data_path + ListFilenames + '/' + subject + '_SpecPat_' + cond + '_' + gen_filename + '_' + ListFilenames + '_acc' + str(acc) + '_time.npy')
 		
-		if fmethod is 'tfa_wavelet_final':
+		if fmethod is 'tfa_wavelet_final_corrected':
 			freq = np.load(data_path + ListFilenames + '/SpecPat_' + gen_filename + '_' + ListFilenames + '_acc' + str(acc) + '_freqs.npy')
 
 		#Include only relevant period of the trial (i.e., baseline + epoch)
@@ -62,7 +62,7 @@ for condi, cond in enumerate(decCond):
 			begin_t = find_nearest(time, trainTime[0])
 
 		if gen_filename is 'diag':
-			if fmethod is 'tfa_wavelet_final':
+			if fmethod is 'tfa_wavelet_final_corrected':
 				score = score[:, begin_t[0] :]
 			#elif fmethod is 'chanxfreq_tfa_wavelet_final':
 				#score = [begin_t[0] :]
@@ -73,9 +73,9 @@ for condi, cond in enumerate(decCond):
 		np.asarray(scores)
 
 #Reshape
-if fmethod is 'tfa_wavelet_final':
+if fmethod is 'tfa_wavelet_final_corrected':
 	scores = np.reshape(scores, (len(decCond), len(ListSubjects), np.shape(score)[0], np.shape(score)[1]))
-elif fmethod is 'chanxfreq_tfa_wavelet_final':
+elif (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected'):
 	scores = np.reshape(scores, (len(decCond), len(ListSubjects), np.shape(score)[0]))
 
 ##########################################
@@ -86,14 +86,14 @@ p_values = []
 if stats is 'permutation': 
 	for condi, cond in enumerate(decCond):
 		if gen_filename is 'diag':
-			if fmethod is 'tfa_wavelet_final':
+			if fmethod is 'tfa_wavelet_final_corrected':
 				p_value_diag = myStats(np.array(np.mean(scores, axis=3))[condi, :, :, None] - chance, tail=tail, permutations=n_permutations)
-			elif fmethod is 'chanxfreq_tfa_wavelet_final':
+			elif (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected'):
 				p_value_diag = myStats(np.array(scores[condi, :, :]) - chance, tail=tail, permutations=n_permutations)
 			sig_diag = p_value_diag < stat_alpha
 			p_values_diag.append(p_value_diag)
 
-			if fmethod is 'tfa_wavelet_final':
+			if fmethod is 'tfa_wavelet_final_corrected':
 				p_value = myStats(np.array(scores[condi]) - chance, tail=tail, permutations=n_permutations)
 				sig_gen = p_value < stat_alpha
 				p_values.append(p_value)
@@ -110,9 +110,9 @@ if stats is 'permutation':
 
 			del tmp
 
-		if fmethod is 'tfa_wavelet_final':
+		if fmethod is 'tfa_wavelet_final_corrected':
 			np.savez(result_path + ListFilenames + '/Stats/Group_SpecPat_' + cond + '_' + gen_filename + '_' + ListFilenames + '_stats.npz', p_value, p_value_diag)
-		elif fmethod is 'chanxfreq_tfa_wavelet_final':
+		elif (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected'):
 			np.savez(result_path + ListFilenames + '/Stats/Group_SpecPat_' + cond + '_' + gen_filename + '_' + ListFilenames + '_stats.npz', p_value_diag)
 elif stats is 'permutation_load':
 	for condi, cond in enumerate(decCond):
@@ -155,11 +155,11 @@ for condi, cond in enumerate(decCond):
 		print (onset_time)
 
 		#Peak decoding 
-		if fmethod is 'chanxfreq_tfa_wavelet_final':
+		if (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected'):
 			peak = np.max(np.mean(scores[condi, :, :], axis=0))
 			peak_time = np.where(np.mean(scores[condi, :, :], axis=0) == np.max(np.mean(scores[condi, :, :], axis=0)))
 			peak_sem = scipy.sem(np.asarray(scores[condi, :, :])[:, peak_time[0][0]])
-		elif fmethod is 'tfa_wavelet_final':
+		elif fmethod is 'tfa_wavelet_final_corrected':
 			peak = np.max(np.mean(np.mean(scores, axis=3)[condi, :, :], axis=0))
 			peak_time = np.where((np.mean(np.mean(scores, axis=3)[condi, :, :], axis=0)) == np.max(np.mean(np.mean(scores, axis=3)[condi, :, :], axis=0)))
 			peak_sem = scipy.sem(np.asarray(np.mean(scores, axis=3)[condi, :, :])[:, peak_time[0][0]])
@@ -184,15 +184,15 @@ for condi, cond in enumerate(decCond):
 		del(onset_time, offset_time)
 
 	#Plot
-	if fmethod is 'tfa_wavelet_final':	
+	if fmethod is 'tfa_wavelet_final_corrected':	
 		pretty_decod(np.asarray(np.mean(scores_smooth, axis=3)[condi, :, :]), times=time[begin_t[0] :], ax=ax_group[condi], color=line_color[condi], sig=p_values_diag[condi] < stat_alpha, chance=chance,
 		alpha=1, fill=True, thickness=0)
-	elif fmethod is 'chanxfreq_tfa_wavelet_final':
+	elif (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected'):
 		pretty_decod(np.asarray(scores_smooth[condi, :, :]), times=time[begin_t[0] :], ax=ax_group[condi], color=line_color[condi], sig=p_values_diag[condi] < stat_alpha, chance=chance,
 		alpha=1, fill=True, thickness=0)
 
 	#Add event markers
-	if (fmethod is 'tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final'):
+	if (fmethod is 'tfa_wavelet_final_corrected') | (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected'):
 		ax_group[condi].axvline(1.500, color='dimgray', zorder=-3) #indicates item onset
 	elif fmethod is 'probeLocked_erp_100_longEpoch':
 		ax_group[condi].axvline(0, color='dimgray', zorder=-3) #indicates probe onset
@@ -204,7 +204,7 @@ for condi, cond in enumerate(decCond):
 	else:
 		ax_group[condi].set_ylabel('')
 
-	if (fmethod is 'tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final'):	
+	if (fmethod is 'tfa_wavelet_final_corrected') | (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected'):	
 		if condi < len(decCond)-1:
 			ax_group[condi].set_xticks(np.arange(0., 4.3, .5)), 
 			ax_group[condi].set_xticklabels([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '], fontname=font_name, fontsize=font_size, fontweight=font_weight) #set x_tick labels
@@ -238,7 +238,7 @@ for condi, cond in enumerate(decCond):
 	fig_group.tight_layout()
 
 #Save
-if (fmethod is 'tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final'):
+if (fmethod is 'tfa_wavelet_final_corrected') | (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected'):
 	plt.savefig(result_path + ListFilenames + '/Figures/Group_SpecPat_StimLocked_' + gen_filename + '_' + ListFilenames + '_decodingTimecourse.svg',
 		format = 'svg', dpi = 300, bbox_inches = 'tight')
 	tmp = svg2rlg(result_path + ListFilenames + '/Figures/Group_SpecPat_StimLocked_' + gen_filename + '_' + ListFilenames + '_decodingTimecourse.svg')
@@ -305,7 +305,7 @@ for condi, cond in enumerate(decCond):
 	cb.ax.set_position([cb_pos.x0--shiftX, cb_pos.y0--shiftY, cb_pos.width, cb_pos.height])
 	'''
 
-	if fmethod is 'tfa_wavelet_final':
+	if fmethod is 'tfa_wavelet_final_corrected':
 		if condi == 0:
 			ax_group[condi].set_ylabel('Frequency (in Hz)', fontname=font_name, fontsize=font_size+2, fontweight=font_weight)
 			ax_group[condi].set_yticks(freq[0 : :3]), 
@@ -355,7 +355,7 @@ for condi, cond in enumerate(decCond):
 
 
 #Save
-if fmethod is 'tfa_wavelet_final':
+if fmethod is 'tfa_wavelet_final_corrected':
 	plt.savefig(result_path + ListFilenames + '/Figures/Group_SpecPat_StimLocked_' + gen_filename + '_' + ListFilenames + '_freqxtime.svg',
 		format = 'svg', dpi = 300, bbox_inches = 'tight')
 	plt.savefig(result_path + ListFilenames + '/Figures/Group_SpecPat_StimLocked_' + gen_filename + '_' + ListFilenames + '_freqxtime.tiff',

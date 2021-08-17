@@ -17,9 +17,7 @@ from ECoG_decoders import binaryClassif
 #Define important variables
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP']
 
-#ListSubjects = ['AS', 'AP', 'MG', 'WS', 'KR']
-
-ListFilenames = ['tfa_wavelet_final']
+ListFilenames = ['tfa_wavelet_final_corrected']
 
 if generalization:
 	gen_filename = 'timeGen'
@@ -46,7 +44,7 @@ for subi, subject in enumerate(ListSubjects):
 			print(np.sum(y_train[:, labeli]))
 			print(np.sum(y_test[:, labeli]))
 
-			if fmethod is 'chanxfreq_tfa_wavelet_final':
+			if (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected'):
 				model, predictions, cv_test, score_label = binaryClassif(X_train, y_train[:, labeli], X_test, y_test[:, labeli], generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
 				
 				time_gen.append(model) #shape:n_labels
@@ -54,7 +52,7 @@ for subi, subject in enumerate(ListSubjects):
 				test_index.append(cv_test) #shape: n_labels x n_folds
 				score.append(score_label)
 
-			elif fmethod is 'tfa_wavelet_final':
+			elif fmethod is 'tfa_wavelet_final_corrected':
 				for timei, _ in enumerate(range(np.shape(X_train)[3])):
 					print('Decoding time ', timei)
 
@@ -65,7 +63,7 @@ for subi, subject in enumerate(ListSubjects):
 					test_index.append(cv_test) #shape: n_labels x n_folds
 					score.append(score_label)
 	else:	
-		if fmethod is 'tfa_wavelet_final':
+		if fmethod is 'tfa_wavelet_final_corrected':
 			for timei, _ in enumerate(range(np.shape(X_train)[3])):
 				print('Decoding time ', timei)
 
@@ -75,7 +73,7 @@ for subi, subject in enumerate(ListSubjects):
 				y_pred.append(predictions) #shape: n_labels x n_folds, within each label: n_folds x n_testTrials x n_Freqs x n_labels
 				test_index.append(cv_test) #shape: n_labels x n_folds
 				score.append(score_label)
-		elif fmethod is 'chanxfreq_tfa_wavelet_final':
+		elif (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected'):
 				model, predictions, cv_test, score_label = binaryClassif(X_train, y_train, X_test, y_test, generalization=generalization, proba=proba, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
 		
 				time_gen.append(model) #shape:n_labels
@@ -87,7 +85,7 @@ for subi, subject in enumerate(ListSubjects):
 	score = np.asarray(score)
 	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue1_testCue0'):
 	#if score.ndim > 2:
-		if fmethod is 'tfa_wavelet_final':
+		if fmethod is 'tfa_wavelet_final_corrected':
 			score_tmp = np.reshape(score, ((np.shape(y_train)[1], np.shape(X_train)[3], np.shape(X_train)[2])))
 			average_score = np.mean(score_tmp, axis=0)
 		else:

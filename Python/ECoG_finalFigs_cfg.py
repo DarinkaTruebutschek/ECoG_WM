@@ -20,13 +20,15 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #Necessary parameters
-fmethod = 'respLocked_erp_100' #'chanxfreq_tfa_wavelet_final'
-fdecoding = 'perChannel' #'perChannel'
+fmethod = 'erp_100_spatialPatterns' #'chanxfreq_tfa_wavelet_final'
+fdecoding = False #'perChannel'
+plotAverage = 0 #plot average decoding performance or not?
+
 ##########################################
 #Preprocessing
-if (fmethod is 'tfa_wavelet_final') | (fmethod is 'respLocked_tfa_wavelet') | (fmethod is 'chanxfreq_tfa_wavelet_final'):
+if (fmethod is 'tfa_wavelet_final_corrected') | (fmethod is 'respLocked_tfa_wavelet') | (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected'):
 	bl = [-.14, 0]
-elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'tfa_wavelet_final') | (fmethod is 'probeLocked_erp_100_longEpoch'):
+elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'tfa_wavelet_final') | (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'frontal_erp_100') | (fmethod is 'temporal_erp_100') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'erp_100_spatialPatterns'):
 	bl = [-.2, 0]
 
 blc = 0 #baseline correction or not?
@@ -40,6 +42,9 @@ acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct
 decCond = ['cue', 'itemPos', 'indItems', 'load', 'probeID', 'probe', 'buttonPress'] # 'itemPos', indItems', 'cue', 'load
 figTitles = ['Task', 'Item position', 'Item identity', 'Item load', 'Probe identity', 'Probe category', 'Motor response']
 
+#decCond = ['indItems_trainCue0_testCue0', 'indItems_trainCue0_testCue1', 'indItems_trainCue1_testCue0', 'indItems_trainCue1_testCue1']
+#figTitles = ['Match', 'Match', 'Mismatch', 'Mismatch']
+
 if fdecoding is 'perChannel':
 	decCond = ['cue', 'itemPos', 'indItems', 'load', 'probeID', 'probe', 'buttonPress']
 	figTitles = ['Task', 'Item position', 'Item identity', 'Item load', 'Probe identity', 'Probe category', 'Motor  response']
@@ -52,26 +57,26 @@ if fdecoding is 'perChannel':
 #figTitles = ['Task', 'Item position',  'Item identity', 'Item load', 'Probe identity', 'Probe category', 'Motor response']
 
 if fdecoding is not 'perChannel':
-	if (fmethod is not 'tfa_wavelet_final') & (fmethod is not 'chanxfreq_tfa_wavelet_final'):
+	if (fmethod is not 'tfa_wavelet_final_corrected') & (fmethod is not 'chanxfreq_tfa_wavelet_final') & (fmethod is not 'chanxfreq_tfa_wavelet_final_corrected') & ('spatialPatterns' not in fmethod):
 		generalization = 1 #0 = diagonal only, 1 = full matrix
 	else:
 		generalization = 0
 else:
 	generalization = 0
 
-if (fmethod is 'tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final'):
+if (fmethod is 'tfa_wavelet_final_corrected') | (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected'):
 	trainTime = [bl[0], 4.3]
 	testTime = [bl[0], 4.3]
 elif fmethod is 'erp':
 	trainTime = [bl[0], 4.4985]
 	testTime = [bl[0], 4.4985]
-elif fmethod is 'erp_100':
+elif (fmethod is 'erp_100') | (fmethod is 'frontal_erp_100') | (fmethod is 'temporal_erp_100') | (fmethod is 'erp_100_spatialPatterns'):
 	trainTime = [bl[0], 4.48]
 	testTime = [bl[0], 4.48]
-elif fmethod is 'respLocked_erp_100':
+elif (fmethod is 'respLocked_erp_100') | (fmethod is 'frontal_respLocked_erp_100') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'respLocked_erp_100_spatialPatterns'):
 	trainTime = [-4.0, 0.]
 	testTime = [-4.0, 0.]
-elif fmethod is ('probeLocked_erp_100_longEpoch'):
+elif (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch'):
 	trainTime = [-4.5, .5]
 	testTime = [-4.5, .5]
 elif fmethod is 'respLocked_tfa_wavelet':
@@ -102,7 +107,7 @@ tail = 0 #0 = 2-sided, 1 = 1-sided
 #Data properties
 sfreq = 100
 if fdecoding is not 'perChannel':
-	if (fmethod is not 'tfa_wavelet_final') & (fmethod is not 'chanxfreq_tfa_wavelet_final'):
+	if (fmethod is not 'tfa_wavelet_final_corrected') & (fmethod is not 'chanxfreq_tfa_wavelet_final'):
 		smoothWindow = 10 #Will the data (but not the stats be smoothed?)
 	else:
 		smoothWindow = 3
@@ -130,11 +135,12 @@ elif fdecoding is 'perChannel':
 		sns.light_palette((60/255, 179/255, 113/255), as_cmap=True), sns.light_palette((23/255, 190/255, 207/255), as_cmap=True), 
 		sns.light_palette((31/255, 120/255, 180/255), as_cmap=True), sns.light_palette((106/255, 61/255, 154/255), as_cmap=True)]
 else:
-	tmp = sns.color_palette("YlOrRd", 6)
-	line_color = (tmp[1], tmp[2], tmp[3], tmp[4])
+	#tmp = sns.color_palette("YlOrRd", 6)
+	tmp = sns.color_palette('Paired')
+	line_color = (tmp[1], tmp[0], tmp[2], tmp[3])
 	map_color = [sns.light_palette(tmp[1], as_cmap=True), 
-		sns.light_palette(tmp[2], as_cmap=True), sns.light_palette(tmp[3], as_cmap=True),
-		sns.light_palette(tmp[4], as_cmap=True)]
+		sns.light_palette(tmp[0], as_cmap=True), sns.light_palette(tmp[2], as_cmap=True),
+		sns.light_palette(tmp[3], as_cmap=True)]
 maskSig = 1 #mask all insignificant values or not
 maskThresh = 0
 contour_steps = np.linspace(chance+.01, .6, 10)

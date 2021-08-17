@@ -33,8 +33,9 @@ end
 
 %% Define important variables
 %subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'HL'}; %subject KR has a different sampling frequency, to be checked carefully
-subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'CD', 'HL'};
+%subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'CD', 'HL'};
 %subnips = {'LJ'};
+subnips = {'HS', 'KJ_I', 'LJ', 'MG', 'WS', 'KR', 'AS', 'AP'};
 
 %% Load data
 for subi = 1 : length(subnips)
@@ -42,7 +43,9 @@ for subi = 1 : length(subnips)
     display(['Preparing subject: ' subnips{subi}]);
     
     %Load initial data
-    load([res_path subnips{subi} '/' subnips{subi} '_reref.mat']);
+    load([res_path subnips{subi} '/' subnips{subi} '_temporal_reref.mat']);
+    reref = reref_anat;
+    
     load([behavior_path subnips{subi} '_memory_behavior_combined.mat']);
     
     %Check which trials have less than 5 sec after cue presentation  
@@ -82,7 +85,7 @@ for subi = 1 : length(subnips)
     trial_included_new = trial_included_new';
     data_mem.trials_included_probe = trial_included_new;
     
-    save([behavior_path subnips{subi} '_memory_behavior_combined_forProbes.mat'], 'data_mem');
+    save([behavior_path subnips{subi} '_temporal_memory_behavior_combined_forProbes.mat'], 'data_mem');
     
     clear('reref');
     reref = tmp;
@@ -187,11 +190,11 @@ for subi = 1 : length(subnips)
         
     
         %Save
-        save([res_path subnips{subi} '/' subnips{subi} '_probeLocked_erp_100_longEpoch.mat'], 'data_probeLocked', '-v7.3');
+        save([res_path subnips{subi} '/' subnips{subi} '_temporal_probeLocked_erp_100_longEpoch.mat'], 'data_probeLocked', '-v7.3');
         %pause;
     else 
         %Save
-        save([res_path subnips{subi} '/' subnips{subi} '_probeLocked_erp_1000_longEpoch.mat'], 'data_probeLocked', '-v7.3');
+        %save([res_path subnips{subi} '/' subnips{subi} '_probeLocked_erp_1000_longEpoch.mat'], 'data_probeLocked', '-v7.3');
     end
     
     clear ('reref', 'tmp', 'tmp1', 'tmp2', 'data_probeLocked', 'erp');

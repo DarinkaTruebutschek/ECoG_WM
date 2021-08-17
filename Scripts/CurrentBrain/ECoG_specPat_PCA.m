@@ -15,60 +15,67 @@ ECoG_setPath;
 subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'}; %included subnips
 
 blc = 0; %normalization: yes or no
+dropoff = 1; %data corrected for dropoff: yes or no
 pca_method = 'pca'; %eigendecomposition or pca_con or pca
+extract_method = 'alex';
 
 %% Define important parameters
-frequency = 'fullSpectrum';
+frequency = 'HGP';
 
 if strcmp(frequency, 'fullSpectrum')
     latencies = [-0.14, 4.3]; %to account for the lower frequencies
     freqs = [8, 180];
-elseif strmcp(frequency, 'HGP')
+elseif strcmp(frequency, 'HGP')
     latencies =  [-0.2, 4.5];
     freqs = [70 150];
 end
-
-%% Initialize important variables
-tmp = cell(1, length(timeBins));
-freqBins = cell(1, length(timeBins));
 
 %% Loop over subjects 
 for subi = 1 : length(subnips)
     
     %Load data
-    load([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet_final.mat']);
+    if dropoff == 0
+        load([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet_final.mat']);
     
-    %Prepare data for pca (i.e., select frequencies and time range, and
-    %apply normalization if wanted)
-    cfg = [];
-    cfg.latency = latencies;
-    cfg.frequency = freqs;
-    
-    freq = ft_selectdata(cfg, freq);
-    
-    %Plot (just for visualization)
-    figure;
-    imagesc(squeeze(mean(mean(freq.powspctrm))));
-    colorbar;
-    
-    %Normalization (if wanted, to account for 1/f dropoff)
-    if blc
+        %Prepare data for pca (i.e., select frequencies and time range, and
+        %apply normalization if wanted)
         cfg = [];
-        cfg.baseline = 'yes';
-        cfg.baselinewindow = [-0.14, 0.05]; %take the entire window?
-        cfg.baselinetype = 'db';
+        cfg.latency = latencies;
+        cfg.frequency = freqs;
+    
+        freq = ft_selectdata(cfg, freq);
+    
+        %Plot (just for visualization)
+        figure;
+        imagesc(squeeze(mean(mean(freq.powspctrm))));
+        colorbar;
+    
+        %Normalization (if wanted, to account for 1/f dropoff)
+        if blc
+            cfg = [];
+            cfg.baseline = 'yes';
+            cfg.baselinewindow = [-0.14, 0.05]; %take the entire window?
+            cfg.baselinetype = 'db';
         
-        freq_norm = ft_freqbaseline(cfg, freq);
+            freq_norm = ft_freqbaseline(cfg, freq);
+        else
+            freq_norm = freq;
+        end
+    
+        %Plot again (just for visualization)
+        figure;
+        imagesc(squeeze(mean(mean(freq_norm.powspctrm))));
+        colorbar;
+    
+        clear('freq')
     else
+        if strcmp(frequency, 'fullSpectrum')
+            load([res_path subnips{subi} '/' subnips{subi} '_freqSpectrum_corrected_' extract_method '.mat']);
+        else
+            load([res_path subnips{subi} '/' subnips{subi} '_highGammaPower_corrected_' extract_method '.mat']);
+        end
         freq_norm = freq;
     end
-    
-    %Plot again (just for visualization)
-    figure;
-    imagesc(squeeze(mean(mean(freq_norm.powspctrm))));
-    colorbar;
-    
-    clear('freq')
     
     %% Do PCA (seperately for each channel & trial)
     for chani = 1 : length(freq_norm.label)
@@ -115,13 +122,16 @@ for subi = 1 : length(subnips)
             %Do PCA
             [pc{chani}, proj{chani}, eigvals{chani}, ~, var_expl{chani}] = pca(tmp');
             clear('tmp');
-            
-            %Save
-             save([res_path subnips{subi} '/' subnips{subi} '_PCA_' pca_method '_' frequency '_baselineCorr_' num2str(blc) '_pc.mat'], 'pc');
-             save([res_path subnips{subi} '/' subnips{subi} '_PCA_' pca_method '_' frequency '_baselineCorr_' num2str(blc) '_proj.mat'], 'proj');
-             save([res_path subnips{subi} '/' subnips{subi} '_PCA_' pca_method '_' frequency '_baselineCorr_' num2str(blc) '_eigvals.mat'], 'eigvals');
-             save([res_path subnips{subi} '/' subnips{subi} '_PCA_' pca_method '_' frequency '_baselineCorr_' num2str(blc) '_var_expl.mat'], 'var_expl');
         end
     end
+            
+    %Save
+    save([res_path subnips{subi} '/' subnips{subi} '_PCA_' pca_method '_' frequency '_baselineCorr_' num2str(blc) '_dropOffCorr_' num2str(dropoff) '_pc.mat'], 'pc');
+    save([res_path subnips{subi} '/' subnips{subi} '_PCA_' pca_method '_' frequency '_baselineCorr_' num2str(blc) '_dropOffCorr_' num2str(dropoff) '_proj.mat'], 'proj');
+    save([res_path subnips{subi} '/' subnips{subi} '_PCA_' pca_method '_' frequency '_baselineCorr_' num2str(blc) '_dropOffCorr_' num2str(dropoff) '_eigvals.mat'], 'eigvals');
+    save([res_path subnips{subi} '/' subnips{subi} '_PCA_' pca_method '_' frequency '_baselineCorr_' num2str(blc) '_dropOffCorr_' num2str(dropoff) '_var_expl.mat'], 'var_expl');
+            
+    clear('pc', 'proj', 'eigvals', 'var_expl');
+    
 end
         

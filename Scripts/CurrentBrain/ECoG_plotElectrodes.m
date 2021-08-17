@@ -30,7 +30,7 @@ ECoG_setPath;
 for subi = 1 : length(subnips)
     
     %Load data
-    load([res_path subnips{subi} '/' subnips{subi} '_reref.mat']); %load preprocessed data including the necessary channel information
+    load([res_path subnips{subi} '/' subnips{subi} '_temporal_reref.mat']); %load preprocessed data including the necessary channel information
     fsmri_acpc = ft_read_mri([mri_path subnips{subi} '/freesurfer/mri/T1.mgz']); %read freesurfer-based mri
     
     %Select channels
@@ -68,12 +68,13 @@ for subi = 1 : length(subnips)
     display(['Loading data for subject ', subnips{subi}]);
     
     %Load data
-    load([res_path subnips{subi} '/' subnips{subi} '_reref.mat']); %load preprocessed data including the necessary channel information
+    load([res_path subnips{subi} '/' subnips{subi} '_temporal_reref.mat']); %load preprocessed data including the necessary channel information
+    reref = reref_anat;
     
     %Select channels
-    
     [channels_left{subi}, channels_right{subi}] = ECoG_subjInfo(subnips{subi}, 'all');
     
+    %This used to work when I wanted to show all electrodes
     if strcmp(hemi, 'left')
         pial_file = 'pial_left.mat';
         channelSelection{subi} = {channels_left{subi}};
@@ -81,6 +82,12 @@ for subi = 1 : length(subnips)
         pial_file = 'pial_right.mat';
         channelSelection{subi} = {channels_right{subi}};
     end
+    
+%     %For subset of electrodes
+%     if strcmp(hemi, 'left')
+%         pial_file = 'pial_left.mat';
+%         channelSelec
+%     end
     
     %Extract infos about channels
     channels{subi} = ECoG_splitElectrodes(reref.elec_mni_frv, channelSelection{subi}{1});
@@ -150,7 +157,7 @@ legend('boxon');
 hold off
 
 %Save
-filename = ['/media/darinka/Data0/iEEG/Results/Figures/Group/Final_ElectrodeCov_' hemi '_' viewside];
+filename = ['/media/darinka/Data0/iEEG/Results/Figures/Group/Final_ElectrodeCov_temporal_' hemi '_' viewside];
 printfig(gcf, [0, 0, 25 12.5], filename);
 
 
