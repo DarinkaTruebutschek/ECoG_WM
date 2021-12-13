@@ -12,12 +12,12 @@ import os
 #Load specific variables and functions
 from ECoG_decod_cfg import *
 from ECoG_prepDec import ECoG_prepDec
-from ECoG_decoders import linModel
+from ECoG_decoders import binaryClassif
 
 ##########################################
 #Define important variables
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP']
-ListFilenames = ['erp_100_spatialPatterns']
+ListFilenames = ['hgp_corrected_averageAct'] #high gamma power corrected for one/f dropoff & averaging across bands
 
 if generalization:
 	gen_filename = 'timeGen'
@@ -33,6 +33,7 @@ for subi, subject in enumerate(ListSubjects):
 	#Prep data for decoding
 	X_train, y_train, X_test, y_test, time = ECoG_prepDec(decCond, subject, 'all')
 
+	'''
 	#Check whether the train & test set are equal
 	if np.shape(y_train)[0] < np.shape(y_test)[0]:
 		minTrial = []
@@ -70,13 +71,13 @@ for subi, subject in enumerate(ListSubjects):
 
 	if np.shape(X_train) != np.shape(X_test):
 		exit()
+	'''
 
 	#Run decoding
 	time_gen = []
 	y_pred = []
 	test_index = []
 	score = []
-	coefs = []
 
 	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue0_testCue1') | (decCond is 'indItems_trainCue1_testCue0') | (decCond is 'indItems_load1'):
 		for labeli, _ in enumerate(range(np.shape(y_train)[1])):
@@ -84,29 +85,25 @@ for subi, subject in enumerate(ListSubjects):
 			print(np.sum(y_train[:, labeli]))
 			print(np.sum(y_test[:, labeli]))
 
-			model, predictions, cv_test, score_label, coef_label = linModel(X_train, y_train[:, labeli], X_test, y_test[:, labeli], generalization=generalization, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
+			model, predictions, cv_test, score_label = binaryClassif(X_train, y_train[:, labeli], X_test, y_test[:, labeli], generalization=generalization, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method, proba=proba)
 			
 			time_gen.append(model) #shape:n_labels
 			y_pred.append(predictions) #shape: n_labels x n_folds, within each label: n_folds x n_testTrials x n_TestTime x n_labels
 			test_index.append(cv_test) #shape: n_labels x n_folds
 			score.append(score_label)
-			coefs.append(coef_label)
 	else:	
-		model, predictions, cv_test, score_label, coef_label = linModel(X_train, y_train, X_test, y_test, generalization=generalization, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method)
+		model, predictions, cv_test, score_label = binaryClassif(X_train, y_train, X_test, y_test, generalization=generalization, n_folds=n_folds, predict_mode=predict_mode, scoring=score_method, proba=proba)
 		
 		time_gen.append(model) #shape:n_labels
 		y_pred.append(predictions) #shape: n_labels x n_folds, within each label: n_folds x n_testTrials x n_TestTime x n_labels
 		test_index.append(cv_test) #shape: n_labels x n_folds
 		score.append(score_label)
-		coefs.append(coef_label)
 
 	#Compute average score for all labels
 	score = np.asarray(score)
-	coefs = np.asarray(coefs)
 	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue1_testCue0') | (decCond is 'indItems_load1'):
 	#if score.ndim > 2:
 		average_score = np.mean(score, axis=0)
-		average_coef = np.mean(coefs, axis=0)
 
 	#Save all data
 	if os.path.isdir(result_path + ListFilenames[0]) is False:
@@ -117,12 +114,10 @@ for subi, subject in enumerate(ListSubjects):
 	np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_y_pred.npy', y_pred, allow_pickle=True)
 	np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_test_index.npy', test_index, allow_pickle=True)
 	np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_score.npy', score, allow_pickle=True)
-	np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_coefs.npy', coefs, allow_pickle=True)
 
 	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue1_testCue0') | (decCond is 'indItems_load1'):
 	#if score.ndim > 2:
 		np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_average_score.npy', average_score, allow_pickle=True)
-		np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_average_coefs.npy', average_coef, allow_pickle=True)
 
 	if (decCond is 'indItems_trainCue1_testCue0') | (decCond is 'indItems_trainCue0_testCue1'):
 		np.asarray(minTrial)

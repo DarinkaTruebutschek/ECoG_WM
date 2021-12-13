@@ -12,7 +12,7 @@ clc;
 ECoG_setPath;
 
 %% Define important variables
-sf = 100;
+sf = 1000;
 
 if sf == 250
     tmin = -4.0;
@@ -32,8 +32,8 @@ elseif sf == 1000
 end
 
 %% Define important variables
-%subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'HL'}; %subject KR has a different sampling frequency, to be checked carefully
-subnips = {'HS', 'KJ_I', 'LJ', 'MG', 'WS', 'KR', 'AS', 'AP'};
+subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'HL'}; %subject KR has a different sampling frequency, to be checked carefully
+%subnips = {'HS', 'KJ_I', 'LJ', 'MG', 'WS', 'KR', 'AS', 'AP'};
 %subnips = {'CD'};
 
 %% Load data
@@ -42,8 +42,8 @@ for subi = 1 : length(subnips)
     display(['Preparing subject: ' subnips{subi}]);
     
     %Load initial data
-    load([res_path subnips{subi} '/' subnips{subi} '_temporal_reref.mat']);
-    reref = reref_anat;
+    load([res_path subnips{subi} '/' subnips{subi} '_reref.mat']);
+    %reref = reref_anat;
     
     %Re-adjust time-axis (& re-epoch)
     cfg = [];
@@ -142,7 +142,8 @@ for subi = 1 : length(subnips)
         %pause;
     %else 
         %Save
-        save([res_path subnips{subi} '/' subnips{subi} '_temporal_respLocked_erp_100.mat'], 'data_respLocked', '-v7.3');
+        %save([res_path subnips{subi} '/' subnips{subi} '_temporal_respLocked_erp_100.mat'], 'data_respLocked', '-v7.3');
+        save([res_path subnips{subi} '/' subnips{subi} '_reref_respLocked.mat'], 'data_respLocked', '-v7.3');
     %end
     
     clear ('reref', 'tmp', 'tmp1', 'tmp2', 'data_respLocked', 'erp');

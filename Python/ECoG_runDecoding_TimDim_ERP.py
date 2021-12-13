@@ -20,7 +20,7 @@ ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS',
 ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'WS', 'KR', 'AS', 'AP', 'SB']
 
 #ListSubjects = ['EG_I']
-ListFilenames = ['erp_100_TimDim_timeBin-100ms_meanSubtraction']
+ListFilenames = ['erp_100_TimDim_timeBin-100ms_nomeanSubtraction']
 
 if generalization:
 	gen_filename = 'timeGen'

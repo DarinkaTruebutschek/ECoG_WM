@@ -32,10 +32,10 @@ elseif sf == 1000
 end
 
 %% Define important variables
-%subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'HL'}; %subject KR has a different sampling frequency, to be checked carefully
+subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'HL'}; %subject KR has a different sampling frequency, to be checked carefully
 %subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP', 'CD', 'HL'};
 %subnips = {'LJ'};
-subnips = {'HS', 'KJ_I', 'LJ', 'MG', 'WS', 'KR', 'AS', 'AP'};
+%subnips = {'HS', 'KJ_I', 'LJ', 'MG', 'WS', 'KR', 'AS', 'AP'};
 
 %% Load data
 for subi = 1 : length(subnips)
@@ -43,8 +43,8 @@ for subi = 1 : length(subnips)
     display(['Preparing subject: ' subnips{subi}]);
     
     %Load initial data
-    load([res_path subnips{subi} '/' subnips{subi} '_temporal_reref.mat']);
-    reref = reref_anat;
+    load([res_path subnips{subi} '/' subnips{subi} '_reref.mat']);
+    %reref = reref_anat;
     
     load([behavior_path subnips{subi} '_memory_behavior_combined.mat']);
     
@@ -148,23 +148,23 @@ for subi = 1 : length(subnips)
     
     tmp = ft_selectdata(cfg, data_probeLocked);
     
-    if sf == 1000
-        %Extract ERPs: Filter
-        cfg = [];
-        cfg.lpfilter = 30; %lowpass data at 30 Hz
-    
-        tmp2 = ft_preprocessing(cfg, tmp);
-    
-        %Extract ERPs: downsammple
-        cfg = [];
-        cfg.resamplefs = 100;
-        %cfg.resamplefs = 250;
-        cfg.detrend = 'no'; %detrending should only be used prior to TFA analysis, but not when looking at evoked fields
-    
-        data_probeLocked = ft_resampledata(cfg, tmp2);
-    else
-        data_probeLocked = tmp;
-    end
+%     if sf == 1000
+%         %Extract ERPs: Filter
+%         cfg = [];
+%         cfg.lpfilter = 30; %lowpass data at 30 Hz
+%     
+%         tmp2 = ft_preprocessing(cfg, tmp);
+%     
+%         %Extract ERPs: downsammple
+%         cfg = [];
+%         cfg.resamplefs = 100;
+%         %cfg.resamplefs = 250;
+%         cfg.detrend = 'no'; %detrending should only be used prior to TFA analysis, but not when looking at evoked fields
+%     
+%         data_probeLocked = ft_resampledata(cfg, tmp2);
+%     else
+%         data_probeLocked = tmp;
+%     end
     
     %Add necessary info to data file
     data_probeLocked.elec_mni_frv = reref.elec_mni_frv;
@@ -174,28 +174,31 @@ for subi = 1 : length(subnips)
     data_probeLocked.trialInfo_all = trialInfo_all;
     %data.trialInfo_all = reref.trialInfo_all;
 
-    if sf == 1000
-        %Timelock
-        cfg = [];
-        cfg.latency = [tmin, tmax];
+%     if sf == 1000
+%         %Timelock
+%         cfg = [];
+%         cfg.latency = [tmin, tmax];
+%     
+%         erp{subi} = ft_timelockanalysis(cfg, data_probeLocked);
+%     
+%         %Plot individual subjects' erps
+%         figure;
+%         plot(erp{subi}.time, squeeze(mean(erp{subi}.avg)));
+%         line([0, 0], [-5, 5]); %probe onset
+%         line([-3, -3], [-5, 5]); %memory onset
+%         line([-4.5, -4.5], [-5, 5]); %memory onset
+%         
+%     
+%         %Save
+%         save([res_path subnips{subi} '/' subnips{subi} '_temporal_probeLocked_erp_100_longEpoch.mat'], 'data_probeLocked', '-v7.3');
+%         %pause;
+%     else 
+%         %Save
+%         %save(c, 'data_probeLocked', '-v7.3');
+%     end
     
-        erp{subi} = ft_timelockanalysis(cfg, data_probeLocked);
-    
-        %Plot individual subjects' erps
-        figure;
-        plot(erp{subi}.time, squeeze(mean(erp{subi}.avg)));
-        line([0, 0], [-5, 5]); %probe onset
-        line([-3, -3], [-5, 5]); %memory onset
-        line([-4.5, -4.5], [-5, 5]); %memory onset
-        
-    
-        %Save
-        save([res_path subnips{subi} '/' subnips{subi} '_temporal_probeLocked_erp_100_longEpoch.mat'], 'data_probeLocked', '-v7.3');
-        %pause;
-    else 
-        %Save
-        %save([res_path subnips{subi} '/' subnips{subi} '_probeLocked_erp_1000_longEpoch.mat'], 'data_probeLocked', '-v7.3');
-    end
+    %Save
+    save([res_path subnips{subi} '/' subnips{subi} '_reref_probeLocked_longEpoch.mat'], 'data_probeLocked', '-v7.3');
     
     clear ('reref', 'tmp', 'tmp1', 'tmp2', 'data_probeLocked', 'erp');
 end

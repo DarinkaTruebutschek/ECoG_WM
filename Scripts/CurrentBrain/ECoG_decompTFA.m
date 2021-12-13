@@ -14,7 +14,7 @@ ECoG_setPath;
 %% Define important variables
 subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'}; %included subnips
 
-tfa_method = 'wavelet';
+tfa_method = 'wavelet_theta';
 epoch = 'cueLocked';
 %% Specify parameters to be used for time-frequency analysis
 if strcmp(tfa_method, 'wavelet')
@@ -32,13 +32,28 @@ if strcmp(tfa_method, 'wavelet')
     else
         toi = [-4.0 : 0.01 : 0];
     end
+elseif strcmp(tfa_method, 'wavelet_theta')
+    minf = 4;
+    maxf = 7;
+    
+    nfreqs = 4;
+    freqoi = linspace(minf, maxf, nfreqs);
+    
+    %Chosen time window will last from -0.445s prior to cue onset to 150 ms
+    %post probe onset
+    if ~strcmp(epoch, 'respLocked')
+        toi = [-0.44 : 0.01 : 4.650];
+    else
+        toi = [-4.0 : 0.01 : 0];
+    end
 end
 
 %% Loop over subjects to decompose signal into time-frequency spectrum and save the resultant data file
 for subi = 1 : length(subnips)
     
     if ~strcmp(epoch, 'respLocked')
-        if ~exist([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet_final.mat'])
+        %if ~exist([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet_final.mat'])
+        if ~exist([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet_theta.mat'])
         
             %Load initial data
             load([res_path subnips{subi} '/' subnips{subi} '_reref.mat']);
@@ -104,7 +119,7 @@ for subi = 1 : length(subnips)
             freq.elec_mni_frv_all = reref.elec_mni_frv_all;
     
             %Save
-            save([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet_final.mat'], 'freq', '-v7.3');
+            save([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet_theta.mat'], 'freq', '-v7.3');
             
             clear('tmp');       
         end         
@@ -152,7 +167,7 @@ end
 for subi = 1 : length(subnips)
     
     %Load time-frequency results, headshape, and electrodes
-    load([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet.mat']);
+    load([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet_theta.mat']);
     
     if isfield(freq.elec, 'coordsys')
         display(freq.elec.coordsys);

@@ -15,6 +15,8 @@ subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'
 hemi = 'left';
 viewside = 'lateral';
 projectToLeft = 1; %project electrodes from the right hemisphere to the left?
+normalization = 0; %normalize within-subject or not
+normalizeSigTimes = 1; %normalize significant time points or not?
 
 %score_type = 'postItem';
 decCond = 'buttonPress_diag';
@@ -23,13 +25,13 @@ filename = 'respLocked_erp_100_spatialPatterns';
 fmethod = 'respLocked_erp_100';
 
 %For plotting
-%my_colors = cbrewer('seq', 'YlOrRd', 12);
 my_colors = flipud(cbrewer('div','Spectral', 12));
 
 
 if (~strcmp(filename, 'erp_100_TimDim_timeBin-100ms_nomeanSubtraction')) & (~strcmp(filename, 'respLocked_erp_100_TimDim_timeBin-100ms_nomeanSubtraction')) & ...
         (~strcmp(filename, 'probeLocked_erp_100_longEpoch_TimDim_timeBin-100ms_nomeanSubtraction')) & ...
-        (~strcmp(filename, 'erp_100_spatialPatterns')) & (~strcmp(filename, 'respLocked_erp_100_spatialPatterns'))
+        (~strcmp(filename, 'erp_100_spatialPatterns')) & (~strcmp(filename, 'respLocked_erp_100_spatialPatterns')) & ...
+        (~strcmp(filename, 'probeLocked_erp_100_longEpoch_spatialPatterns'))
     if ~strcmp(decCond, 'buttonPress_diag') && ~strcmp(decCond, 'probe_diag')
         timebins = {'Baseline', 'Cue', 'Delay 1', 'Items', 'Del2'};
     else
@@ -53,6 +55,13 @@ else
 		-3.0, -2.9; -2.9, -2.8; -2.8, -2.7; -2.7, -2.6; -2.6, -2.5; -2.5, -2.4; -2.4, -2.3; -2.3, -2.2; -2.2, -2.1; -2.1, -2.0; ...
 		-2.0, -1.9; -1.9, -1.8; -1.8, -1.7; -1.7, -1.6; -1.6, -1.5; -1.5, -1.4; -1.4, -1.3; -1.3, -1.2; -1.2, -1.1; -1.1, -1.0; ...
 		-1.0, -0.9; -0.9, -0.8; -0.8, -0.7; -0.7, -0.6; -0.6, -0.5; -0.5, -0.4; -0.4, -0.3; -0.3, -0.2; -0.2, -0.1; -0.1, 0.0];
+    elseif strcmp(fmethod, 'probeLocked_erp_100_longEpoch')
+        timebins = [-4.5, -4.4; -4.4, -4.3; -4.3, -4.2; -4.2, -4.1; -4.1, -4.0; ... 
+		-4.0, -3.9; -3.9, -3.8; -3.8, -3.7; -3.7, -3.6; -3.6, -3.5; -3.5, -3.4; -3.4, -3.3; -3.3, -3.2; -3.2, -3.1; -3.1, -3.0; ...
+		-3.0, -2.9; -2.9, -2.8; -2.8, -2.7; -2.7, -2.6; -2.6, -2.5; -2.5, -2.4; -2.4, -2.3; -2.3, -2.2; -2.2, -2.1; -2.1, -2.0; ...
+		-2.0, -1.9; -1.9, -1.8; -1.8, -1.7; -1.7, -1.6; -1.6, -1.5; -1.5, -1.4; -1.4, -1.3; -1.3, -1.2; -1.2, -1.1; -1.1, -1.0; ...
+		-1.0, -0.9; -0.9, -0.8; -0.8, -0.7; -0.7, -0.6; -0.6, -0.5; -0.5, -0.4; -0.4, -0.3; -0.3, -0.2; -0.2, -0.1; -0.1, 0.0; ...
+		0.0, 0.1; 0.1, 0.2; 0.2, 0.3; 0.3, 0.4; 0.4, 0.5];
     end
 end
 
@@ -78,7 +87,7 @@ for subi = 1 : length(subnips)
     %Load data
     load([res_path subnips{subi} '/' subnips{subi} '_reref.mat']); %load preprocessed data including the necessary channel information
     %tmp{subi} = load(['/media/darinka/Data0/iEEG/Results/Decoding/' filename '/forMatlab/' subnips{subi} '_erp_timDim_indItems_diag_' filename '_averageDecodingPerChannel_' score_type '.mat']);
-    if (~strcmp(filename, 'respLocked_erp_100_spatialPatterns')) & (~strcmp(filename, 'respLocked_erp_100_TimDim_timeBin-100ms_nomeanSubtraction'))
+    if (~strcmp(filename, 'erp_100_spatialPatterns')) & (~strcmp(filename, 'probeLocked_erp_100_longEpoch_spatialPatterns')) & (~strcmp(filename, 'respLocked_erp_100_spatialPatterns')) & (~strcmp(filename, 'respLocked_erp_100_TimDim_timeBin-100ms_nomeanSubtraction'))
         if strcmp(fmethod, 'erp_100')
             tmp{subi} = load(['/media/darinka/Data0/iEEG/Results/Decoding/' filename '/forMatlab/' subnips{subi} '_erp_timDim_' decCond '_' filename '_scores.mat']);
         elseif strcmp(fmethod, 'probeLocked_erp_100_longEpoch')
@@ -86,11 +95,11 @@ for subi = 1 : length(subnips)
         elseif strcmp(fmethod, 'respLocked_erp_100')
             tmp{subi} = load(['/media/darinka/Data0/iEEG/Results/Decoding/' filename '/forMatlab/' subnips{subi} '_respLocked_erp_timDim_' decCond '_' filename '_scores.mat']);
         end
-    elseif strcmp(filename,'respLocked_erp_100_spatialPatterns')
+    elseif (strcmp(filename, 'erp_100_spatialPatterns')) | (strcmp(filename,'respLocked_erp_100_spatialPatterns')) | (strcmp(filename, 'probeLocked_erp_100_longEpoch_spatialPatterns'))
         if strcmp(fmethod, 'erp_100')
             tmp{subi} = load(['/media/darinka/Data0/iEEG/Results/Decoding/' filename '/forMatlab/' subnips{subi} '_erp_timDim_' decCond '_' filename '_scores.mat']);
         elseif strcmp(fmethod, 'probeLocked_erp_100_longEpoch')
-            tmp{subi} = load(['/media/darinka/Data0/iEEG/Results/Decoding/' filename '/forMatlab/' subnips{subi} '_probeLocked_erp_timDim_' decCond '_' filename '_scores.mat']);
+            tmp{subi} = load(['/media/darinka/Data0/iEEG/Results/Decoding/' filename '/forMatlab/' subnips{subi} '_erp_timDim_' decCond '_' filename '_scores.mat']);
         elseif strcmp(fmethod, 'respLocked_erp_100')
             tmp{subi} = load(['/media/darinka/Data0/iEEG/Results/Decoding/' filename '/forMatlab/' subnips{subi} '_erp_timDim_' decCond '_' filename '_scores.mat']);
         end
@@ -108,7 +117,13 @@ for subi = 1 : length(subnips)
     
     if (strcmp(filename, 'respLocked_erp_100_spatialPatterns'))
         timeline =  [-4 : 0.01 : 0];
-        
+    elseif  (strcmp(filename, 'erp_100_spatialPatterns'))
+        timeline = [-0.45 : 0.01 : 4.49];
+    elseif (strcmp(filename, 'probeLocked_erp_100_longEpoch_spatialPatterns'))
+        timeline = [-4.5 : 0.01 : 0.5];
+    end
+    
+    if (strcmp(filename, 'erp_100_spatialPatterns')) | (strcmp(filename, 'respLocked_erp_100_spatialPatterns')) | (strcmp(filename, 'probeLocked_erp_100_longEpoch_spatialPatterns'))
         for bini = 1 : length(timebins)
             ind1  = nearest(timeline,timebins(bini, 1));
             ind2  = nearest(timeline, timebins(bini, 2));
@@ -118,6 +133,12 @@ for subi = 1 : length(subnips)
         end
         
         data{subi} = data_tmp{subi};
+        
+        if normalization
+            tmp1 = data{subi}(:);
+            tmp1 = normalize(tmp1);
+            data{subi} = reshape(tmp1, [size(data{subi}, 1), size(data{subi}, 2)]);
+        end
     end
     
     %Sanity check: Does the number of channels imported via Python
@@ -254,52 +275,52 @@ if strcmp(fmethod, 'respLocked_erp_100')
         c_min = min(min([dat2plot{:}]));
         c_max = max(max([dat2plot{:}]));
     elseif strcmp(decCond, 'probe_diag')
-        c_min = .5;
-        c_max = .7;
+        c_min = min(min([dat2plot{:}]));
+        c_max = max(max([dat2plot{:}]));
     elseif strcmp(decCond, 'probeID_diag')
-        c_min = .5;
-        c_max = .61;
+        c_min = min(min([dat2plot{:}]));
+        c_max = max(max([dat2plot{:}]));
     elseif strcmp(decCond, 'load_diag')
-        c_min = .5;
-        c_max = .65;
+        c_min = min(min([dat2plot{:}]));
+        c_max = max(max([dat2plot{:}]));
     elseif strcmp(decCond, 'indItems_diag')
-        c_min = .5;
-        c_max = .59;
+        c_min = min(min([dat2plot{:}]));
+        c_max = max(max([dat2plot{:}]));
     elseif strcmp(decCond, 'itemPos_diag')
-        c_min = .5;
-        c_max = .6;
+        c_min = min(min([dat2plot{:}]));
+        c_max = max(max([dat2plot{:}]));
     elseif strcmp(decCond, 'cue_diag')
-        c_min = .5;
-        c_max = .7;
+        c_min = min(min([dat2plot{:}]));
+        c_max = max(max([dat2plot{:}]));
     end
-elseif strcmp(fmethod, 'erp_100')
+elseif (strcmp(fmethod, 'erp_100')) | (strcmp(fmethod, 'probeLocked_erp_100_longEpoch'))
     if strcmp(decCond, 'buttonPress_diag')
-        c_min = .5;
-        c_max = 69;
+        c_min = min(min([dat2plot{:}]));
+        c_max = max(max([dat2plot{:}]));
     elseif strcmp(decCond, 'probe_diag')
-        c_min = .5;
-        c_max = .69;
+        c_min = min(min([dat2plot{:}]));
+        c_max = max(max([dat2plot{:}]));
     elseif strcmp(decCond, 'probeID_diag')
-        c_min = .5;
-        c_max = .64;
+        c_min = min(min([dat2plot{:}]));
+        c_max = max(max([dat2plot{:}]));
     elseif strcmp(decCond, 'load_diag')
-        c_min = .5;
-        c_max = .8;
+        c_min = min(min([dat2plot{:}]));
+        c_max = max(max([dat2plot{:}]));
     elseif strcmp(decCond, 'indItems_diag')
-        c_min = .5;
-        c_max = .6;
+        c_min = min(min([dat2plot{:}]));
+        c_max = max(max([dat2plot{:}]));
     elseif strcmp(decCond, 'itemPos_diag')
-        c_min = .5;
-        c_max = .7;
+        c_min = min(min([dat2plot{:}]));
+        c_max = max(max([dat2plot{:}]));
     elseif strcmp(decCond, 'cue_diag')
-        c_min = .5;
-        c_max = .68;
+        c_min = min(min([dat2plot{:}]));
+        c_max = max(max([dat2plot{:}]));
     end
 end
 
 if strcmp(fmethod, 'respLocked_erp_100')
     fig_inds = [1:10; 11:20; 21:30; 31:40];
-elseif strcmp(fmethod, 'erp_100')
+elseif strcmp(fmethod, 'erp_100') | strcmp(fmethod, 'probeLocked_erp_100_longEpoch')
     fig_inds = [1:10; 11:20; 21:30; 31:40; 41:50];
 end
 

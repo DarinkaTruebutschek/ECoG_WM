@@ -22,13 +22,15 @@ ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS',
 
 #ListSubjects = ['EG_I', 'HS', 'KJ_I', 'LJ', 'MG']
 #ListFreqs = [[8, 12], [13, 30], [31, 70], [71, 160]]
-ListFilenames = ['frontal_erp_100']
+ListFilenames = ['erp_100']
 
 if generalization:
 	gen_filename = 'timeGen'
 else:
 	gen_filename = 'diag'
 
+if 'load1' in decCond:
+	ListSubjects = ['EG_I', 'KJ_I', 'MG', 'WS', 'AP']
 ##########################################
 #Loop over subjects and frequencies
 for subi, subject in enumerate(ListSubjects):
@@ -72,6 +74,19 @@ for subi, subject in enumerate(ListSubjects):
 			y_train = y_train[tmp]
 			X_test = X_test[tmp]
 			y_test = y_test[tmp]
+	elif (decCond is 'indItems_load1_trainCue0_testCue0') | (decCond is 'indItems_load1_trainCue1_testCue1'):
+		minTrials = np.load(result_path + ListFilenames[0] + '/'  + subject + '_BroadbandERP_indItems_load1_trainCue0_testCue1_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_minTrials.npy')
+
+		if np.shape(y_train)[0] > minTrials[0]:
+		
+			#Randomly select a subset of trials in both samples
+			tmp = np.random.choice(np.arange(np.shape(y_train)[0]), minTrials, replace=False)
+			tmp = np.sort(tmp)
+
+			X_train = X_train[tmp]
+			y_train = y_train[tmp]
+			X_test = X_test[tmp]
+			y_test = y_test[tmp]
 
 	if np.shape(X_train) != np.shape(X_test):
 		exit()
@@ -82,7 +97,7 @@ for subi, subject in enumerate(ListSubjects):
 	test_index = []
 	score = []
 
-	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue0_testCue1') | (decCond is 'indItems_trainCue1_testCue0') | (decCond is 'indItems_load1'):
+	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue0_testCue1') | (decCond is 'indItems_trainCue1_testCue0') | (decCond is 'indItems_load1') | (decCond  is  'itemPos_load1') | (decCond is 'indItems_load1_trainCue1_testCue0') | (decCond is 'indItems_load1_trainCue0_testCue1') | (decCond is 'indItems_load1_trainCue1_testCue1') | (decCond is 'indItems_load1_trainCue0_testCue0'):	
 		for labeli, _ in enumerate(range(np.shape(y_train)[1])):
 			print('Running decoding on label ', labeli)
 			print(np.sum(y_train[:, labeli]))
@@ -104,7 +119,7 @@ for subi, subject in enumerate(ListSubjects):
 
 	#Compute average score for all labels
 	score = np.asarray(score)
-	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue1_testCue0') | (decCond is 'indItems_load1'):
+	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue1_testCue0') | (decCond is 'indItems_load1') | (decCond is 'itemPos_load1') | (decCond is 'indItems_load1_trainCue1_testCue0') | (decCond is 'indItems_load1_trainCue0_testCue1') | (decCond is 'indItems_load1_trainCue1_testCue1') | (decCond is 'indItems_load1_trainCue0_testCue0'):
 	#if score.ndim > 2:
 		average_score = np.mean(score, axis=0)
 
@@ -118,11 +133,11 @@ for subi, subject in enumerate(ListSubjects):
 	np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_test_index.npy', test_index, allow_pickle=True)
 	np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_score.npy', score, allow_pickle=True)
 
-	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue1_testCue0') | (decCond is 'indItems_load1'):
+	if (decCond is 'indItems') | (decCond is 'itemPos') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_trainCue1_testCue0') | (decCond is 'indItems_load1') | (decCond is  'itemPos_load1') | (decCond is 'indItems_load1_trainCue1_testCue0') | (decCond is 'indItems_load1_trainCue0_testCue1') | (decCond is 'indItems_load1_trainCue1_testCue1') | (decCond is 'indItems_load1_trainCue0_testCue0'):
 	#if score.ndim > 2:
 		np.save(result_path + ListFilenames[0] + '/' + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_average_score.npy', average_score, allow_pickle=True)
 
-	if (decCond is 'indItems_trainCue1_testCue0') | (decCond is 'indItems_trainCue0_testCue1'):
+	if (decCond is 'indItems_trainCue1_testCue0') | (decCond is 'indItems_trainCue0_testCue1') | (decCond is 'indItems_load1_trainCue1_testCue0') | (decCond is 'indItems_load1_trainCue0_testCue1'):
 		np.asarray(minTrial)
 		np.save(result_path + ListFilenames[0] + '/'  + subject + '_BroadbandERP_' + decCond + '_' + gen_filename + '_' + ListFilenames[0] + '_acc' + str(acc) + '_minTrials.npy', minTrial, allow_pickle=True)
 

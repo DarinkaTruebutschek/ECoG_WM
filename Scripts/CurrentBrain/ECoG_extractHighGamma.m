@@ -15,7 +15,7 @@ ECoG_setPath;
 subnips = {'EG_I', 'HS', 'KJ_I', 'LJ', 'MG', 'MKL', 'SB', 'WS', 'KR', 'AS', 'AP'}; %included subnips
 
 extract_method = 'alex'; %or: alex
-epoch = 'cueLocked';
+epoch = 'respLocked';
 
 %% Specify important parameters
 minf = 70;
@@ -39,9 +39,11 @@ elseif strcmp(extract_method, 'alex')
     tfa_method = 'hilbert';
     
     if strcmp(epoch, 'cueLocked')
-        tfa_toi = [-0.44 : 0.01 : 4.650];
+        tfa_toi = [-0.45 : 0.04 : 4.650];
+    elseif strcmp(epoch, 'probeLocked_longEpoch')
+        tfa_toi= [-4.5 : 0.04 : 0.5];
     elseif strcmp(epoch, 'respLocked')
-        tfa_toi= [-0.44 : 0.01 : 4.650];
+        tfa_toi = [-4.0 : 0.04 : 0];
     end
     
     tfa_foi = [minf : nfreqs : maxf-nfreqs];
@@ -51,10 +53,20 @@ end
 for subi = 1 : length(subnips)
     
     %Preprocess and select relevant data
-    if ~strcmp(epoch, 'respLocked') 
+    if strcmp(epoch, 'cueLocked')
         %Load initial data
         load([res_path subnips{subi} '/' subnips{subi} '_reref.mat']);
-            
+    elseif strcmp(epoch, 'probeLocked_longEpoch')
+        %Load initial data
+        load([res_path subnips{subi} '/' subnips{subi} '_reref_probeLocked_longEpoch.mat']);
+        reref = data_probeLocked;
+    elseif strcmp(epoch, 'respLocked')
+        %Load initial data
+        load([res_path subnips{subi} '/' subnips{subi} '_reref_respLocked.mat']);
+        reref = data_respLocked;
+    end
+    
+    if strcmp(epoch, 'cueLocked')
         %Check sampling frequency to make sure 
         if reref.fsample ~= 1000
             disp('ATTENTION! Sample frequency deviates from 1000.');
@@ -86,6 +98,7 @@ for subi = 1 : length(subnips)
                 
             clear('tmp');
         end
+    end
        
        %Select data to only include the time window of interest to begin
        %with
@@ -93,7 +106,13 @@ for subi = 1 : length(subnips)
         cfg.latency = [tfa_toi(1), tfa_toi(end)];
         
         tmp = ft_selectdata(cfg, reref);
-    end
+        
+        %Preprocess
+        cfg = [];
+        cfg.demean = 'yes';
+        cfg.detrend = 'yes';
+        
+        tmp = ft_preprocessing(cfg, tmp);
     
     %Extract HFP
     if strcmp(extract_method, 'fieldtrip')
@@ -157,7 +176,11 @@ for subi = 1 : length(subnips)
             
             %Restrict data to period of interest
             cfg = [];
-            cfg.latency = [-.2, 4.5];
+            if strcmp(epoch, 'cueLocked')
+                cfg.latency = [-.2, 4.5];
+            elseif strcmp(epoch, 'probeLocked_longEpoch')
+                cfg.lateny = [-4.5, 0.5];
+            end
             
             data_filt{freqi} = ft_selectdata(cfg, data_filt{freqi});
 
@@ -166,49 +189,123 @@ for subi = 1 : length(subnips)
             %data (currently done)
             
             data_filt_norm = data_filt;
-            meanBand = nanmean([data_filt{freqi}.trial{:}], 2);
+%             meanBand = nanmean([data_filt{freqi}.trial{:}], 2);
+%             
+%             for triali = 1 : length(data_filt_norm{freqi}.trial)
+%                 data_filt_norm{freqi}.trial{triali} = data_filt{freqi}.trial{triali} ./ meanBand;
+%             end
+        end
+        
+        %Load freq data
+        load([res_path subnips{subi} '/' subnips{subi} '_tfa_wavelet_final.mat']);
+        
+        %Fit filtered data into typical TF structure
+        clear ('tmp')
+        for freqi = 1 : length(tfa_foi)
+            tmp{freqi} = zeros(length(data_filt_norm{freqi}.trial), size(data_filt_norm{freqi}.trial{1}, 1), size(data_filt_norm{freqi}.trial{1}, 2));
             
             for triali = 1 : length(data_filt_norm{freqi}.trial)
-                data_filt_norm{freqi}.trial{triali} = data_filt{freqi}.trial{triali} ./ meanBand;
+                tmp{freqi}(triali, :, :) = data_filt_norm{freqi}.trial{triali};
             end
         end
         
-        %Initialize HGP as empty structure with the same dimensions as ERP
-        %cfg = [];
-        %cfg.latency = [-.2, 4.5];
-        %reref_avg = ft_timelockanalysis(cfg, reref);
+        powspctrm = zeros(length(tfa_foi), size(tmp{1}, 1), size(tmp{1}, 2), size(tmp{1}, 3));
+        for freqi = 1 : length(tfa_foi)
+            powspctrm(freqi, :, :, :) = tmp{freqi};
+        end
+        
+        powspctrm = permute(powspctrm, [2, 3, 1, 4]);
+        
+        %Fill old freq struct
+        freq.powspctrm = powspctrm;
+        freq.freq = tfa_foi;
+        freq.time = data_filt_norm{freqi}.time{1};
+        
+        %Plot spectrum to get an idea
+        figure;
+        plot(squeeze(mean(mean(mean(freq.powspctrm, 4)))));
+        
+        %Normalize
+        freq_norm = freq;
+    
+        for freqi = 1 : size(freq_norm.powspctrm, 3)
+            meanBand(freqi, :) = squeeze(nanmean(nanmean(freq.powspctrm(:, :, freqi, :), 1), 4));
+        end
+    
+        for freqi = 1 : size(freq_norm.powspctrm, 3)
+            for chani = 1 : size(freq_norm.powspctrm, 2)
+                freq_norm.powspctrm(:, chani, freqi, :) = freq_norm.powspctrm(:, chani, freqi, :) ./ meanBand(freqi, chani);
+            end
+        end
+        
+        freq = freq_norm;
+        
+        %Plot spectrum to get an idea
+        figure;
+        plot(squeeze(mean(mean(mean(freq.powspctrm, 4)))));
+    
+        %Save
+        save([res_path subnips{subi} '/' subnips{subi} '_highGammaPower_corrected_' extract_method '_respLocked.mat'], 'freq', '-v7.3');
 
-        %HGP = rmfield(reref_avg, {'avg', 'var'});
-        HGP = data_filt{1};
+        %Average over frequencies (to downsample)
+        HGP = reref;
         
-        %Average over individual bands
-        for triali = 1 : length(data_filt_norm{freqi}.trial)
-            meanHGP = zeros(size(data_filt_norm{1}.trial{1}, 1), size(data_filt_norm{1}.trial{1}, 2), length(data_filt));
-            
-            for freqi = 1 : length(data_filt_norm)
-                meanHGP(:, :, freqi) = data_filt_norm{freqi}.trial{triali};
-            end
-            
-            HGP.trial{triali} = mean(meanHGP, 3);
+        powspctrm = squeeze(mean(freq.powspctrm, 3));
+        
+        for triali = 1 : length(HGP.trial)
+            HGP.trial{triali} = squeeze(powspctrm(triali, :, :));
+            HGP.time{triali} = freq.time;
         end
+        
+        %Downssample        
+        cfg = [];
+        cfg.resamplefs = 100;
+        
+        data = ft_resampledata(cfg, HGP); 
+        
+        %Remove table
+        data = rmfield(data, 'trialInfo_all');
+        
+        %Save
+        save([res_path subnips{subi} '/' subnips{subi} '_respLocked_HGP_100.mat'], 'data', '-v7.3');   
+        clear('data', 'HGP', 'tmp', 'meanBand', 'freq', 'freq_norm');
     end
-    
-    %Average over trials
-    HGP.avg = zeros(size(HGP.trial{1}, 1), size(HGP.trial{1}, 2), length(HGP.trial));
-    for triali = 1 : length(HGP.trial)
-        HGP.avg(:, :, triali) = HGP.trial{triali};
-    end
-    
-    %Add missing info
-    HGP.elec = reref.elec;
-    HGP.elec_mni_frv = reref.elec_mni_frv;
-    HGP.label_all = reref.label_all;
-    HGP.elec_all = reref.elec_all;
-    HGP.elec_mni_frv_all = reref.elec_mni_frv_all;
-    
-    %Save
-    save([res_path subnips{subi} '/' subnips{subi} '_HGP_' extract_method '.mat'], 'HGP', '-v7.3');
 end
+   
+    
+    
+        
+%         %HGP = rmfield(reref_avg, {'avg', 'var'});
+%         HGP = data_filt{1};
+%         
+%         %Average over individual bands
+%         for triali = 1 : length(data_filt_norm{freqi}.trial)
+%             meanHGP = zeros(size(data_filt_norm{1}.trial{1}, 1), size(data_filt_norm{1}.trial{1}, 2), length(data_filt));
+%             
+%             for freqi = 1 : length(data_filt_norm)
+%                 meanHGP(:, :, freqi) = data_filt_norm{freqi}.trial{triali};
+%             end
+%             
+%             HGP.trial{triali} = mean(meanHGP, 3);
+%         end
+%     end
+%     
+%     %Average over trials
+%     HGP.avg = zeros(size(HGP.trial{1}, 1), size(HGP.trial{1}, 2), length(HGP.trial));
+%     for triali = 1 : length(HGP.trial)
+%         HGP.avg(:, :, triali) = HGP.trial{triali};
+%     end
+%     
+%     %Add missing info
+%     HGP.elec = reref.elec;
+%     HGP.elec_mni_frv = reref.elec_mni_frv;
+%     HGP.label_all = reref.label_all;
+%     HGP.elec_all = reref.elec_all;
+%     HGP.elec_mni_frv_all = reref.elec_mni_frv_all;
+%     
+%     %Save
+%     save([res_path subnips{subi} '/' subnips{subi} '_HGP_' extract_method '.mat'], 'HGP', '-v7.3');
+
 
     
 

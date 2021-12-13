@@ -20,15 +20,15 @@ script_path = wkdir + 'ECoG_WM/Python/'
 
 ##########################################
 #Necessary parameters
-fmethod = 'erp_100_spatialPatterns' #'chanxfreq_tfa_wavelet_final'
-fdecoding = False #'perChannel'
+fmethod = 'erp_100' #'chanxfreq_tfa_wavelet_final'
+fdecoding = 'False' #'perChannel'
 plotAverage = 0 #plot average decoding performance or not?
 
 ##########################################
 #Preprocessing
 if (fmethod is 'tfa_wavelet_final_corrected') | (fmethod is 'respLocked_tfa_wavelet') | (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected'):
 	bl = [-.14, 0]
-elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'tfa_wavelet_final') | (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'frontal_erp_100') | (fmethod is 'temporal_erp_100') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'erp_100_spatialPatterns'):
+elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'tfa_wavelet_final') | (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'frontal_erp_100') | (fmethod is 'temporal_erp_100') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'erp_100_spatialPatterns') | (fmethod is 'probeLocked_erp_100_longEpoch_spatialPatterns') | (fmethod is 'HGP_100') | (fmethod is 'probeLocked_HGP_100_longEpoch'):
 	bl = [-.2, 0]
 
 blc = 0 #baseline correction or not?
@@ -42,6 +42,9 @@ acc = 1 #0 = include both correct and incorrect trials, 1 = include only correct
 decCond = ['cue', 'itemPos', 'indItems', 'load', 'probeID', 'probe', 'buttonPress'] # 'itemPos', indItems', 'cue', 'load
 figTitles = ['Task', 'Item position', 'Item identity', 'Item load', 'Probe identity', 'Probe category', 'Motor response']
 
+#decCond = ['cue_load1', 'itemPos_load1', 'indItems_load1', 'probeID_load1', 'probe_load1', 'buttonPress_load1'] # 'itemPos', indItems', 'cue', 'load
+#figTitles = ['Task', 'Item position', 'Item identity', 'Probe identity', 'Probe category', 'Motor response']
+
 #decCond = ['indItems_trainCue0_testCue0', 'indItems_trainCue0_testCue1', 'indItems_trainCue1_testCue0', 'indItems_trainCue1_testCue1']
 #figTitles = ['Match', 'Match', 'Mismatch', 'Mismatch']
 
@@ -51,14 +54,17 @@ if fdecoding is 'perChannel':
 
 	#decCond = ['cue', 'itemPos', 'indItems', 'load', 'probeID', 'probe', 'buttonPress']
 	#figTitles = ['Task', 'Item position', 'Item identity', 'Item load', 'Probe identity', 'Probe category', 'Motor response']
-#decCond = ['indItems_trainCue0_testCue0', 'indItems_trainCue0_testCue1', 'indItems_trainCue1_testCue0', 'indItems_trainCue1_testCue1']
+#decCond = ['indItems_trainCue0_testCue0', 'indItems_trainCue0_testCue0', 'indItems_trainCue1_testCue1', 'indItems_trainCue1_testCue1']
 #figTitles = ['Match', 'Mismatch', 'Match', 'Mismatch']
 #decCond = ['cue', 'itemPos', 'indItems', 'load', 'probeID', 'probe', 'buttonPress']
 #figTitles = ['Task', 'Item position',  'Item identity', 'Item load', 'Probe identity', 'Probe category', 'Motor response']
 
 if fdecoding is not 'perChannel':
 	if (fmethod is not 'tfa_wavelet_final_corrected') & (fmethod is not 'chanxfreq_tfa_wavelet_final') & (fmethod is not 'chanxfreq_tfa_wavelet_final_corrected') & ('spatialPatterns' not in fmethod):
-		generalization = 1 #0 = diagonal only, 1 = full matrix
+		if (decCond[0] is not 'cue_load1'):
+			generalization = 1 #0 = diagonal only, 1 = full matrix
+		else:
+			generalization = 0
 	else:
 		generalization = 0
 else:
@@ -70,13 +76,13 @@ if (fmethod is 'tfa_wavelet_final_corrected') | (fmethod is 'chanxfreq_tfa_wavel
 elif fmethod is 'erp':
 	trainTime = [bl[0], 4.4985]
 	testTime = [bl[0], 4.4985]
-elif (fmethod is 'erp_100') | (fmethod is 'frontal_erp_100') | (fmethod is 'temporal_erp_100') | (fmethod is 'erp_100_spatialPatterns'):
+elif (fmethod is 'erp_100') | (fmethod is 'frontal_erp_100') | (fmethod is 'temporal_erp_100') | (fmethod is 'erp_100_spatialPatterns') | (fmethod is 'HGP_100'):
 	trainTime = [bl[0], 4.48]
 	testTime = [bl[0], 4.48]
-elif (fmethod is 'respLocked_erp_100') | (fmethod is 'frontal_respLocked_erp_100') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'respLocked_erp_100_spatialPatterns'):
+elif (fmethod is 'respLocked_erp_100') | (fmethod is 'frontal_respLocked_erp_100') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'respLocked_erp_100_spatialPatterns') | (fmethod is 'respLocked_HGP_100'):
 	trainTime = [-4.0, 0.]
 	testTime = [-4.0, 0.]
-elif (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch'):
+elif (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch') | (fmethod is 'probeLocked_erp_100_longEpoch_spatialPatterns') | (fmethod is 'probeLocked_HGP_100_longEpoch'):
 	trainTime = [-4.5, .5]
 	testTime = [-4.5, .5]
 elif fmethod is 'respLocked_tfa_wavelet':
@@ -133,6 +139,13 @@ elif fdecoding is 'perChannel':
 	map_color = [sns.light_palette((0.8901960784313725, 0.10196078431372549, 0.10980392156862745), as_cmap=True), 
 		sns.light_palette((1.0, 0.4980392156862745, 0.0), as_cmap=True), sns.light_palette((253/255, 208/255, 23/255), as_cmap=True),
 		sns.light_palette((60/255, 179/255, 113/255), as_cmap=True), sns.light_palette((23/255, 190/255, 207/255), as_cmap=True), 
+		sns.light_palette((31/255, 120/255, 180/255), as_cmap=True), sns.light_palette((106/255, 61/255, 154/255), as_cmap=True)]
+elif (decCond[0] is 'cue_load1')  & (fdecoding is not 'perChannel'):
+	line_color = ((0.8901960784313725, 0.10196078431372549, 0.10980392156862745), (1.0, 0.4980392156862745, 0.0), (253/255, 208/255, 23/255), 
+		(23/255, 190/255, 207/255), (31/255, 120/255, 180/255), (106/255, 61/255, 154/255))
+	map_color = [sns.light_palette((0.8901960784313725, 0.10196078431372549, 0.10980392156862745), as_cmap=True), 
+		sns.light_palette((1.0, 0.4980392156862745, 0.0), as_cmap=True), sns.light_palette((253/255, 208/255, 23/255), as_cmap=True),
+		sns.light_palette((23/255, 190/255, 207/255), as_cmap=True), 
 		sns.light_palette((31/255, 120/255, 180/255), as_cmap=True), sns.light_palette((106/255, 61/255, 154/255), as_cmap=True)]
 else:
 	#tmp = sns.color_palette("YlOrRd", 6)

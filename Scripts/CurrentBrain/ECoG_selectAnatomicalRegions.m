@@ -39,30 +39,35 @@ for subi = 1 : length(subnips)
     chanInds = chanInds';
     chanInds = logical(chanInds);
     
-    %Select exactly that data
-    cfg = [];
-    cfg.channel = chanIncluded(~cellfun(@isempty, chanIncluded));
-    reref_anat = ft_selectdata(cfg, reref);
-    
-    %Change relevant electrode info
-    reref_anat.elec.chanpos = reref_anat.elec.chanpos(chanInds, :);
-    reref_anat.elec.chantype = reref_anat.elec.chantype(chanInds);
-    reref_anat.elec.chanunit = reref_anat.elec.chanunit(chanInds);
-    reref_anat.elec.label = reref_anat.elec.label(chanInds);
-    reref_anat.elec.tra = reref_anat.elec.tra(chanInds', :);
-    
-    reref_anat.elec_mni_frv.chanpos = reref_anat.elec_mni_frv.chanpos(chanInds, :);
-    reref_anat.elec_mni_frv.chantype = reref_anat.elec_mni_frv.chantype(chanInds);
-    reref_anat.elec_mni_frv.chanunit = reref_anat.elec_mni_frv.chanunit(chanInds);
-    reref_anat.elec_mni_frv.label = reref_anat.elec_mni_frv.label(chanInds);
-    reref_anat.elec_mni_frv.tra = reref_anat.elec_mni_frv.tra(chanInds', :);
-    
-    display(reref_anat.elec.label);
-    
     %Save
-    save([res_path subnips{subi} '/' subnips{subi} '_' area '_reref.mat'], 'reref_anat', '-v7.3');
+    save([res_path subnips{subi} '/' subnips{subi} '_' area '_chanInds.mat'], 'chanInds');
     
     clear('chanIncluded', 'reref_anat');
+    
+%     %Select exactly that data
+%     cfg = [];
+%     cfg.channel = chanIncluded(~cellfun(@isempty, chanIncluded));
+%     reref_anat = ft_selectdata(cfg, reref);
+%     
+%     %Change relevant electrode info
+%     reref_anat.elec.chanpos = reref_anat.elec.chanpos(chanInds, :);
+%     reref_anat.elec.chantype = reref_anat.elec.chantype(chanInds);
+%     reref_anat.elec.chanunit = reref_anat.elec.chanunit(chanInds);
+%     reref_anat.elec.label = reref_anat.elec.label(chanInds);
+%     reref_anat.elec.tra = reref_anat.elec.tra(chanInds', :);
+%     
+%     reref_anat.elec_mni_frv.chanpos = reref_anat.elec_mni_frv.chanpos(chanInds, :);
+%     reref_anat.elec_mni_frv.chantype = reref_anat.elec_mni_frv.chantype(chanInds);
+%     reref_anat.elec_mni_frv.chanunit = reref_anat.elec_mni_frv.chanunit(chanInds);
+%     reref_anat.elec_mni_frv.label = reref_anat.elec_mni_frv.label(chanInds);
+%     reref_anat.elec_mni_frv.tra = reref_anat.elec_mni_frv.tra(chanInds', :);
+%     
+%     display(reref_anat.elec.label);
+%     
+%     %Save
+%     save([res_path subnips{subi} '/' subnips{subi} '_' area '_reref.mat'], 'reref_anat', '-v7.3');
+%     
+%     clear('chanIncluded', 'reref_anat');
 end
 
 

@@ -16,8 +16,8 @@ from base import find_nearest, loadtablefrommat
 from ECoG_decod_cfg import *
 from ECoG_fldtrp2mne import ECoG_fldtrp2mne
 
-#def ECoG_prepDec(decCond, subject, foi, toi_i):
-def ECoG_prepDec(decCond, subject, foi):
+def ECoG_prepDec(decCond, subject, foi, toi_i):
+#def ECoG_prepDec(decCond, subject, foi):
 
 	##########################################
 	from ECoG_decod_cfg import fmethod
@@ -30,9 +30,13 @@ def ECoG_prepDec(decCond, subject, foi):
 		fmethod = 'probeLocked_erp_100_longEpoch'
 
 	#Load data (X)
-	fname = data_path + subject + '/' +  subject + '_' + fmethod + '.mat'
+	if fmethod is not 'hgp_corrected_averageAct':
+		fname = data_path + subject + '/' +  subject + '_' + fmethod + '.mat'
+	else:
+		fname = data_path + subject + '/' + subject + '_highGammaPower_corrected_alex.mat'
+
 	if (fmethod is 'tfa_wavelet') | (fmethod is 'respLocked_tfa_wavelet') | (fmethod is 'tfa_wavelet_final_corrected'):
-		data = ECoG_fldtrp2mne(fname, 'freq', 'tfa') #for tfa data, this is a 4d-matrix of size n_trials, n_channels, n_freqs, n_times
+		data = ECoG_fldtrp2mne(fname, 'freq', 'tfa') #for tfa data, this is a 4d-matrix of size n_trials, n_channels, n_freqs, n_time
 
 		if foi is not 'all' and foi is not 'specPat':
 			#Preprocess data: Extract specific frequencies, apply baseline correction, and then average over those frequencies
@@ -55,17 +59,30 @@ def ECoG_prepDec(decCond, subject, foi):
 
 		if blc:
 			data.apply_baseline(baseline=bl, mode='zscore', verbose=True)
-	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'frontal_erp_100') | (fmethod is 'temporal_erp_100'):
+	elif fmethod is 'hgp_corrected_averageAct':
+		data = ECoG_fldtrp2mne(fname, 'freq', 'tfa')
+
+		#Preprocess data: Apply baseline correction 
+		if blc:
+			data.apply_baseline(baseline=bl, verbose=True)
+
+	elif (fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'frontal_erp_100') | (fmethod is 'temporal_erp_100') | (fmethod is 'HGP_100'):
 		data = ECoG_fldtrp2mne(fname, 'data', 'erp') #for erp data, this is a 3d-matrix of sixe n_trials, n_channels, n_freqs, n_times
 
 		#Preprocess data: Apply baseline correction 
 		if blc:
 			data.apply_baseline(baseline=bl, verbose=True)
-	elif (fmethod is 'respLocked_erp_100') | (fmethod is 'frontal_respLocked_erp_100') | (fmethod is 'temporal_respLocked_erp_100'):
-		data = ECoG_fldtrp2mne(fname, 'data_respLocked', 'erp') #for erp data, this is a 3d-matrix of sixe n_trials, n_channels, n_freqs, n_times
+	elif (fmethod is 'respLocked_erp_100') | (fmethod is 'frontal_respLocked_erp_100') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'respLocked_HGP_100'):
+		if fmethod is 'respLocked_HGP_100':
+			data = ECoG_fldtrp2mne(fname, 'data', 'erp')
+		else:
+			data = ECoG_fldtrp2mne(fname, 'data_respLocked', 'erp') #for erp data, this is a 3d-matrix of sixe n_trials, n_channels, n_freqs, n_times
 		data.crop(tmin=trainTime[0], tmax=trainTime[1])
-	elif (fmethod is 'probeLocked_erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch'):
-		data = ECoG_fldtrp2mne(fname, 'data_probeLocked', 'erp')
+	elif (fmethod is 'probeLocked_erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch') | (fmethod is 'probeLocked_HGP_100_longEpoch'):
+		if fmethod is 'probeLocked_HGP_100_longEpoch':
+			data = ECoG_fldtrp2mne(fname, 'data', 'erp')
+		else:
+			data = ECoG_fldtrp2mne(fname, 'data_probeLocked', 'erp')
 		data.crop(tmin=trainTime[0], tmax=trainTime[1])
 
 		#Preprocess data: Apply baseline correction 
@@ -74,7 +91,7 @@ def ECoG_prepDec(decCond, subject, foi):
 
 	##########################################
 	#Load labels (y)
-	if (fmethod is not 'probeLocked_erp_100_longEpoch') & (fmethod is not 'frontal_probeLocked_erp_100_longEpoch') & (fmethod is not 'temporal_probeLocked_erp_100_longEpoch'):
+	if (fmethod is not 'probeLocked_erp_100_longEpoch') & (fmethod is not 'frontal_probeLocked_erp_100_longEpoch') & (fmethod is not 'temporal_probeLocked_erp_100_longEpoch') & (fmethod is not 'probeLocked_HGP_100_longEpoch'):
 		fname = behavior_path + subject + '_memory_behavior_forPython_final.mat'
 	else:
 		fname = behavior_path + subject + '_memory_behavior_forPython_Probe_final.mat'
@@ -82,19 +99,19 @@ def ECoG_prepDec(decCond, subject, foi):
 	trialInfo = loadtablefrommat(fname, 'table_struct', 'table_columns')
 
 	#Select only that subset of data also used in the ECoG analyses
-	if (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch'):
+	if (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch') | (fmethod is 'probeLocked_HGP_100_longEpoch'):
 		trialInfo = trialInfo[trialInfo.trials_included_probe != 0]
 	else:
 		trialInfo = trialInfo[trialInfo.EEG_included != 0]
 
 	#Sanity check: Do X and y have the same dimensions?
-	if (fmethod is 'tfa_wavelet') | (fmethod is 'tfa_wavelet_final_corrected'):
+	if (fmethod is 'tfa_wavelet') | (fmethod is 'tfa_wavelet_final_corrected') | (fmethod is 'hgp_corrected_averageAct'):
 		if np.shape(data.data)[0] != np.shape(trialInfo)[0]:
 			print('X and y do not have the same dimensions')
 	elif ((fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100') | (fmethod is 'probeLocked_erp_100') | 
 		(fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'frontal_erp_100') | 
 		(fmethod is 'frontal_respLocked_erp_100') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected') |
-		(fmethod is 'temporal_erp_100') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch')):
+		(fmethod is 'temporal_erp_100') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch') | (fmethod is 'HGP_100') | (fmethod is 'probeLocked_HGP_100_longEpoch') | (fmethod is 'respLocked_HGP_100')):
 		if np.shape(data.get_data())[0] != np.shape(trialInfo)[0]:
 			print('X and y do not have the same dimensions')
 
@@ -108,11 +125,17 @@ def ECoG_prepDec(decCond, subject, foi):
 	elif ((fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100') | (fmethod is 'probeLocked_erp_100') |
 		 (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'chanxfreq_tfa_wavelet_final') | (fmethod is 'frontal_erp_100') |
 		 (fmethod is 'frontal_respLocked_erp_100') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') | (fmethod is 'chanxfreq_tfa_wavelet_final_corrected') |
-		 (fmethod is 'temporal_erp_100') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch')):
+		 (fmethod is 'temporal_erp_100') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch') | (fmethod is 'HGP_100') | (fmethod is 'probeLocked_HGP_100_longEpoch') | (fmethod is 'respLocked_HGP_100')):
 		if win_size is not False:
 			X_train_tmp = data.get_data() #n_trials x n_channels x n_timepoints (decoding done seperately on each time point)
 		else:
 			X_train = data.get_data()
+	elif fmethod is 'hgp_corrected_averageAct':
+		if win_size is not False:
+			X_train_tmp = data.data
+		else:
+			X_train = data.data
+			X_train = np.squeeze(np.mean(X_train, axis=2)) #average over frequency dimension
 
 	#If temporal, and not spatial (default) pattern is to be decoded,
 	#extract the appropriate channels of interest, time window of interest,
@@ -154,7 +177,7 @@ def ECoG_prepDec(decCond, subject, foi):
 		elif np.shape(win_size)[0] > 1:
 			if ((fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'probeLocked_erp_100_longEpoch') | (fmethod is 'respLocked_erp_100') | 
 				(fmethod is 'frontal_erp_100') | (fmethod is 'frontal_respLocked_erp_100') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') |
-				(fmethod is 'temporal_erp_100') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch')):
+				(fmethod is 'temporal_erp_100') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch') | (fmethod is 'probeLocked_HGP_100_longEpoch')):
 				timebins_onset = find_nearest(data.times, win_size[toi_i][0])[0] 
 				win_size_sample = np.round(data.info['sfreq'])*(np.abs(win_size[toi_i][1]-win_size[toi_i][0]))
 
@@ -193,7 +216,7 @@ def ECoG_prepDec(decCond, subject, foi):
 		elif rel_blc & (np.shape(win_size)[0] > 1):
 			if ((fmethod is 'erp') | (fmethod is 'erp_100') | (fmethod is 'respLocked_erp_100') | (fmethod is 'frontal_erp_100') | 
 				(fmethod is 'frontal_respLocked_erp_100') | (fmethod is 'frontal_probeLocked_erp_100_longEpoch') |
-				(fmethod is 'temporal_erp_100') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch')):
+				(fmethod is 'temporal_erp_100') | (fmethod is 'temporal_respLocked_erp_100') | (fmethod is 'temporal_probeLocked_erp_100_longEpoch') | (fmethod is 'probeLocked_HGP_100_longEpoch')):
 				my_mean = np.mean(X_train, axis=2)
 
 				for t, timepoint in enumerate(np.arange(np.shape(X_train)[2])):
@@ -204,7 +227,7 @@ def ECoG_prepDec(decCond, subject, foi):
 				for t, timepoint in enumerate(np.arange(np.shape(X_train)[2])):
 					X_train[:, :, t, :] = X_train[:, :, t, :] - my_mean
 
-	if (decCond is 'indItems') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_load1'):
+	if (decCond is 'indItems') | (decCond is 'indItems_trainCue0_testCue0') | (decCond is 'indItems_trainCue1_testCue1') | (decCond is 'indItems_load1') | (decCond is 'indItems_load1_trainCue0_testCue0') | (decCond is 'indItems_load1_trainCue1_testCue1'):
 		y_train = []
 		for _, row_i in enumerate(range(len(trialInfo))):
 			tmp = trialInfo.values[row_i, 7:11]
@@ -214,7 +237,7 @@ def ECoG_prepDec(decCond, subject, foi):
 		del tmp	
 
 		y_train = MultiLabelBinarizer().fit_transform(y_train)
-	elif (decCond is 'indItems_trainCue0_testCue1') | (decCond is 'indItems_trainCue1_testCue0'):
+	elif (decCond is 'indItems_trainCue0_testCue1') | (decCond is 'indItems_trainCue1_testCue0') | (decCond is 'indItems_load1_trainCue0_testCue1') | (decCond is 'indItems_load1_trainCue1_testCue0') :
 		y_train = []
 		y_test = []
 		for _, row_i in enumerate(range(len(trialInfo))):
@@ -227,7 +250,7 @@ def ECoG_prepDec(decCond, subject, foi):
 
 		y_train = MultiLabelBinarizer().fit_transform(y_train)
 		y_test = MultiLabelBinarizer().fit_transform(y_test)
-	elif decCond is 'itemPos':
+	elif (decCond is 'itemPos') | (decCond is 'itemPos_load1'):
 		y_train = []
 		for _, row_i in enumerate(range(len(trialInfo))):
 			tmp = trialInfo.values[row_i, 17:21]
@@ -237,24 +260,24 @@ def ECoG_prepDec(decCond, subject, foi):
 		del tmp	
 
 		y_train = MultiLabelBinarizer().fit_transform(y_train)
-	elif decCond is 'cue':
+	elif (decCond is 'cue') | (decCond is 'cue_load1'):
 		y_train = trialInfo.values[:, 3]
 	elif decCond is 'load':
 		y_train = trialInfo.values[:, 6] #labels: 1, 2, & 4
 		y_train[y_train == 1] = 0
 		y_train[y_train == 2] = 1
 		y_train[y_train == 4] = 2
-	elif decCond is 'probe':
+	elif (decCond is 'probe') | (decCond is 'probe_load1'):
 		y_train = trialInfo.values[:, 4] 
-	elif decCond is 'probeID':
+	elif (decCond is 'probeID') | (decCond is 'probeID_load1'):
 		y_train = trialInfo.values[:, 11]
-	elif decCond is 'buttonPress':
+	elif (decCond is 'buttonPress') | (decCond is 'buttonPress_load1'):
 		y_train = trialInfo.values[:, 12]
 		y_train[y_train == 2] = 1 #1/2 = trigger pulled
 		y_train[(y_train == 3) | (y_train == 4)] = 0 #3/4 = trigger not pulled
 
 	#Select only those trials, in which the subject responded correctly & throw out any additional nan entries
-	if acc & (decCond is not 'indItems_trainCue0_testCue0' and decCond is not 'indItems_trainCue1_testCue1' and decCond is not 'indItems_trainCue0_testCue1' and decCond is not 'indItems_trainCue1_testCue0' and decCond is not 'indItems_load1'):
+	if acc & (decCond is not 'indItems_load1_trainCue0_testCue0' and decCond is not 'indItems_load1_trainCue1_testCue1' and decCond is not 'indItems_load1_trainCue1_testCue0' and decCond is not 'indItems_load1_trainCue0_testCue1' and decCond is not 'indItems_trainCue0_testCue0' and decCond is not 'indItems_trainCue1_testCue1' and decCond is not 'indItems_trainCue0_testCue1' and decCond is not 'indItems_trainCue1_testCue0' and decCond is not 'indItems_load1' and decCond is not 'cue_load1' and decCond is not 'itemPos_load1' and decCond is not 'probe_load1' and decCond is not 'probeID_load1' and decCond is not 'buttonPress_load1'):
 		sel = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3))))
 	elif acc & (decCond is 'indItems_trainCue0_testCue0'):
 		sel = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 0)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 0))))
@@ -266,8 +289,18 @@ def ECoG_prepDec(decCond, subject, foi):
 	elif acc & (decCond is 'indItems_trainCue1_testCue0'):
 		sel_train = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 1))))
 		sel_test = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 0)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 0))))
-	elif acc & (decCond is 'indItems_load1'):
+	elif acc & (decCond is 'indItems_load1' or decCond is 'cue_load1' or decCond is 'itemPos_load1' or decCond is 'probe_load1' or decCond is'probeID_load1' or decCond is 'buttonPress_load1'):
 		sel = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.load == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.load == 1))))
+	elif acc & (decCond is 'indItems_load1_trainCue0_testCue0'):
+		sel = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 0) & (trialInfo.load == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 0) & (trialInfo.load == 1))))
+	elif acc & (decCond is 'indItems_load1_trainCue0_testCue1'):
+		sel = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 1) & (trialInfo.load == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 1) & (trialInfo.load == 1))))
+	elif acc & (decCond is 'indItems_load1_trainCue1_testCue0'):
+		sel_train = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 1) & (trialInfo.load == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 1) & (trialInfo.load == 1))))
+		sel_test = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 0) & (trialInfo.load == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 0) & (trialInfo.load == 1))))
+	elif accc & (decCond is 'indItems_load1_trainCue0_testCue1'):
+		sel_train = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 0) & (trialInfo.load == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 0) & (trialInfo.load == 1))))
+		sel_test = np.where((((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 1) & (trialInfo.cue == 1) & (trialInfo.load == 1)) | ((~np.isnan(trialInfo.block_id)) & (trialInfo.resp == 3) & (trialInfo.cue == 1) & (trialInfo.load == 1))))
 	else:
 		sel = np.where(~np.isnan(trialInfo.block_id))
 
@@ -281,10 +314,10 @@ def ECoG_prepDec(decCond, subject, foi):
 			X_train = X_train[:, np.squeeze(sel), :]
 			X_train = np.squeeze(X_train)
 			y_train = y_train[np.squeeze(sel)]
-	elif (win_size is False) and (decCond is not 'indItems_trainCue0_testCue1') and (decCond is not 'indItems_trainCue1_testCue0'):
+	elif (win_size is False) and (decCond is not 'indItems_trainCue0_testCue1') and (decCond is not 'indItems_trainCue1_testCue0') and (decCond is not 'indItems_load1_trainCue0_testCue1') and (decCond is not 'indItems_load1_trainCue1_testCue0'):
 		X_train = X_train[sel]
 		y_train = np.squeeze(y_train)[sel]
-	elif (win_size is False) and (decCond is 'indItems_trainCue0_testCue1'):
+	elif (win_size is False) and (decCond is 'indItems_trainCue0_testCue1' or decCond is not 'indItems_load1_trainCue0_testCue1'):
 		X_test = np.copy(X_train)
 
 		X_train = X_train[sel_train]
@@ -292,7 +325,7 @@ def ECoG_prepDec(decCond, subject, foi):
 
 		X_test = X_test[sel_test]
 		y_test = np.squeeze(y_test)[sel_test]
-	elif (win_size is False) and (decCond is 'indItems_trainCue1_testCue0'):
+	elif (win_size is False) and (decCond is 'indItems_trainCue1_testCue0' or decCond is not 'indItems_load1_trainCue1_testCue0'):
 		X_test = np.copy(X_train)
 
 		X_train = X_train[sel_train]
@@ -309,6 +342,6 @@ def ECoG_prepDec(decCond, subject, foi):
 	print('Training on:', np.shape(X_train), np.shape(y_train))
 	print('Testing on:', np.shape(X_test), np.shape(y_test))
 	
-	return X_train, y_train, X_test, y_test, data.times
+	#return X_train, y_train, X_test, y_test, data.times
 
-	#return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset 
+	return X_train, y_train, X_test, y_test, data.times, data.info['ch_names'], timebins_onset 

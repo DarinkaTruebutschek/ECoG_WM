@@ -1,0 +1,9 @@
+%This script projects the coefficients of the spatial pattern decoding onto
+%the mni standard brain.
+%Project: ECoG_WM
+%Author: D.T.
+%Date: 14 Sept 2021
+
+clear all;
+close all;
+clc;
